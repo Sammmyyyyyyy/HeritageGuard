@@ -1,0 +1,515 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'DM Serif Display', Georgia, serif;
+    --font-cinzel: 'Cinzel', serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Heritage Color Palette */
+    --color-emerald-dark: #0D3B2E;
+    --color-emerald-deep: #08281E;
+    --color-emerald-light: #165342;
+    --color-gold: #D4AF37;
+    --color-gold-light: #F3E5AB;
+    --color-sandstone: #F8F6F0;
+    --color-sandstone-dark: #EAE6DB;
+    --color-terracotta: #C85A32;
+    --color-navy-command: #0A1128;
+    --color-navy-surface: #131E3A;
+    --color-navy-card: #1A2748;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #F8F6F0;
+    color: #1A2621;
+    overflow-x: hidden;
+    letter-spacing: -0.011em;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, .font-serif-heritage {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  .font-regal {
+    font-family: var(--font-cinzel);
+    letter-spacing: -0.01em;
+  }
+
+  .font-mono-stat {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-panel-dark {
+  background: rgba(16, 26, 48, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(13, 59, 46, 0.15);
+}
+
+/* =========================================================
+   Compact & Fully Transparent 3D Cards (No top strip)
+   ========================================================= */
+.uiverse-parent {
+  width: 100%;
+  max-width: 240px;
+  perspective: 1000px;
+}
+
+.uiverse-card {
+  position: relative;
+  padding: 0;
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  transform-style: preserve-3d;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  width: 100%;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 20px 30px -10px;
+  transition: all 0.5s ease-in-out;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.uiverse-card:hover {
+  transform: rotate3d(0.5, 1, 0, 22deg);
+  border-color: #D4AF37;
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: rgba(212, 175, 55, 0.3) 0px 25px 40px -10px;
+}
+
+.uiverse-content-box {
+  border-radius: 18px;
+  transition: all 0.5s ease-in-out;
+  padding: 16px 14px 14px 14px;
+  transform-style: preserve-3d;
+  background: transparent;
+}
+
+/* 3D Title with depth */
+.uiverse-card-title {
+  display: inline-block;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 40px);
+}
+
+.uiverse-card:hover .uiverse-card-title,
+.uiverse-card-title:hover {
+  transform: translate3d(0px, 0px, 55px);
+  color: #D4AF37;
+}
+
+/* 3D Content with depth */
+.uiverse-card-content {
+  margin-top: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 25px);
+}
+
+.uiverse-card:hover .uiverse-card-content,
+.uiverse-card-content:hover {
+  transform: translate3d(0px, 0px, 45px);
+  color: #FFFFFF;
+}
+
+/* 3D See More / Action Button */
+.uiverse-see-more {
+  cursor: pointer;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 800;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 20px);
+  background: #D4AF37;
+  color: #0A1128;
+}
+
+.uiverse-card:hover .uiverse-see-more,
+.uiverse-see-more:hover {
+  transform: translate3d(0px, 0px, 55px) scale(1.05);
+  background: #FFFFFF;
+  color: #0A1128;
+}
+
+/* 3D Floating Icon Box */
+.uiverse-date-box {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  height: 32px;
+  width: 32px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(0px, 0px, 60px);
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 10px 12px -5px;
+  transition: all 0.5s ease-in-out;
+}
+
+.uiverse-card:hover .uiverse-date-box {
+  transform: translate3d(0px, 0px, 75px) scale(1.1);
+  border-color: #FFFFFF;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Cinematic Silky-Smooth Carousel Crossfade */
+.carousel-slide-layer {
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+  transition: opacity 1400ms cubic-bezier(0.4, 0, 0.2, 1), transform 6000ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+.carousel-slide-active {
+  opacity: 1;
+  transform: scale(1.05) translateZ(0);
+  z-index: 2;
+}
+
+.carousel-slide-inactive {
+  opacity: 0;
+  transform: scale(1.0) translateZ(0);
+  z-index: 1;
+}
+
+/* =========================================================
+   Animated Navbar Button (Exact Uiverse.io Animation)
+   ========================================================= */
+.animated-nav-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 24px;
+  border: 2px solid;
+  border-color: transparent;
+  font-size: 12px;
+  background-color: transparent;
+  border-radius: 100px;
+  font-weight: 700;
+  color: #0D3B2E;
+  box-shadow: 0 0 0 1.5px rgba(13, 59, 46, 0.2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  user-select: none;
+}
+
+.animated-nav-btn.active {
+  background-color: #0D3B2E;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 2px #0D3B2E;
+}
+
+.animated-nav-btn.active-authority {
+  background-color: #0A1128;
+  color: #D4AF37;
+  box-shadow: 0 0 0 2px #D4AF37;
+}
+
+.animated-nav-btn svg {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-nav-btn .arr-1 {
+  right: 10px;
+}
+
+.animated-nav-btn .arr-2 {
+  left: -35%;
+}
+
+.animated-nav-btn .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-color: #D4AF37;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-nav-btn .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-7px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.animated-nav-btn:hover {
+  box-shadow: 0 0 0 8px transparent;
+  color: #0A1128;
+  border-radius: 12px;
+}
+
+.animated-nav-btn:hover .arr-1 {
+  right: -35%;
+}
+
+.animated-nav-btn:hover .arr-2 {
+  left: 10px;
+}
+
+.animated-nav-btn:hover .text {
+  transform: translateX(7px);
+}
+
+.animated-nav-btn:hover svg {
+  fill: #0A1128;
+}
+
+.animated-nav-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 0 3px #D4AF37;
+}
+
+.animated-nav-btn:hover .circle {
+  width: 180px;
+  height: 180px;
+  opacity: 1;
+}
+
+/* =========================================================
+   Animated Bouncing Glowing Blob Card (From Uiverse.io)
+   ========================================================= */
+.blob-card {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  border-radius: 20px;
+  z-index: 10;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 30px rgba(13, 59, 46, 0.08), -10px -10px 30px #ffffff;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  background-color: #F8F6F0;
+}
+
+.blob-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 15px 15px 40px rgba(13, 59, 46, 0.14), -15px -15px 40px #ffffff;
+}
+
+.blob-card-bg {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.blob-card:hover .blob-card-bg {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.blob-shape {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  opacity: 0.85;
+  filter: blur(14px);
+  animation: blob-bounce 5s infinite ease-in-out;
+}
+
+.blob-emerald {
+  background-color: #10B981;
+}
+
+.blob-gold {
+  background-color: #F59E0B;
+}
+
+.blob-blue {
+  background-color: #3B82F6;
+}
+
+.blob-purple {
+  background-color: #A855F7;
+}
+
+@keyframes blob-bounce {
+  0% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+  }
+  50% {
+    transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
+  }
+  75% {
+    transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+  }
+  100% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+}
+
+/* =========================================================
+   Animated Search Bar (From Uiverse.io by boryanakrasteva)
+   ========================================================= */
+.uiverse-search-bar {
+  position: relative;
+  background: #FFFFFF;
+  padding: 6px;
+  border-radius: 20px;
+  border: 2px solid rgba(13, 59, 46, 0.15);
+  box-shadow: 0 4px 20px rgba(13, 59, 46, 0.05);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uiverse-search-bar:focus-within {
+  border-color: #0D3B2E;
+  box-shadow: 0 8px 30px rgba(13, 59, 46, 0.15), 0 0 0 2px rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+}
+
+.uiverse-search-input-container {
+  position: relative;
+  flex: 1;
+}
+
+.uiverse-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0D3B2E;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.uiverse-search-bar:hover .uiverse-search-icon {
+  animation: search-icon-anim 1s linear infinite;
+  color: #C85A32;
+}
+
+@keyframes search-icon-anim {
+  0%, 100% {
+    transform: translateY(-50%) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.22) rotate(-10deg);
+  }
+}
+
+.uiverse-search-input {
+  width: 100%;
+  padding: 12px 16px 12px 46px;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1A2621;
+  border: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
