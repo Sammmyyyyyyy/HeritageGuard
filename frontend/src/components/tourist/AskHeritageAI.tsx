@@ -153,7 +153,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               <Bot className="w-4 h-4 text-[#D4AF37]" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold">HeritageGuard AI Assistant</h3>
+              <h3 className="text-xs sm:text-sm font-bold">DhoroharDhirsti AI Assistant</h3>
               <p className="text-[10px] text-white/70 flex items-center space-x-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Active • Connected to ASI Knowledge Base</span>

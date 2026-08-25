@@ -66,7 +66,7 @@ export const TouristHero: React.FC<TouristHeroProps> = ({
               <p className="text-base sm:text-lg text-[#1A2621]/80 max-w-2xl leading-relaxed mb-8">
                 {language === 'hi'
                   ? 'हेरिटेजगार्ड एआई वास्तविक समय निगरानी, कंप्यूटर विज़न दरार पहचान, सटीक भीड़ भविष्यवाणी और व्यक्तिगत यात्रा योजनाओं के माध्यम से स्मारकों के संरक्षण और सुखद पर्यटन को जोड़ता है।'
-                  : 'HeritageGuard AI bridges conservation and tourism through intelligent insights, real-time visual damage monitoring, crowd forecasting, and sustainable personalized experiences.'}
+                  : 'DhoroharDhirsti AI bridges conservation and tourism through intelligent insights, real-time visual damage monitoring, crowd forecasting, and sustainable personalized experiences.'}
               </p>
             </div>
 

@@ -28,6 +28,29 @@ interface NavbarProps {
   onLanguageChange: (lang: 'en' | 'hi') => void;
 }
 
+const StarElements = () => (
+  <>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-1">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-2">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-3">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-4">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-5">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 784.11 815.53" className="star-6">
+      <path className="fil0" d="M392.05 0c-20.9,210.08 -184.06,378.41 -392.05,407.78 207.96,29.37 371.12,197.68 392.05,407.74 20.93,-210.06 184.09,-378.37 392.05,-407.74 -207.98,-29.38 -371.16,-197.69 -392.06,-407.78z" />
+    </svg>
+  </>
+);
+
 export const Navbar: React.FC<NavbarProps> = ({
   activeView,
   onViewChange,
@@ -104,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div 
             onClick={handleLogoClick}
             className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group select-none shrink-0"
-            title="DharoharDrishti Home"
+            title="DhoroharDhirsti Home"
           >
             {/* Architectural Emblem Icon */}
             <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 border ${
@@ -122,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className={`font-serif-heritage text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-none ${
                 activeView === 'authority' ? 'text-[#0F2B48]' : 'text-[#0D3B2E]'
               }`}>
-                DHAROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DRISHTI</span>
+                DHOROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DHIRSTI</span>
               </span>
               <span className="text-[8px] sm:text-[9.5px] tracking-[0.22em] uppercase font-bold text-[#6B7280] mt-0.5 sm:mt-1">
                 HERITAGEGUARD AI
@@ -134,25 +157,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               CENTER: 3 Contextual Navigation States (Desktop & Tablet)
              ========================================================================= */}
           
-          {/* STATE 1: HOME / LANDING NAVBAR */}
+          {/* STATE 1: HOME / LANDING NAVBAR (Animated Glowing Star Buttons from Uiverse.io) */}
           {activeView === 'home' && (
             <nav className="hidden md:flex items-center space-x-3 shrink-0">
               <button
                 onClick={() => handleSwitchInterface('tourist')}
-                className="px-4 lg:px-5 py-2.5 rounded-full border border-[#D1D5DB] bg-white/70 hover:bg-white text-xs lg:text-sm font-semibold text-[#1F2937] flex items-center space-x-2 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                className="uiverse-star-btn cursor-pointer"
               >
                 <span>🧑</span>
                 <span>Tourist</span>
-                <ArrowRight className="w-4 h-4 text-gray-500 ml-0.5" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#181818] ml-0.5" />
+                <StarElements />
               </button>
 
               <button
                 onClick={() => handleSwitchInterface('authority')}
-                className="px-4 lg:px-5 py-2.5 rounded-full border border-[#D1D5DB] bg-white/70 hover:bg-white text-xs lg:text-sm font-semibold text-[#1F2937] flex items-center space-x-2 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                className="uiverse-star-btn star-authority cursor-pointer"
               >
                 <span>🏛</span>
                 <span>Authority</span>
-                <ArrowRight className="w-4 h-4 text-gray-500 ml-0.5" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#0F2B48] ml-0.5" />
+                <StarElements />
               </button>
             </nav>
           )}
@@ -384,59 +409,61 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
-            {/* User Profile Avatar Icon */}
-            <div className="relative shrink-0" ref={profileRef}>
-              <button 
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className={`w-9 h-9 rounded-full p-0.5 shadow-2xs cursor-pointer hover:scale-105 transition-transform flex items-center justify-center text-white shrink-0 ${
-                  activeView === 'authority'
-                    ? 'bg-gradient-to-tr from-[#0F2B48] to-[#1E40AF]'
-                    : 'bg-gradient-to-tr from-[#3D4F37] to-[#8C7335]'
-                }`}
-                title="User Profile"
-              >
-                <User className="w-4 h-4" />
-              </button>
+            {/* User Profile Avatar Icon (Only rendered on Tourist and Authority sections) */}
+            {activeView !== 'home' && (
+              <div className="relative shrink-0" ref={profileRef}>
+                <button 
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className={`w-9 h-9 rounded-full p-0.5 shadow-2xs cursor-pointer hover:scale-105 transition-transform flex items-center justify-center text-white shrink-0 ${
+                    activeView === 'authority'
+                      ? 'bg-gradient-to-tr from-[#0F2B48] to-[#1E40AF]'
+                      : 'bg-gradient-to-tr from-[#3D4F37] to-[#8C7335]'
+                  }`}
+                  title="User Profile"
+                >
+                  <User className="w-4 h-4" />
+                </button>
 
-              {/* Profile Popover */}
-              {isProfileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 z-50 animate-fadeIn space-y-2">
-                  <div className="flex items-center space-x-3 pb-2 border-b border-gray-100">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                      activeView === 'authority' ? 'bg-[#0F2B48]' : 'bg-[#0D3B2E]'
-                    }`}>
-                      {activeView === 'authority' ? 'ASI' : 'TG'}
+                {/* Profile Popover */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 z-50 animate-fadeIn space-y-2">
+                    <div className="flex items-center space-x-3 pb-2 border-b border-gray-100">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                        activeView === 'authority' ? 'bg-[#0F2B48]' : 'bg-[#0D3B2E]'
+                      }`}>
+                        {activeView === 'authority' ? 'ASI' : 'TG'}
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-bold text-gray-900 truncate">
+                          {activeView === 'authority' ? 'Ayush K. Maurya' : 'Heritage Explorer'}
+                        </p>
+                        <p className="text-[10px] text-gray-500 truncate">
+                          {activeView === 'authority' ? 'ASI Chief Conservator' : 'Level 2 Citizen Contributor'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="truncate">
-                      <p className="text-xs font-bold text-gray-900 truncate">
-                        {activeView === 'authority' ? 'Ayush K. Maurya' : 'Heritage Explorer'}
-                      </p>
-                      <p className="text-[10px] text-gray-500 truncate">
-                        {activeView === 'authority' ? 'ASI Chief Conservator' : 'Level 2 Citizen Contributor'}
-                      </p>
+
+                    <div className="text-xs text-gray-600 space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <span>Saved Monuments</span>
+                        <span className="font-semibold text-gray-900">4</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <span>Submitted Scans</span>
+                        <span className="font-semibold text-emerald-600">2 Verified</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <span>Platform Status</span>
+                        <span className="inline-flex items-center space-x-1 text-[10px] font-semibold text-emerald-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Live Sync</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="text-xs text-gray-600 space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <span>Saved Monuments</span>
-                      <span className="font-semibold text-gray-900">4</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <span>Submitted Scans</span>
-                      <span className="font-semibold text-emerald-600">2 Verified</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <span>Platform Status</span>
-                      <span className="inline-flex items-center space-x-1 text-[10px] font-semibold text-emerald-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Live Sync</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Mobile Hamburger Menu Toggle (< md) */}
             <button

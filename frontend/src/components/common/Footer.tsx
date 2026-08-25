@@ -70,9 +70,9 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
               </div>
               <div>
                 <span className="font-regal text-xl font-bold tracking-tight text-white">
-                  Dharohar<span className="text-[#D4AF37]">Drishti</span>
+                  Dhorohar<span className="text-[#D4AF37]">Dhirsti</span>
                 </span>
-                <p className="text-[10px] text-white/60">HeritageGuard AI Platform</p>
+                <p className="text-[10px] text-white/60">DhoroharDhirsti AI Platform</p>
               </div>
             </div>
             <p className="text-xs text-white/70 leading-relaxed mb-4">
@@ -159,7 +159,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
         </div>
 
         <div className="pt-8 border-t border-white/10 text-center text-xs text-white/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 HeritageGuard AI (DharoharDrishti). All rights reserved.</p>
+          <p>© 2026 DhoroharDhirsti. All rights reserved.</p>
           <p className="text-[11px]">
             Designed for India's Cultural Legacy • Developed for High Conservation Impact
           </p>

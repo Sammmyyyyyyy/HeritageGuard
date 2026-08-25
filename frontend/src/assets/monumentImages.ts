@@ -39,10 +39,10 @@ export const createSvgFallback = (title: string, subtitle: string, bgGradient: [
     </g>
     
     <!-- Text Labels -->
-    <text x="400" y="420" font-family="'Playfair Display', serif" font-size="34" font-weight="bold" fill="#F8F6F0" text-anchor="middle">
+    <text x="400" y="420" font-family="'Google Sans', 'DM Sans', sans-serif" font-size="34" font-weight="bold" fill="#F8F6F0" text-anchor="middle">
       ${title}
     </text>
-    <text x="400" y="460" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="600" fill="#D4AF37" text-anchor="middle" letter-spacing="2">
+    <text x="400" y="460" font-family="'DM Sans', 'Noto Sans', sans-serif" font-size="16" font-weight="600" fill="#D4AF37" text-anchor="middle" letter-spacing="2">
       ${subtitle.toUpperCase()}
     </text>
   </svg>`;

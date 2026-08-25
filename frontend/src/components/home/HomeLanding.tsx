@@ -53,6 +53,38 @@ const HERO_SLIDES: HeroSlide[] = [
   }
 ];
 
+const CardCyberFX = () => (
+  <>
+    <div className="card-glare" />
+    <div className="glowing-elements">
+      <div className="glow-1" />
+      <div className="glow-2" />
+      <div className="glow-3" />
+    </div>
+    <div className="card-particles">
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+    <div className="corner-elements">
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+    <div className="scan-line" />
+    <div className="cyber-lines">
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+  </>
+);
+
 export const HomeLanding: React.FC<HomeLandingProps> = ({
   language,
   onNavigateToTourist,
@@ -166,72 +198,92 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
           <p className="text-xs sm:text-sm text-white/90 max-w-md leading-relaxed font-medium drop-shadow-sm">
             {language === 'hi'
               ? 'धरोहर दृष्टि वास्तविक समय निगरानी, कंप्यूटर विज़न दरार पहचान, भीड़ भविष्यवाणी और सतत यात्रा योजनाओं के माध्यम से स्मारकों के संरक्षण और सुखद पर्यटन को जोड़ता है।'
-              : 'HeritageGuard AI bridges conservation and tourism through intelligent insights, real-time monitoring, and personalized experiences.'}
+              : 'DhoroharDhirsti AI bridges conservation and tourism through intelligent insights, real-time monitoring, and personalized experiences.'}
           </p>
         </div>
 
-        {/* Two Compact, Transparent 3D Pathway Cards */}
+        {/* Two 3D Interactive Tracker Perspective Pathway Cards (Uiverse.io by 00Kubi) */}
         <div className="relative z-10 pt-4 sm:pt-6">
           <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4 max-w-xl">
             
-            {/* 🧑‍🦱 "Explore as Tourist" Compact Transparent 3D Card */}
-            <div className="uiverse-parent">
+            {/* 🧑‍🦱 "Explore as Tourist" 3D Tracker Perspective Card */}
+            <div className="tracker-container select-none">
               <div 
+                className="tracker-canvas" 
                 onClick={onNavigateToTourist}
-                className="uiverse-card"
+                role="button"
+                tabIndex={0}
+                title="Explore as Tourist"
               >
-                {/* 3D Floating Icon Box */}
-                <div className="uiverse-date-box">
-                  <Compass className="w-4 h-4 text-[#D4AF37]" />
-                </div>
+                {Array.from({ length: 25 }, (_, i) => (
+                  <div key={i} className={`tracker tr-${i + 1}`} />
+                ))}
+                
+                <div className="tracker-3d-card">
+                  <div className="flex items-start justify-between relative z-10">
+                    <span className="text-sm sm:text-[15px] font-bold text-white tracking-wide">
+                      {language === 'hi' ? 'पर्यटक अन्वेषण' : 'Explore as Tourist'}
+                    </span>
+                    <div className="w-7.5 h-7.5 rounded-lg bg-black/40 border border-[#D4AF37]/60 flex items-center justify-center shadow-md shrink-0">
+                      <Compass className="w-4 h-4 text-[#D4AF37]" />
+                    </div>
+                  </div>
 
-                {/* 3D Content Box (Fully Transparent) */}
-                <div className="uiverse-content-box">
-                  <span className="uiverse-card-title">
-                    {language === 'hi' ? 'पर्यटक अन्वेषण' : 'Explore as Tourist'}
-                  </span>
-                  
-                  <p className="uiverse-card-content">
+                  <p className="text-xs sm:text-[12px] text-white/85 line-clamp-2 my-1 leading-snug relative z-10">
                     {language === 'hi'
                       ? 'स्मारक खोजें, इतिहास जानें, एआई यात्रा बनाएं और सतत घूमें।'
                       : 'Discover monuments, explore stories, plan smart itineraries and travel sustainably.'}
                   </p>
 
-                  <span className="uiverse-see-more">
-                    <span>{language === 'hi' ? 'पर्यटक पोर्टल' : 'Explore as Tourist'}</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </span>
+                  <div className="flex items-center justify-between pt-0.5 relative z-10">
+                    <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[#D4AF37] text-[#0A1128] font-bold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-md hover:bg-white transition-colors">
+                      <span>{language === 'hi' ? 'पर्यटक पोर्टल' : 'Explore as Tourist'}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+
+                  <CardCyberFX />
                 </div>
               </div>
             </div>
 
-            {/* 🏛️ "Enter Authority Center" Compact Transparent 3D Card */}
-            <div className="uiverse-parent">
+            {/* 🏛️ "Enter Authority Center" 3D Tracker Perspective Card */}
+            <div className="tracker-container select-none">
               <div 
+                className="tracker-canvas" 
                 onClick={onNavigateToAuthority}
-                className="uiverse-card"
+                role="button"
+                tabIndex={0}
+                title="Enter Authority Center"
               >
-                {/* 3D Floating Icon Box */}
-                <div className="uiverse-date-box">
-                  <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                </div>
+                {Array.from({ length: 25 }, (_, i) => (
+                  <div key={i} className={`tracker tr-${i + 1}`} />
+                ))}
+                
+                <div className="tracker-3d-card authority-style">
+                  <div className="flex items-start justify-between relative z-10">
+                    <span className="text-sm sm:text-[15px] font-bold text-white tracking-wide">
+                      {language === 'hi' ? 'प्राधिकरण केंद्र' : 'Enter Authority Center'}
+                    </span>
+                    <div className="w-7.5 h-7.5 rounded-lg bg-black/40 border border-[#63B3ED]/60 flex items-center justify-center shadow-md shrink-0">
+                      <ShieldCheck className="w-4 h-4 text-[#63B3ED]" />
+                    </div>
+                  </div>
 
-                {/* 3D Content Box (Fully Transparent) */}
-                <div className="uiverse-content-box">
-                  <span className="uiverse-card-title">
-                    {language === 'hi' ? 'प्राधिकरण केंद्र' : 'Enter Authority Center'}
-                  </span>
-                  
-                  <p className="uiverse-card-content">
+                  <p className="text-xs sm:text-[12px] text-white/85 line-clamp-2 my-1 leading-snug relative z-10">
                     {language === 'hi'
                       ? 'स्मारकों की स्थिति देखें, दरारें जांचें, भीड़ प्रबंधित करें और संरक्षण करें।'
                       : 'Monitor heritage sites, detect visual damage, manage crowds and prioritize conservation.'}
                   </p>
 
-                  <span className="uiverse-see-more">
-                    <span>{language === 'hi' ? 'कंट्रोल सेंटर' : 'Enter Authority Center'}</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </span>
+                  <div className="flex items-center justify-between pt-0.5 relative z-10">
+                    <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-md bg-[#63B3ED] text-[#0A1128] font-bold text-[10px] sm:text-[11px] uppercase tracking-wider shadow-md hover:bg-white transition-colors">
+                      <span>{language === 'hi' ? 'कंट्रोल सेंटर' : 'Enter Authority Center'}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+
+                  <CardCyberFX />
                 </div>
               </div>
             </div>

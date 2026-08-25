@@ -131,7 +131,15 @@ export const TouristApp: React.FC<TouristAppProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#F8F6F0] text-[#1A2621] min-h-[calc(100vh-72px)]">
+    <div className={`w-full text-[#1A2621] min-h-[calc(100vh-72px)] ${
+      activeTab === 'itinerary'
+        ? 'itinerary-page-bg'
+        : activeTab === 'ai-assistant'
+          ? 'ask-ai-page-bg'
+          : activeTab === 'scan'
+            ? 'scan-monument-page-bg'
+            : 'bg-[#F8F6F0]'
+    }`}>
       
       {/* Full-Width Main Content Canvas (No Sidebars!) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 animate-fadeIn">
@@ -466,7 +474,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     Need instant historical stories or crowd forecasts?
                   </h4>
                   <p className="text-xs text-white/80 leading-relaxed">
-                    Ask Dharohar AI for custom routes, epigraph translations, and eco-friendly visit windows.
+                    Ask Dhorohar AI for custom routes, epigraph translations, and eco-friendly visit windows.
                   </p>
                 </div>
 
@@ -474,7 +482,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   onClick={() => handleNavigateTab('ai-assistant')}
                   className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c59b27] text-[#08281E] text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-md active:scale-95"
                 >
-                  <span>Chat with Dharohar AI</span>
+                  <span>Chat with Dhorohar AI</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
