@@ -269,7 +269,7 @@ export const ConservationWorkflow: React.FC<ConservationWorkflowProps> = ({
         </div>
       ) : (
         /* Conservation Kanban Board View */
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-start">
           {kanbanColumns.map((col) => (
             <div key={col.id} className="bg-[#F8F6F0] p-4 rounded-2xl border border-[#0D3B2E]/10 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[#0D3B2E]/10">

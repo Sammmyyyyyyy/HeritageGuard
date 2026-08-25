@@ -132,8 +132,8 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
       </div>
 
       {/* Preset Test Case Selector Bar */}
-      <div className="flex items-center justify-center space-x-2 mb-6 overflow-x-auto pb-2">
-        <span className="text-xs font-semibold text-[#0D3B2E] whitespace-nowrap">
+      <div className="flex items-center space-x-2 mb-6 overflow-x-auto pb-2 px-1 max-w-full no-scrollbar">
+        <span className="text-xs font-semibold text-[#0D3B2E] whitespace-nowrap shrink-0">
           {language === 'hi' ? 'परीक्षण हेतु नमूना चुनें:' : 'Test with Preset Scans:'}
         </span>
         {PRESET_DAMAGE_SCANS.map((scan, idx) => (
@@ -146,7 +146,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
               setSelectedDetection(null);
               setIsSubmitted(false);
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap border ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap border cursor-pointer shrink-0 ${
               !customImage && selectedScanIndex === idx
                 ? 'bg-[#0D3B2E] text-white border-[#0D3B2E] shadow-sm'
                 : 'bg-white text-[#1A2621] border-[#0D3B2E]/15 hover:bg-[#F8F6F0]'
@@ -156,17 +156,17 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
           </button>
         ))}
         {customImage && (
-          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-[#08281E] shadow-sm">
+          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-[#08281E] shadow-sm whitespace-nowrap shrink-0">
             Custom Uploaded Photo
           </span>
         )}
       </div>
 
-      {/* Main Scanner Grid (Image 4 inspired layout) */}
+      {/* Main Scanner Grid (Desktop: Steps | Scanner | Results, Mobile: Scanner -> Steps -> Results) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column: 3 Steps & Best Practice Tips (3 cols) */}
-        <div className="lg:col-span-3 space-y-4">
+        {/* Step 1 / Instructions Column: Order-2 on mobile, Order-1 on Desktop (3 cols) */}
+        <div className="order-2 lg:order-1 lg:col-span-3 space-y-4 w-full">
           
           {/* Step-by-Step Card */}
           <div className="bg-white p-5 rounded-2xl border border-[#0D3B2E]/10 shadow-sm">
@@ -236,10 +236,10 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
         </div>
 
-        {/* Center Column: Camera Viewfinder with AI Detection Bounding Boxes (6 cols) */}
-        <div className="lg:col-span-6 flex flex-col items-center">
+        {/* Center Column: Camera Viewfinder: Order-1 on mobile, Order-2 on Desktop (6 cols) */}
+        <div className="order-1 lg:order-2 lg:col-span-6 flex flex-col items-center w-full">
           
-          <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden bg-black shadow-2xl border-4 border-[#0D3B2E] select-none">
+          <div className="relative w-full aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden bg-black shadow-2xl border-2 sm:border-4 border-[#0D3B2E] select-none">
             
             {/* Monument Photo */}
             <img
@@ -263,17 +263,17 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
               <div className="" />
             </div>
 
-            {/* Corner Framing Brackets (Image 4 inspired) */}
-            <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-white rounded-tl-lg pointer-events-none" />
-            <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-white rounded-tr-lg pointer-events-none" />
-            <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-white rounded-bl-lg pointer-events-none" />
-            <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-white rounded-br-lg pointer-events-none" />
+            {/* Corner Framing Brackets */}
+            <div className="absolute top-3 sm:top-4 left-3 sm:left-4 w-6 sm:w-8 h-6 sm:h-8 border-t-2 border-l-2 border-white rounded-tl-lg pointer-events-none" />
+            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-6 sm:w-8 h-6 sm:h-8 border-t-2 border-r-2 border-white rounded-tr-lg pointer-events-none" />
+            <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 w-6 sm:w-8 h-6 sm:h-8 border-b-2 border-l-2 border-white rounded-bl-lg pointer-events-none" />
+            <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-6 sm:w-8 h-6 sm:h-8 border-b-2 border-r-2 border-white rounded-br-lg pointer-events-none" />
 
             {/* Top Status Pill */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-              <div className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-semibold flex items-center space-x-1.5 shadow-md">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>{isScanning ? 'AI Inferencing in progress...' : hasScanned ? 'Analysis Complete' : 'AI is ready to analyze'}</span>
+            <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-20 max-w-[90%]">
+              <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] sm:text-xs font-semibold flex items-center space-x-1.5 shadow-md truncate">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span className="truncate">{isScanning ? 'AI Inferencing in progress...' : hasScanned ? 'Analysis Complete' : 'AI is ready to analyze'}</span>
               </div>
             </div>
 
@@ -314,7 +314,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                 <button
                   key={z}
                   onClick={() => setZoomLevel(z)}
-                  className={`px-2.5 py-0.5 rounded-full font-mono font-bold transition-all ${
+                  className={`px-2 sm:px-2.5 py-0.5 rounded-full font-mono font-bold transition-all cursor-pointer ${
                     zoomLevel === z ? 'bg-white text-black' : 'text-white/70 hover:text-white'
                   }`}
                 >
@@ -324,7 +324,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
             </div>
 
             {/* Bottom Camera Controls Bar (Shutter, Gallery, Camera Switch) */}
-            <div className="absolute bottom-3 inset-x-0 px-8 flex items-center justify-between z-20">
+            <div className="absolute bottom-3 inset-x-0 px-4 sm:px-8 flex items-center justify-between z-20">
               
               {/* Gallery File Upload Button */}
               <label 
@@ -344,11 +344,11 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
               <button
                 onClick={handleCapture}
                 disabled={isScanning}
-                className="w-16 h-16 rounded-full bg-white p-1 shadow-2xl transition-transform active:scale-95 flex items-center justify-center hover:ring-4 hover:ring-[#D4AF37]/50"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white p-1 shadow-2xl transition-transform active:scale-95 flex items-center justify-center hover:ring-4 hover:ring-[#D4AF37]/50 cursor-pointer"
                 title="Capture & Run AI Model"
               >
                 <div className="w-full h-full rounded-full bg-[#0D3B2E] border-2 border-white flex items-center justify-center">
-                  <div className={`w-6 h-6 rounded-full bg-[#D4AF37] ${isScanning ? 'animate-ping' : ''}`} />
+                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#D4AF37] ${isScanning ? 'animate-ping' : ''}`} />
                 </div>
               </button>
 
@@ -359,7 +359,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                   setSelectedDetection(null);
                   setIsSubmitted(false);
                 }}
-                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white border border-white/30 transition-transform active:scale-95 shadow-md"
+                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white border border-white/30 transition-transform active:scale-95 shadow-md cursor-pointer"
                 title="Reset View"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -369,21 +369,21 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
           </div>
 
-          {/* Under-Scanner Info Strip (Image 4 inspired) */}
-          <div className="w-full mt-4 bg-amber-50/80 p-3 rounded-xl border border-amber-200/80 flex items-center justify-between text-xs text-[#0D3B2E]">
+          {/* Under-Scanner Info Strip */}
+          <div className="w-full mt-4 bg-amber-50/80 p-3 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-[#0D3B2E] gap-2">
             <div className="flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-[#C85A32] shrink-0" />
               <span className="font-medium">
                 Your scan feeds directly into ASI's preventive conservation queue.
               </span>
             </div>
-            <span className="font-bold text-[#C85A32] whitespace-nowrap">Citizen Science Initiative</span>
+            <span className="font-bold text-[#C85A32] whitespace-nowrap self-end sm:self-auto">Citizen Science Initiative</span>
           </div>
 
         </div>
 
         {/* Right Column: "What We Detect" & AI Results Drawer (3 cols) */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="order-3 lg:order-3 lg:col-span-3 space-y-4 w-full">
           
           {/* AI Result Inspection Card */}
           {hasScanned ? (

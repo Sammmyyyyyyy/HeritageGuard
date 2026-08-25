@@ -203,8 +203,8 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
         </div>
 
         {/* Two 3D Interactive Tracker Perspective Pathway Cards (Uiverse.io by 00Kubi) */}
-        <div className="relative z-10 pt-4 sm:pt-6">
-          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4 max-w-xl">
+        <div className="relative z-10 pt-4 sm:pt-6 w-full">
+          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4 w-full max-w-full sm:max-w-xl">
             
             {/* 🧑‍🦱 "Explore as Tourist" 3D Tracker Perspective Card */}
             <div className="tracker-container select-none">

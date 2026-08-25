@@ -144,19 +144,19 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
       </div>
 
       {/* Main Chat Window Container */}
-      <div className="bg-white rounded-3xl shadow-xl border border-[#0D3B2E]/15 overflow-hidden flex flex-col h-[560px]">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-[#0D3B2E]/15 overflow-hidden flex flex-col h-[520px] sm:h-[580px] w-full">
         
         {/* Chat Header Bar */}
-        <div className="bg-[#0D3B2E] text-white px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+        <div className="bg-[#0D3B2E] text-white px-3.5 sm:px-5 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
               <Bot className="w-4 h-4 text-[#D4AF37]" />
             </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold">DhoroharDhirsti AI Assistant</h3>
-              <p className="text-[10px] text-white/70 flex items-center space-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Active • Connected to ASI Knowledge Base</span>
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold truncate">DhoroharDhirsti AI Assistant</h3>
+              <p className="text-[10px] text-white/70 flex items-center space-x-1 truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                <span className="truncate">Active • Connected to ASI Knowledge Base</span>
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               setMessages([messages[0]]);
               if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             }}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer shrink-0 ml-2"
             title="Reset Chat"
           >
             <RotateCcw className="w-4 h-4" />
@@ -176,7 +176,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
         {/* Message Feed Area (Scrolls internally without moving the browser window) */}
         <div 
           ref={chatScrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-[#F8F6F0]/60"
+          className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3.5 bg-[#F8F6F0]/60 w-full"
         >
           {messages.map((msg) => {
             const isAI = msg.sender === 'ai';
@@ -185,16 +185,16 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${isAI ? 'items-start' : 'items-end'}`}
+                className={`flex flex-col w-full ${isAI ? 'items-start' : 'items-end'}`}
               >
                 <div
-                  className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-xs ${
+                  className={`max-w-[92%] sm:max-w-[80%] rounded-2xl p-3 sm:p-3.5 text-xs sm:text-sm leading-relaxed shadow-xs ${
                     isAI
                       ? 'bg-white text-[#1A2621] border border-[#0D3B2E]/15'
                       : 'bg-[#0D3B2E] text-white'
                   }`}
                 >
-                  <p className="whitespace-pre-line">{displayText}</p>
+                  <p className="whitespace-pre-line break-words">{displayText}</p>
 
                   {/* Sources Footnote if AI */}
                   {isAI && msg.sources && msg.sources.length > 0 && (
@@ -204,8 +204,8 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
                         <span>Source Citations:</span>
                       </p>
                       {msg.sources.map((src, sIdx) => (
-                        <div key={sIdx} className="bg-[#F8F6F0] p-1 rounded text-[10px] text-gray-600 flex items-center justify-between">
-                          <span className="font-medium text-[#0D3B2E] truncate pr-2">{src.title}</span>
+                        <div key={sIdx} className="bg-[#F8F6F0] p-1.5 rounded text-[10px] text-gray-600 flex items-center justify-between gap-2">
+                          <span className="font-medium text-[#0D3B2E] truncate">{src.title}</span>
                           <span className="font-mono text-emerald-700 font-bold shrink-0">{Math.round(src.confidence * 100)}% match</span>
                         </div>
                       ))}
@@ -218,7 +218,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
                     {isAI && (
                       <button
                         onClick={() => handleSpeak(msg)}
-                        className="flex items-center space-x-1 text-[#0D3B2E] hover:text-[#C85A32] font-semibold transition-colors cursor-pointer"
+                        className="flex items-center space-x-1 text-[#0D3B2E] hover:text-[#C85A32] font-semibold transition-colors cursor-pointer ml-2"
                         title="Read aloud"
                       >
                         {activeSpeechId === msg.id ? (
@@ -239,12 +239,12 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
 
                 {/* Follow-up Prompts Pills */}
                 {isAI && msg.suggestedFollowUps && (
-                  <div className="mt-1.5 flex flex-wrap gap-1.5 max-w-[85%]">
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 max-w-[92%] sm:max-w-[85%]">
                     {msg.suggestedFollowUps.map((prompt, pIdx) => (
                       <button
                         key={pIdx}
                         onClick={() => handleSend(prompt)}
-                        className="text-[11px] bg-white hover:bg-[#F8F6F0] text-[#0D3B2E] px-2.5 py-1 rounded-full border border-[#0D3B2E]/20 shadow-2xs transition-colors text-left cursor-pointer"
+                        className="text-[11px] bg-white hover:bg-[#F8F6F0] text-[#0D3B2E] px-2.5 py-1 rounded-full border border-[#0D3B2E]/20 shadow-2xs transition-colors text-left cursor-pointer break-words"
                       >
                         ✦ {prompt}
                       </button>
@@ -256,34 +256,34 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
           })}
 
           {isTyping && (
-            <div className="flex items-center space-x-2 text-xs text-gray-500 bg-white p-2.5 rounded-2xl w-32 border border-[#0D3B2E]/10 shadow-sm animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0D3B2E] animate-ping" />
-              <span>Analyzing archives...</span>
+            <div className="flex items-center space-x-2 text-xs text-gray-500 bg-white p-2.5 rounded-2xl w-36 border border-[#0D3B2E]/10 shadow-sm animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0D3B2E] animate-ping shrink-0" />
+              <span className="truncate">Analyzing archives...</span>
             </div>
           )}
         </div>
 
         {/* Bottom Input Area */}
-        <div className="p-3.5 bg-white border-t border-[#0D3B2E]/10">
+        <div className="p-2.5 sm:p-3.5 bg-white border-t border-[#0D3B2E]/10 shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 w-full"
           >
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={language === 'hi' ? 'स्मारकों या इतिहास के बारे में पूछें...' : 'Ask about monument history, acoustics, mud-packs, or crowds...'}
-              className="flex-1 px-4 py-2.5 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0D3B2E]/30 focus:bg-white text-[#1A2621]"
+              placeholder={language === 'hi' ? 'स्मारकों या इतिहास के बारे में पूछें...' : 'Ask about history, acoustics, mud-packs, or crowds...'}
+              className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0D3B2E]/30 focus:bg-white text-[#1A2621]"
             />
 
             <button
               type="submit"
               disabled={!inputText.trim()}
-              className="px-4 py-2.5 bg-[#0D3B2E] hover:bg-[#08281E] disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-md flex items-center space-x-1 text-xs cursor-pointer"
+              className="px-3.5 sm:px-4 py-2.5 bg-[#0D3B2E] hover:bg-[#08281E] disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1 text-xs cursor-pointer shrink-0"
             >
               <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
               <span className="hidden sm:inline">Send</span>

@@ -58,12 +58,12 @@ export const TouristHero: React.FC<TouristHeroProps> = ({
               </div>
 
               {/* Majestic Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0D3B2E] leading-[1.1] mb-5 font-serif-heritage">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#0D3B2E] leading-[1.15] sm:leading-[1.1] mb-4 sm:mb-5 font-serif-heritage">
                 Preserve Our <span className="text-[#C85A32] underline decoration-[#D4AF37]/50 underline-offset-4">Heritage</span>.<br />
                 Enrich Every Journey.
               </h1>
 
-              <p className="text-base sm:text-lg text-[#1A2621]/80 max-w-2xl leading-relaxed mb-8">
+              <p className="text-xs sm:text-sm lg:text-base text-[#1A2621]/80 max-w-2xl leading-relaxed mb-6 sm:mb-8 font-medium">
                 {language === 'hi'
                   ? 'हेरिटेजगार्ड एआई वास्तविक समय निगरानी, कंप्यूटर विज़न दरार पहचान, सटीक भीड़ भविष्यवाणी और व्यक्तिगत यात्रा योजनाओं के माध्यम से स्मारकों के संरक्षण और सुखद पर्यटन को जोड़ता है।'
                   : 'DhoroharDhirsti AI bridges conservation and tourism through intelligent insights, real-time visual damage monitoring, crowd forecasting, and sustainable personalized experiences.'}

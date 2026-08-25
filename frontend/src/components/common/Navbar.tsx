@@ -293,9 +293,9 @@ export const Navbar: React.FC<NavbarProps> = ({
              ========================================================================= */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             
-            {/* Tourist Mode Selector (Always 100% visible on Tourist pages) */}
+            {/* Tourist Mode Selector (Desktop only: md+) */}
             {activeView === 'tourist' && (
-              <div className="relative shrink-0" ref={modeDropdownRef}>
+              <div className="relative shrink-0 hidden md:block" ref={modeDropdownRef}>
                 <button
                   onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
                   className="flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 rounded-full border border-[#86EFAC] bg-[#F0FDF4] hover:bg-[#DCFCE7] text-xs sm:text-sm font-semibold text-[#15803D] shadow-2xs transition-all cursor-pointer whitespace-nowrap"
@@ -344,9 +344,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            {/* Authority Portal Selector (Always 100% visible on Authority pages) */}
+            {/* Authority Portal Selector (Desktop only: md+) */}
             {activeView === 'authority' && (
-              <div className="relative shrink-0" ref={modeDropdownRef}>
+              <div className="relative shrink-0 hidden md:block" ref={modeDropdownRef}>
                 <button
                   onClick={() => setIsModeDropdownOpen(!isModeDropdownOpen)}
                   className="flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] hover:bg-[#DBEAFE] text-xs sm:text-sm font-semibold text-[#1D4ED8] shadow-2xs transition-all cursor-pointer whitespace-nowrap"
@@ -395,8 +395,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            {/* Language Selector */}
-            <div className="flex items-center px-3 sm:px-4 py-2 rounded-full border border-[#D1D5DB] bg-white/70 hover:bg-white text-xs sm:text-sm font-semibold text-[#374151] shadow-2xs transition-all cursor-pointer shrink-0">
+            {/* Language Selector (Desktop only: md+) */}
+            <div className="hidden md:flex items-center px-3 sm:px-4 py-2 rounded-full border border-[#D1D5DB] bg-white/70 hover:bg-white text-xs sm:text-sm font-semibold text-[#374151] shadow-2xs transition-all cursor-pointer shrink-0">
               <Globe className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1 sm:mr-1.5 text-[#C85A32] shrink-0" />
               <select
                 value={language}
@@ -409,9 +409,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
-            {/* User Profile Avatar Icon (Only rendered on Tourist and Authority sections) */}
+            {/* User Profile Avatar Icon (Desktop only: md+ and activeView !== 'home') */}
             {activeView !== 'home' && (
-              <div className="relative shrink-0" ref={profileRef}>
+              <div className="relative shrink-0 hidden md:block" ref={profileRef}>
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className={`w-9 h-9 rounded-full p-0.5 shadow-2xs cursor-pointer hover:scale-105 transition-transform flex items-center justify-center text-white shrink-0 ${
@@ -468,7 +468,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile Hamburger Menu Toggle (< md) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-white/80 border border-gray-200 text-[#0D3B2E] hover:bg-white transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+              className="md:hidden p-2.5 rounded-xl bg-white border border-gray-200 text-[#0D3B2E] hover:bg-gray-50 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0 flex items-center justify-center"
               aria-label="Toggle Navigation Menu"
             >
               {isMobileMenuOpen ? (
@@ -486,104 +486,236 @@ export const Navbar: React.FC<NavbarProps> = ({
             MOBILE DROPDOWN DRAWER (< md)
            ========================================================================= */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-3 px-2 border-t border-gray-200/80 space-y-2 animate-fadeIn bg-white/98 rounded-b-2xl shadow-2xl relative z-50">
+          <div className="md:hidden py-4 px-3 border-t border-gray-200/90 space-y-3.5 animate-fadeIn bg-white/98 backdrop-blur-lg rounded-b-3xl shadow-2xl relative z-50 max-h-[80vh] overflow-y-auto">
             
+            {/* 1. User Profile Box on Mobile (Visible only in Tourist & Authority sections) */}
+            {activeView !== 'home' && (
+              <div className="p-3 bg-[#F8F6F0] rounded-2xl border border-[#0D3B2E]/10 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs ${
+                    activeView === 'authority' ? 'bg-[#0F2B48]' : 'bg-[#0D3B2E]'
+                  }`}>
+                    {activeView === 'authority' ? 'ASI' : 'TG'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-900 truncate">
+                      {activeView === 'authority' ? 'Ayush K. Maurya' : 'Heritage Explorer'}
+                    </p>
+                    <p className="text-[10px] text-gray-500 truncate">
+                      {activeView === 'authority' ? 'ASI Chief Conservator' : 'Level 2 Contributor • 2 Scans'}
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live</span>
+                </span>
+              </div>
+            )}
+
+            {/* 2. Context Navigation Links */}
             {/* Tourist Links */}
             {activeView === 'tourist' && (
-              <div className="space-y-1 pb-2 border-b border-gray-100">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-3 py-1">Tourist Navigation</p>
-                <button
-                  onClick={() => { onTouristTabChange('discover'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    touristTab === 'discover' ? 'bg-[#0D3B2E] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Compass className="w-4 h-4" />
-                  <span>Discover Monuments</span>
-                </button>
-                <button
-                  onClick={() => { onTouristTabChange('itinerary'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    touristTab === 'itinerary' ? 'bg-[#0D3B2E] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Plan Journey & Itinerary</span>
-                </button>
-                <button
-                  onClick={() => { onTouristTabChange('scan'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    touristTab === 'scan' ? 'bg-[#0D3B2E] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>AI Damage Scanner</span>
-                </button>
-                <button
-                  onClick={() => { onTouristTabChange('ai-assistant'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    touristTab === 'ai-assistant' ? 'bg-[#0D3B2E] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Bot className="w-4 h-4" />
-                  <span>Ask Heritage AI</span>
-                </button>
+              <div className="space-y-1 pb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0D3B2E]/60 px-2 py-1">
+                  Tourist Features
+                </p>
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    onClick={() => { onTouristTabChange('discover'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      touristTab === 'discover' 
+                        ? 'bg-[#0D3B2E] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Compass className="w-4 h-4" />
+                      <span>Discover Monuments</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onTouristTabChange('itinerary'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      touristTab === 'itinerary' 
+                        ? 'bg-[#0D3B2E] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Calendar className="w-4 h-4" />
+                      <span>Plan Journey & Itinerary</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onTouristTabChange('scan'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      touristTab === 'scan' 
+                        ? 'bg-[#0D3B2E] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Camera className="w-4 h-4" />
+                      <span>AI Damage Scanner</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onTouristTabChange('ai-assistant'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      touristTab === 'ai-assistant' 
+                        ? 'bg-[#0D3B2E] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Bot className="w-4 h-4" />
+                      <span>Ask Heritage AI</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Authority Links */}
             {activeView === 'authority' && (
-              <div className="space-y-1 pb-2 border-b border-gray-100">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-3 py-1">Authority Navigation</p>
-                <button
-                  onClick={() => { onAuthorityTabChange('overview'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    authorityTab === 'overview' ? 'bg-[#0F2B48] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Activity className="w-4 h-4 text-[#E28743]" />
-                  <span>Control Center Overview</span>
-                </button>
-                <button
-                  onClick={() => { onAuthorityTabChange('monitoring'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    authorityTab === 'monitoring' ? 'bg-[#0F2B48] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Map className="w-4 h-4 text-[#3182CE]" />
-                  <span>Site Map & Monitoring</span>
-                </button>
-                <button
-                  onClick={() => { onAuthorityTabChange('analytics'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    authorityTab === 'analytics' ? 'bg-[#0F2B48] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <BarChart3 className="w-4 h-4 text-[#805AD5]" />
-                  <span>Risk Matrix & Analytics</span>
-                </button>
-                <button
-                  onClick={() => { onAuthorityTabChange('conservation'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                    authorityTab === 'conservation' ? 'bg-[#0F2B48] text-white' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-[#38A169]" />
-                  <span>Conservation & Inspector</span>
-                </button>
+              <div className="space-y-1 pb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0F2B48]/60 px-2 py-1">
+                  Authority Control Center
+                </p>
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    onClick={() => { onAuthorityTabChange('overview'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      authorityTab === 'overview' 
+                        ? 'bg-[#0F2B48] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Activity className="w-4 h-4 text-[#E28743]" />
+                      <span>Control Center Overview</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onAuthorityTabChange('monitoring'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      authorityTab === 'monitoring' 
+                        ? 'bg-[#0F2B48] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Map className="w-4 h-4 text-[#3182CE]" />
+                      <span>Site Map & Monitoring</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onAuthorityTabChange('analytics'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      authorityTab === 'analytics' 
+                        ? 'bg-[#0F2B48] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <BarChart3 className="w-4 h-4 text-[#805AD5]" />
+                      <span>Risk Matrix & Analytics</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onAuthorityTabChange('conservation'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      authorityTab === 'conservation' 
+                        ? 'bg-[#0F2B48] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <ShieldCheck className="w-4 h-4 text-[#38A169]" />
+                      <span>Conservation & Inspector</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Interface Switchers */}
-            <div className="pt-2 space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-3">Switch Mode</p>
-              <div className="grid grid-cols-2 gap-2 px-1">
+            {/* Homepage Quick Links */}
+            {activeView === 'home' && (
+              <div className="space-y-2 pb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-2 py-1">
+                  Explore Portals
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => handleSwitchInterface('tourist')}
+                    className="w-full p-3 rounded-2xl bg-[#F0FDF4] border border-[#86EFAC] text-left flex items-center justify-between text-[#0D3B2E] cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">🧑</span>
+                      <div>
+                        <p className="text-xs font-bold">Tourist Interface</p>
+                        <p className="text-[10px] text-gray-500">Discover monuments, scan & plan itineraries</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-emerald-600" />
+                  </button>
+
+                  <button
+                    onClick={() => handleSwitchInterface('authority')}
+                    className="w-full p-3 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] text-left flex items-center justify-between text-[#0F2B48] cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">🏛</span>
+                      <div>
+                        <p className="text-xs font-bold">Authority Center</p>
+                        <p className="text-[10px] text-gray-500">Monitor structural health & live crowd pressure</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-blue-600" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Platform Interface Switcher */}
+            <div className="pt-2 border-t border-gray-100 space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-2">
+                Platform View
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => handleSwitchInterface('home')}
+                  className={`flex items-center justify-center space-x-1 py-2.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    activeView === 'home'
+                      ? 'bg-[#1A2621] text-white border-[#1A2621] shadow-xs'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <span>🏠</span>
+                  <span>Home</span>
+                </button>
+
                 <button
                   onClick={() => handleSwitchInterface('tourist')}
-                  className={`flex items-center justify-center space-x-1.5 py-2.5 rounded-xl text-xs font-semibold border cursor-pointer ${
+                  className={`flex items-center justify-center space-x-1 py-2.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                     activeView === 'tourist'
-                      ? 'bg-[#0D3B2E] text-white border-[#0D3B2E]'
-                      : 'bg-gray-50 text-gray-800 border-gray-200'
+                      ? 'bg-[#0D3B2E] text-white border-[#0D3B2E] shadow-xs'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>🧑</span>
@@ -592,14 +724,45 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   onClick={() => handleSwitchInterface('authority')}
-                  className={`flex items-center justify-center space-x-1.5 py-2.5 rounded-xl text-xs font-semibold border cursor-pointer ${
+                  className={`flex items-center justify-center space-x-1 py-2.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                     activeView === 'authority'
-                      ? 'bg-[#0F2B48] text-white border-[#0F2B48]'
-                      : 'bg-gray-50 text-gray-800 border-gray-200'
+                      ? 'bg-[#0F2B48] text-white border-[#0F2B48] shadow-xs'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <span>🏛</span>
                   <span>Authority</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4. Language Selector inside Mobile Drawer */}
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between px-2">
+              <span className="text-xs font-bold text-gray-600 flex items-center space-x-1.5">
+                <Globe className="w-4 h-4 text-[#C85A32]" />
+                <span>Language / भाषा</span>
+              </span>
+
+              <div className="inline-flex p-0.5 bg-gray-100 rounded-xl">
+                <button
+                  onClick={() => onLanguageChange('en')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    language === 'en'
+                      ? 'bg-white text-[#0D3B2E] shadow-2xs'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => onLanguageChange('hi')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    language === 'hi'
+                      ? 'bg-white text-[#0D3B2E] shadow-2xs'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  हिन्दी
                 </button>
               </div>
             </div>

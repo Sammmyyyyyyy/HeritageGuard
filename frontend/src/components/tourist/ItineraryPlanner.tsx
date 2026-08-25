@@ -276,10 +276,10 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
         </p>
 
         {/* Mode Toggle Switch */}
-        <div className="inline-flex p-1 bg-white border border-[#0D3B2E]/15 rounded-2xl shadow-xs mt-3">
+        <div className="flex flex-col sm:inline-flex sm:flex-row p-1 bg-white border border-[#0D3B2E]/15 rounded-2xl shadow-xs mt-3 gap-1 w-full sm:w-auto">
           <button
             onClick={() => setPlannerMode('custom')}
-            className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+            className={`px-4 sm:px-5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               plannerMode === 'custom'
                 ? 'bg-[#0D3B2E] text-white shadow-sm'
                 : 'text-[#1A2621]/70 hover:text-[#0D3B2E]'
@@ -291,7 +291,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
           <button
             onClick={() => setPlannerMode('curated')}
-            className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+            className={`px-4 sm:px-5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               plannerMode === 'curated'
                 ? 'bg-[#0D3B2E] text-white shadow-sm'
                 : 'text-[#1A2621]/70 hover:text-[#0D3B2E]'
@@ -305,11 +305,11 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
       {/* 2. Interactive AI Custom Planning Form (Shown when plannerMode === 'custom') */}
       {plannerMode === 'custom' && !generatedPlan && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#0D3B2E]/15 shadow-xl max-w-4xl mx-auto space-y-6 animate-fadeIn">
+        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl border border-[#0D3B2E]/15 shadow-xl max-w-4xl mx-auto space-y-6 animate-fadeIn">
           
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
             <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#0D3B2E]/10 flex items-center justify-center text-[#0D3B2E]">
+              <div className="w-8 h-8 rounded-xl bg-[#0D3B2E]/10 flex items-center justify-center text-[#0D3B2E] shrink-0">
                 <Sliders className="w-4 h-4" />
               </div>
               <div>
@@ -321,7 +321,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full">
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full self-start sm:self-auto">
               ● Live Crowd Engine Ready
             </span>
           </div>

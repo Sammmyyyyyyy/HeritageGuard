@@ -74,48 +74,48 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 animate-fadeIn">
       
-      <div className="relative bg-white w-full max-w-5xl rounded-3xl shadow-2xl border border-[#0D3B2E]/20 overflow-hidden my-8 max-h-[92vh] flex flex-col">
+      <div className="relative bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl border border-[#0D3B2E]/20 overflow-hidden my-4 sm:my-8 max-h-[92vh] flex flex-col">
         
         {/* Modal Header Bar */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-[#0D3B2E]/10 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0D3B2E] text-white flex items-center justify-center text-sm font-bold">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#0D3B2E]/10 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 pr-2">
+            <div className="w-8 h-8 rounded-lg bg-[#0D3B2E] text-white flex items-center justify-center text-sm font-bold shrink-0">
               🏛️
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-[#0D3B2E] font-serif-heritage leading-tight">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-[#0D3B2E] font-serif-heritage leading-tight truncate">
                 {monument.name}
               </h2>
-              <p className="text-xs text-[#1A2621]/60 flex items-center space-x-1">
-                <MapPin className="w-3 h-3 text-[#C85A32]" />
-                <span>{monument.city}, {monument.state}</span>
+              <p className="text-xs text-[#1A2621]/60 flex items-center space-x-1 truncate">
+                <MapPin className="w-3 h-3 text-[#C85A32] shrink-0" />
+                <span className="truncate">{monument.city}, {monument.state}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
             <button
               onClick={handleShare}
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors text-xs flex items-center space-x-1"
+              className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors text-xs flex items-center space-x-1 cursor-pointer"
               title="Share Link"
             >
               <Share2 className="w-4 h-4" />
-              {copiedLink && <span className="text-[10px] text-emerald-600 font-bold">Copied!</span>}
+              {copiedLink && <span className="text-[10px] text-emerald-600 font-bold hidden sm:inline">Copied!</span>}
             </button>
 
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-[#0D3B2E]/10 hover:bg-[#0D3B2E]/20 text-[#0D3B2E] flex items-center justify-center transition-colors"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0D3B2E]/10 hover:bg-[#0D3B2E]/20 text-[#0D3B2E] flex items-center justify-center transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="overflow-y-auto p-6 space-y-8 flex-1">
+        <div className="overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 flex-1">
           
           {/* Main Visual Carousel / Gallery Section */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -406,24 +406,24 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
         </div>
 
         {/* Modal Footer Bar */}
-        <div className="sticky bottom-0 z-30 bg-[#F8F6F0] px-6 py-4 border-t border-[#0D3B2E]/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-[#1A2621]/70">
+        <div className="sticky bottom-0 z-30 bg-[#F8F6F0] px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[#0D3B2E]/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-[#1A2621]/70 text-center sm:text-left">
             <span>Help protect our national heritage. Follow ASI photography & cordoned line rules.</span>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-[#0D3B2E]/20 text-xs font-semibold text-[#0D3B2E] hover:bg-white transition-colors"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl border border-[#0D3B2E]/20 text-xs font-semibold text-[#0D3B2E] hover:bg-white transition-colors cursor-pointer text-center"
             >
               Close
             </button>
             <button
               onClick={onOpenScanner}
-              className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c59b27] text-[#08281E] text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
+              className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c59b27] text-[#08281E] text-xs font-bold shadow-md transition-all flex items-center justify-center space-x-1.5 cursor-pointer text-center"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Launch AI Camera Scanner</span>
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span className="truncate">Launch AI Scanner</span>
             </button>
           </div>
         </div>
