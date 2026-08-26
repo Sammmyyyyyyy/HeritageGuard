@@ -1,0 +1,81 @@
+[
+    {
+        "site_id": "JAI001",
+        "name": "Amer Fort",
+        "coords": {
+            "lat": 26.9855,
+            "lng": 75.8513
+        },
+        "entry_fee": 100,
+        "duration_minutes": 180,
+        "tags": [
+            "fort",
+            "history",
+            "architecture"
+        ],
+        "heritage_pressure": 0.9
+    },
+    {
+        "site_id": "JAI002",
+        "name": "Hawa Mahal",
+        "coords": {
+            "lat": 26.9239,
+            "lng": 75.8267
+        },
+        "entry_fee": 50,
+        "duration_minutes": 60,
+        "tags": [
+            "architecture",
+            "history"
+        ],
+        "heritage_pressure": 0.85
+    },
+    {
+        "site_id": "JAI003",
+        "name": "City Palace",
+        "coords": {
+            "lat": 26.9255,
+            "lng": 75.8236
+        },
+        "entry_fee": 200,
+        "duration_minutes": 120,
+        "tags": [
+            "palace",
+            "museum",
+            "royal"
+        ],
+        "heritage_pressure": 0.75
+    },
+    {
+        "site_id": "JAI004",
+        "name": "Jantar Mantar",
+        "coords": {
+            "lat": 26.9247,
+            "lng": 75.8245
+        },
+        "entry_fee": 50,
+        "duration_minutes": 90,
+        "tags": [
+            "science",
+            "unesco",
+            "outdoors"
+        ],
+        "heritage_pressure": 0.6
+    },
+    {
+        "site_id": "JAI005",
+        "name": "Albert Hall Museum",
+        "coords": {
+            "lat": 26.9116,
+            "lng": 75.8195
+        },
+        "entry_fee": 40,
+        "duration_minutes": 120,
+        "tags": [
+            "museum",
+            "art",
+            "architecture"
+        ],
+        "heritage_pressure": 0.65
+    }
+]

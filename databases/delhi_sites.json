@@ -1,0 +1,81 @@
+[
+    {
+        "site_id": "DEL001",
+        "name": "Red Fort",
+        "coords": {
+            "lat": 28.6562,
+            "lng": 77.241
+        },
+        "entry_fee": 35,
+        "duration_minutes": 120,
+        "tags": [
+            "architecture",
+            "history",
+            "mughal"
+        ],
+        "heritage_pressure": 0.9
+    },
+    {
+        "site_id": "DEL002",
+        "name": "Qutub Minar",
+        "coords": {
+            "lat": 28.5245,
+            "lng": 77.1855
+        },
+        "entry_fee": 35,
+        "duration_minutes": 90,
+        "tags": [
+            "history",
+            "unesco",
+            "monument"
+        ],
+        "heritage_pressure": 0.85
+    },
+    {
+        "site_id": "DEL003",
+        "name": "India Gate",
+        "coords": {
+            "lat": 28.6129,
+            "lng": 77.2295
+        },
+        "entry_fee": 0,
+        "duration_minutes": 45,
+        "tags": [
+            "memorial",
+            "outdoors"
+        ],
+        "heritage_pressure": 0.7
+    },
+    {
+        "site_id": "DEL004",
+        "name": "Humayun's Tomb",
+        "coords": {
+            "lat": 28.5933,
+            "lng": 77.2507
+        },
+        "entry_fee": 35,
+        "duration_minutes": 120,
+        "tags": [
+            "unesco",
+            "architecture",
+            "mughal"
+        ],
+        "heritage_pressure": 0.65
+    },
+    {
+        "site_id": "DEL005",
+        "name": "Lotus Temple",
+        "coords": {
+            "lat": 28.5535,
+            "lng": 77.2588
+        },
+        "entry_fee": 0,
+        "duration_minutes": 60,
+        "tags": [
+            "religion",
+            "architecture",
+            "peace"
+        ],
+        "heritage_pressure": 0.8
+    }
+]

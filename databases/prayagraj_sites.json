@@ -1,0 +1,82 @@
+[
+    {
+        "site_id": "PRA001",
+        "name": "Triveni Sangam",
+        "coords": {
+            "lat": 25.4299,
+            "lng": 81.8848
+        },
+        "entry_fee": 0,
+        "duration_minutes": 120,
+        "tags": [
+            "religion",
+            "river",
+            "nature"
+        ],
+        "heritage_pressure": 0.95
+    },
+    {
+        "site_id": "PRA002",
+        "name": "Allahabad Fort",
+        "coords": {
+            "lat": 25.4287,
+            "lng": 81.8761
+        },
+        "entry_fee": 0,
+        "duration_minutes": 60,
+        "tags": [
+            "fort",
+            "history",
+            "river"
+        ],
+        "heritage_pressure": 0.5
+    },
+    {
+        "site_id": "PRA003",
+        "name": "Khusro Bagh",
+        "coords": {
+            "lat": 25.4429,
+            "lng": 81.8153
+        },
+        "entry_fee": 0,
+        "duration_minutes": 60,
+        "tags": [
+            "gardens",
+            "history",
+            "mughal"
+        ],
+        "heritage_pressure": 0.4
+    },
+    {
+        "site_id": "PRA004",
+        "name": "Anand Bhavan",
+        "coords": {
+            "lat": 25.4615,
+            "lng": 81.8596
+        },
+        "entry_fee": 70,
+        "duration_minutes": 90,
+        "tags": [
+            "museum",
+            "history",
+            "independence"
+        ],
+        "heritage_pressure": 0.65
+    },
+    {
+        "site_id": "PRA005",
+        "name": "Chandrashekhar Azad Park",
+        "coords": {
+            "lat": 25.4542,
+            "lng": 81.8499
+        },
+        "entry_fee": 10,
+        "duration_minutes": 90,
+        "tags": [
+            "park",
+            "nature",
+            "history"
+        ],
+        "heritage_pressure": 0.55
+    }
+]

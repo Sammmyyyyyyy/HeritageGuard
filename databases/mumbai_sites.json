@@ -1,0 +1,79 @@
+[
+    {
+        "site_id": "BOM001",
+        "name": "Gateway of India",
+        "coords": {
+            "lat": 18.922,
+            "lng": 72.8347
+        },
+        "entry_fee": 0,
+        "duration_minutes": 60,
+        "tags": [
+            "monument",
+            "ocean",
+            "history"
+        ],
+        "heritage_pressure": 0.95
+    },
+    {
+        "site_id": "BOM002",
+        "name": "Elephanta Caves",
+        "coords": {
+            "lat": 18.9633,
+            "lng": 72.9315
+        },
+        "entry_fee": 40,
+        "duration_minutes": 180,
+        "tags": [
+            "caves",
+            "religion",
+            "unesco"
+        ],
+        "heritage_pressure": 0.6
+    },
+    {
+        "site_id": "BOM003",
+        "name": "Chhatrapati Shivaji Maharaj Terminus",
+        "coords": {
+            "lat": 18.94,
+            "lng": 72.8355
+        },
+        "entry_fee": 0,
+        "duration_minutes": 30,
+        "tags": [
+            "architecture",
+            "unesco"
+        ],
+        "heritage_pressure": 0.85
+    },
+    {
+        "site_id": "BOM004",
+        "name": "Haji Ali Dargah",
+        "coords": {
+            "lat": 18.9827,
+            "lng": 72.8089
+        },
+        "entry_fee": 0,
+        "duration_minutes": 90,
+        "tags": [
+            "religion",
+            "ocean"
+        ],
+        "heritage_pressure": 0.8
+    },
+    {
+        "site_id": "BOM005",
+        "name": "Siddhivinayak Temple",
+        "coords": {
+            "lat": 19.0166,
+            "lng": 72.8304
+        },
+        "entry_fee": 0,
+        "duration_minutes": 120,
+        "tags": [
+            "religion",
+            "indoors"
+        ],
+        "heritage_pressure": 0.9
+    }
+]
