@@ -29,6 +29,7 @@ interface MonumentDetailModalProps {
   language: 'en' | 'hi';
   onSelectAlternative: (altId: string) => void;
   onOpenScanner: () => void;
+  onOpenCrowdForecast?: (monument: Monument) => void;
 }
 
 export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
@@ -36,7 +37,8 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
   onClose,
   language,
   onSelectAlternative,
-  onOpenScanner
+  onOpenScanner,
+  onOpenCrowdForecast
 }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -258,61 +260,127 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
           </div>
 
-          {/* Real-time Crowd Prediction Hourly Curve */}
-          <div className="bg-white p-5 rounded-2xl border border-[#0D3B2E]/10 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#0D3B2E]/10 mb-4 gap-2">
+          {/* Today's Crowd Prediction Preview (Compact preview with View Crowd Forecast CTA) */}
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#0D3B2E]/12 shadow-sm space-y-4">
+            
+            {/* Header & Meta */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#0D3B2E]/10 gap-3">
               <div>
-                <h3 className="text-base font-bold text-[#0D3B2E] flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-[#C85A32]" />
-                  <span>Live Crowd Prediction & Hourly Density Curve</span>
-                </h3>
-                <p className="text-xs text-[#1A2621]/60">
-                  Real-time footfall: <span className="font-bold text-[#0D3B2E]">{monument.liveFootfall.toLocaleString()} visitors</span> (Safe Capacity: {monument.maxCapacity.toLocaleString()})
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0D3B2E] font-serif-heritage flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-[#C85A32]" />
+                    <span>{language === 'hi' ? 'आज का भीड़ पूर्वानुमान' : "Today's Crowd Prediction"}</span>
+                  </h3>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                    monument.crowdLevel === 'Low'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : monument.crowdLevel === 'Moderate'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {monument.crowdLevel}
+                  </span>
+                </div>
+                <p className="text-xs text-[#1A2621]/65 mt-0.5 font-medium">
+                  {language === 'hi' ? 'दिन भर में अनुमानित आगंतुक घनत्व' : 'Predicted visitor density throughout the day'}
                 </p>
               </div>
 
+              {/* Status Chips */}
               <div className="flex items-center space-x-3 text-xs">
-                <span className="flex items-center space-x-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
-                  <span>Low</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
-                  <span>Moderate</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-red-500"></span>
-                  <span>Peak / Overcrowded</span>
-                </span>
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-500 block font-semibold uppercase">Real-time Footfall</span>
+                  <span className="font-bold text-[#0D3B2E] font-mono-stat">{monument.liveFootfall.toLocaleString()} visitors</span>
+                </div>
+                <div className="h-7 w-[1px] bg-gray-200" />
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-500 block font-semibold uppercase">Safe Capacity</span>
+                  <span className="font-bold text-gray-700 font-mono-stat">{monument.maxCapacity.toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
-            {/* Hourly Footfall Bars */}
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 pt-2">
-              {monument.hourlyFootfall.map((hf, i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="w-full bg-[#F8F6F0] h-24 rounded-lg flex flex-col justify-end p-1 relative overflow-hidden border border-[#0D3B2E]/10">
-                    <div
-                      className={`w-full rounded-md transition-all ${
-                        hf.isPeak 
-                          ? 'bg-gradient-to-t from-red-600 to-red-400' 
-                          : hf.pressurePercentage > 50
-                          ? 'bg-gradient-to-t from-amber-500 to-amber-400'
-                          : 'bg-gradient-to-t from-emerald-600 to-emerald-400'
-                      }`}
-                      style={{ height: `${hf.pressurePercentage}%` }}
-                    />
-                    {hf.isPeak && (
-                      <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-red-700 bg-red-100 px-1 rounded">
-                        Peak
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[11px] font-mono text-[#1A2621]/70 mt-1 font-semibold">{hf.hour}</span>
-                  <span className="text-[10px] text-gray-500">{hf.count}</span>
+            {/* Quick Preview Insights Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="bg-[#F8F6F0] p-3 rounded-xl border border-[#0D3B2E]/10 flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-3.5 h-3.5 text-[#C85A32]" />
+                  <span className="text-gray-600 font-medium">Best Upcoming Slot:</span>
                 </div>
-              ))}
+                <span className="font-bold text-[#0D3B2E] font-mono-stat">
+                  {monument.bestVisitingWindow.start} – {monument.bestVisitingWindow.end}
+                </span>
+              </div>
+
+              <div className="bg-[#F8F6F0] p-3 rounded-xl border border-[#0D3B2E]/10 flex items-center justify-between text-xs">
+                <span className="text-gray-600 font-medium">Crowd Density Legend:</span>
+                <div className="flex items-center space-x-2 text-[11px]">
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>Low</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span>Mod</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    <span>Peak</span>
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Hourly Footfall Bars Preview */}
+            <div className="pt-2">
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {monument.hourlyFootfall.map((hf, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div className="w-full bg-[#F8F6F0] h-20 rounded-lg flex flex-col justify-end p-1 relative overflow-hidden border border-[#0D3B2E]/10">
+                      <div
+                        className={`w-full rounded-md transition-all ${
+                          hf.isPeak 
+                            ? 'bg-gradient-to-t from-red-600 to-red-400' 
+                            : hf.pressurePercentage > 50
+                            ? 'bg-gradient-to-t from-amber-500 to-amber-400'
+                            : 'bg-gradient-to-t from-emerald-600 to-emerald-400'
+                        }`}
+                        style={{ height: `${hf.pressurePercentage}%` }}
+                      />
+                      {hf.isPeak && (
+                        <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-red-700 bg-red-100 px-1 rounded">
+                          Peak
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-mono text-[#1A2621]/70 mt-1 font-semibold">{hf.hour}</span>
+                    <span className="text-[10px] text-gray-500">{hf.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Primary Action Button: View Crowd Forecast */}
+            <div className="pt-3 border-t border-[#0D3B2E]/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-[11px] text-gray-500 font-medium">
+                {language === 'hi'
+                  ? '7-दिनों का विस्तृत घंटेवार पूर्वानुमान व हेरिटेज प्रेशर रिपोर्ट देखें।'
+                  : 'Explore 7-day predicted footfall, hourly simulation curves & heritage preservation impact.'}
+              </p>
+
+              <button
+                onClick={() => {
+                  if (onOpenCrowdForecast) {
+                    onOpenCrowdForecast(monument);
+                  }
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#0D3B2E] hover:bg-[#08281E] text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
+              >
+                <span>{language === 'hi' ? '7-दिवसीय भीड़ पूर्वानुमान देखें' : 'View Crowd Forecast'}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37]" />
+              </button>
+            </div>
+
           </div>
 
           {/* Historical Significance & Architectural Highlights */}

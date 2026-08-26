@@ -5,6 +5,7 @@ import { HomeLanding } from './components/home/HomeLanding';
 import { TouristApp } from './components/tourist/TouristApp';
 import { AuthorityApp } from './components/authority/AuthorityApp';
 import { MonumentDetailModal } from './components/tourist/MonumentDetailModal';
+import { CrowdForecastPage } from './components/tourist/forecast/CrowdForecastPage';
 
 import { MONUMENTS_DATA } from './data/monumentsData';
 import { PRESET_DAMAGE_SCANS } from './data/damageScansData';
@@ -16,8 +17,11 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 const getInitialView = (): 'home' | 'tourist' | 'authority' => {
   if (typeof window !== 'undefined') {
     const hash = window.location.hash.replace('#', '').toLowerCase();
-    if (hash === 'tourist' || hash === 'authority' || hash === 'home') {
-      return hash as 'home' | 'tourist' | 'authority';
+    if (hash.startsWith('forecast-') || hash === 'tourist') {
+      return 'tourist';
+    }
+    if (hash === 'authority' || hash === 'home') {
+      return hash as 'home' | 'authority';
     }
     const saved = localStorage.getItem('dharohar_active_view');
     if (saved === 'tourist' || saved === 'authority' || saved === 'home') {
@@ -34,12 +38,23 @@ export function App() {
 
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [selectedMonument, setSelectedMonument] = useState<Monument | null>(null);
+  const [forecastMonument, setForecastMonument] = useState<Monument | null>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash.startsWith('forecast-')) {
+        const mId = hash.replace('forecast-', '');
+        return MONUMENTS_DATA.find((m) => m.id === mId || m.name.toLowerCase().includes(mId.toLowerCase())) || null;
+      }
+    }
+    return null;
+  });
   const [citizenReports, setCitizenReports] = useState<DamageScanResult[]>(PRESET_DAMAGE_SCANS);
   const [alerts, setAlerts] = useState<AlertItem[]>(RECENT_ALERTS);
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string; type: 'success' | 'alert' } | null>(null);
 
   // Sync activeView with browser URL hash and localStorage
   const handleViewChange = (view: 'home' | 'tourist' | 'authority') => {
+    setForecastMonument(null);
     setActiveView(view);
     if (typeof window !== 'undefined') {
       window.location.hash = view;
@@ -57,7 +72,19 @@ export function App() {
 
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (hash.startsWith('forecast-')) {
+        const mId = hash.replace('forecast-', '');
+        const found = MONUMENTS_DATA.find((m) => m.id === mId || m.name.toLowerCase().includes(mId.toLowerCase()));
+        if (found) {
+          setForecastMonument(found);
+          setSelectedMonument(null);
+          setActiveView('tourist');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
       if (hash === 'tourist' || hash === 'authority' || hash === 'home') {
+        setForecastMonument(null);
         setActiveView(hash as 'home' | 'tourist' | 'authority');
       }
     };
@@ -118,6 +145,35 @@ export function App() {
     }
   };
 
+  const handleOpenCrowdForecast = (monument: Monument) => {
+    setSelectedMonument(null);
+    setForecastMonument(monument);
+    setActiveView('tourist');
+    if (typeof window !== 'undefined') {
+      window.location.hash = `forecast-${monument.id}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleBackFromForecast = (monument: Monument) => {
+    setForecastMonument(null);
+    setSelectedMonument(monument);
+    if (typeof window !== 'undefined') {
+      window.location.hash = 'tourist';
+    }
+  };
+
+  const handlePlanVisitFromForecast = (monument: Monument) => {
+    setForecastMonument(null);
+    setSelectedMonument(null);
+    setTouristTab('itinerary');
+    handleViewChange('tourist');
+    showToast(
+      'AI Visiting Slot Applied!',
+      `Itinerary customized for ${monument.name} around the optimal low-crowd window.`
+    );
+  };
+
   return (
     <div className={`min-h-screen flex flex-col ${
       activeView === 'authority' ? 'bg-[#F4F6F9] text-[#1A202C]' : 'bg-[#F8F6F0] text-[#1A2621]'
@@ -143,7 +199,10 @@ export function App() {
         activeView={activeView}
         onViewChange={handleViewChange}
         touristTab={touristTab}
-        onTouristTabChange={setTouristTab}
+        onTouristTabChange={(tab) => {
+          setForecastMonument(null);
+          setTouristTab(tab);
+        }}
         authorityTab={authorityTab}
         onAuthorityTabChange={setAuthorityTab}
         language={language}
@@ -161,13 +220,22 @@ export function App() {
         )}
 
         {activeView === 'tourist' && (
-          <TouristApp
-            language={language}
-            activeTab={touristTab}
-            onTabChange={setTouristTab}
-            onSelectMonument={(m) => setSelectedMonument(m)}
-            onReportSubmitted={handleReportSubmitted}
-          />
+          forecastMonument ? (
+            <CrowdForecastPage
+              monument={forecastMonument}
+              language={language}
+              onBackToMonument={handleBackFromForecast}
+              onPlanVisit={handlePlanVisitFromForecast}
+            />
+          ) : (
+            <TouristApp
+              language={language}
+              activeTab={touristTab}
+              onTabChange={setTouristTab}
+              onSelectMonument={(m) => setSelectedMonument(m)}
+              onReportSubmitted={handleReportSubmitted}
+            />
+          )
         )}
 
         {activeView === 'authority' && (
@@ -198,6 +266,7 @@ export function App() {
             setTouristTab('scan');
             handleViewChange('tourist');
           }}
+          onOpenCrowdForecast={handleOpenCrowdForecast}
         />
       )}
 

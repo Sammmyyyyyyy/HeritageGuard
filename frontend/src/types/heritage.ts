@@ -176,3 +176,75 @@ export interface ChatMessage {
   }>;
   suggestedFollowUps?: string[];
 }
+
+export interface HourlyForecastItem {
+  hour: string; // e.g. "07:00", "08:00"
+  visitors: number;
+  capacityPercentage: number;
+  crowdLevel: CrowdLevel;
+  isNow?: boolean;
+}
+
+export interface DailyCrowdForecast {
+  date: string; // ISO date string: "2026-08-27"
+  dayOfWeek: string; // "THU"
+  dayName: string; // "Thursday"
+  formattedDate: string; // "27 Aug"
+  isToday: boolean;
+  expectedVisitors: number;
+  comparisonWithToday: {
+    label: string; // "↓ 10% vs today"
+    direction: 'up' | 'down' | 'same';
+    percentage: number;
+  };
+  crowdLevel: CrowdLevel;
+  comfortScore: number; // 0-100, e.g. 82
+  comfortLabel: string; // "Excellent time to visit"
+  heritagePressure: number; // 0-100, e.g. 38
+  heritageImpactLabel: string; // "Low impact"
+  heritageImpactDetails: string;
+  bestVisitingWindow: {
+    start: string;
+    end: string;
+    reasons: string[];
+    hindiReasons?: string[];
+  };
+  avoidWindow: {
+    start: string;
+    end: string;
+    reason: string;
+    hindiReason?: string;
+  };
+  hourlyForecast: HourlyForecastItem[];
+  crowdReasons: {
+    isHigh: boolean;
+    title: string;
+    factors: string[];
+    summary: string;
+    hindiSummary?: string;
+  };
+  aiRecommendation: string;
+  hindiAiRecommendation?: string;
+}
+
+export interface MonumentCrowdForecast {
+  monumentId: string;
+  monumentName: string;
+  hindiName: string;
+  city: string;
+  state: string;
+  imageUrl: string;
+  safeCapacity: number;
+  currentLiveFootfall: number;
+  currentCrowdLevel: CrowdLevel;
+  bestDayThisWeek: {
+    dayName: string;
+    date: string;
+    formattedDate: string;
+    expectedVisitors: number;
+    reason: string;
+    hindiReason?: string;
+  };
+  days: DailyCrowdForecast[];
+}
+

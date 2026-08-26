@@ -391,7 +391,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                       </div>
 
                       {/* Card Content */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
                         <div className="space-y-1.5">
                           <h4 className="text-base sm:text-lg font-bold text-[#0D3B2E] font-serif-heritage group-hover:text-[#C85A32] transition-colors leading-snug tracking-tight">
                             {monument.name}
@@ -410,11 +410,27 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                           </div>
                         </div>
 
-                        <div className="pt-3 border-t border-gray-100 text-xs text-gray-600 flex items-center justify-between font-medium">
-                          <span className="truncate max-w-[150px]">{monument.architecturalStyle}</span>
-                          <span className="text-[10px] font-mono-stat text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
-                            HPS: {monument.heritagePressureScore}
-                          </span>
+                        {/* Bottom Meta & Action Section */}
+                        <div className="space-y-3 pt-3 border-t border-gray-100 mt-auto">
+                          <div className="text-xs text-gray-600 flex items-center justify-between font-medium">
+                            <span className="truncate max-w-[150px]">{monument.architecturalStyle}</span>
+                            <span className="text-[10px] font-mono-stat text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
+                              HPS: {monument.heritagePressureScore}
+                            </span>
+                          </div>
+
+                          {/* Primary Card CTA Button: View Details */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectMonument(monument);
+                            }}
+                            aria-label={`View details for ${monument.name}`}
+                            className="w-full py-2.5 px-3 rounded-xl bg-[#0D3B2E]/6 hover:bg-[#0D3B2E] text-[#0D3B2E] hover:text-white border border-[#0D3B2E]/15 hover:border-[#0D3B2E] text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all duration-200 cursor-pointer shadow-2xs group/btn active:scale-98"
+                          >
+                            <span>{language === 'hi' ? 'विवरण देखें' : 'View Details'}</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-[#C85A32] group-hover/btn:text-[#D4AF37] group-hover/btn:translate-x-1 transition-all duration-200" />
+                          </button>
                         </div>
                       </div>
                     </div>
