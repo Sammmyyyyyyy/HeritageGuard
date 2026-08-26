@@ -1,0 +1,28 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# YOLO training / prediction outputs
+runs/
+
+# Downloaded / extracted datasets
+dataset/
+
+# YOLO model weights
+*.pt
+
+# Roboflow files
+*.zip
+
+# Environment variables / secrets
+.env
+# Local test image
+check.jpg
+# Roboflow downloaded dataset
+tourism-project-1/
+# Local environment files
+.env.damage
