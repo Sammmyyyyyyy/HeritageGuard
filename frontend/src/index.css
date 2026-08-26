@@ -1,0 +1,1104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'DM Sans', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Google Sans', 'DM Sans', 'Noto Sans', sans-serif;
+  --font-display: 'Google Sans', 'DM Sans', sans-serif;
+  --font-oswald: 'Oswald', 'Google Sans', sans-serif;
+  --font-noto: 'Noto Sans', sans-serif;
+}
+
+@layer base {
+  :root {
+    --font-heading: 'Google Sans', 'DM Sans', 'Noto Sans', sans-serif;
+    --font-sans: 'DM Sans', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-oswald: 'Oswald', 'Google Sans', sans-serif;
+    --font-noto: 'Noto Sans', sans-serif;
+
+    /* Heritage Color Palette */
+    --color-emerald-dark: #0D3B2E;
+    --color-emerald-deep: #08281E;
+    --color-emerald-light: #165342;
+    --color-gold: #D4AF37;
+    --color-gold-light: #F3E5AB;
+    --color-sandstone: #F8F6F0;
+    --color-sandstone-dark: #EAE6DB;
+    --color-terracotta: #C85A32;
+    --color-navy-command: #0A1128;
+    --color-navy-surface: #131E3A;
+    --color-navy-card: #1A2748;
+  }
+
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #F8F6F0;
+    color: #1A2621;
+    overflow-x: hidden;
+    max-width: 100vw;
+    letter-spacing: -0.011em;
+  }
+
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  h1, h2, h3, h4, .font-serif-heritage, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
+  }
+
+  .font-regal {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+  }
+
+  .font-mono-stat, .font-stat {
+    font-family: var(--font-oswald);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-panel-dark {
+  background: rgba(16, 26, 48, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(13, 59, 46, 0.15);
+}
+
+/* =========================================================
+   Compact & Fully Transparent 3D Cards (No top strip)
+   ========================================================= */
+.uiverse-parent {
+  width: 100%;
+  max-width: 240px;
+  perspective: 1000px;
+}
+
+.uiverse-card {
+  position: relative;
+  padding: 0;
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  transform-style: preserve-3d;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  width: 100%;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 20px 30px -10px;
+  transition: all 0.5s ease-in-out;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.uiverse-card:hover {
+  transform: rotate3d(0.5, 1, 0, 22deg);
+  border-color: #D4AF37;
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: rgba(212, 175, 55, 0.3) 0px 25px 40px -10px;
+}
+
+.uiverse-content-box {
+  border-radius: 18px;
+  transition: all 0.5s ease-in-out;
+  padding: 16px 14px 14px 14px;
+  transform-style: preserve-3d;
+  background: transparent;
+}
+
+/* 3D Title with depth */
+.uiverse-card-title {
+  display: inline-block;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 40px);
+}
+
+.uiverse-card:hover .uiverse-card-title,
+.uiverse-card-title:hover {
+  transform: translate3d(0px, 0px, 55px);
+  color: #D4AF37;
+}
+
+/* 3D Content with depth */
+.uiverse-card-content {
+  margin-top: 5px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 25px);
+}
+
+.uiverse-card:hover .uiverse-card-content,
+.uiverse-card-content:hover {
+  transform: translate3d(0px, 0px, 45px);
+  color: #FFFFFF;
+}
+
+/* 3D See More / Action Button */
+.uiverse-see-more {
+  cursor: pointer;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 800;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  transition: all 0.5s ease-in-out;
+  transform: translate3d(0px, 0px, 20px);
+  background: #D4AF37;
+  color: #0A1128;
+}
+
+.uiverse-card:hover .uiverse-see-more,
+.uiverse-see-more:hover {
+  transform: translate3d(0px, 0px, 55px) scale(1.05);
+  background: #FFFFFF;
+  color: #0A1128;
+}
+
+/* 3D Floating Icon Box */
+.uiverse-date-box {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  height: 32px;
+  width: 32px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate3d(0px, 0px, 60px);
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 10px 12px -5px;
+  transition: all 0.5s ease-in-out;
+}
+
+.uiverse-card:hover .uiverse-date-box {
+  transform: translate3d(0px, 0px, 75px) scale(1.1);
+  border-color: #FFFFFF;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Cinematic Silky-Smooth Carousel Crossfade */
+.carousel-slide-layer {
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+  transition: opacity 1400ms cubic-bezier(0.4, 0, 0.2, 1), transform 6000ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+.carousel-slide-active {
+  opacity: 1;
+  transform: scale(1.05) translateZ(0);
+  z-index: 2;
+}
+
+.carousel-slide-inactive {
+  opacity: 0;
+  transform: scale(1.0) translateZ(0);
+  z-index: 1;
+}
+
+/* =========================================================
+   Animated Navbar Button (Exact Uiverse.io Animation)
+   ========================================================= */
+.animated-nav-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 24px;
+  border: 2px solid;
+  border-color: transparent;
+  font-size: 12px;
+  background-color: transparent;
+  border-radius: 100px;
+  font-weight: 700;
+  color: #0D3B2E;
+  box-shadow: 0 0 0 1.5px rgba(13, 59, 46, 0.2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  user-select: none;
+}
+
+.animated-nav-btn.active {
+  background-color: #0D3B2E;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 2px #0D3B2E;
+}
+
+.animated-nav-btn.active-authority {
+  background-color: #0A1128;
+  color: #D4AF37;
+  box-shadow: 0 0 0 2px #D4AF37;
+}
+
+.animated-nav-btn svg {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-nav-btn .arr-1 {
+  right: 10px;
+}
+
+.animated-nav-btn .arr-2 {
+  left: -35%;
+}
+
+.animated-nav-btn .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-color: #D4AF37;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-nav-btn .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-7px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.animated-nav-btn:hover {
+  box-shadow: 0 0 0 8px transparent;
+  color: #0A1128;
+  border-radius: 12px;
+}
+
+.animated-nav-btn:hover .arr-1 {
+  right: -35%;
+}
+
+.animated-nav-btn:hover .arr-2 {
+  left: 10px;
+}
+
+.animated-nav-btn:hover .text {
+  transform: translateX(7px);
+}
+
+.animated-nav-btn:hover svg {
+  fill: #0A1128;
+}
+
+.animated-nav-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 0 3px #D4AF37;
+}
+
+.animated-nav-btn:hover .circle {
+  width: 180px;
+  height: 180px;
+  opacity: 1;
+}
+
+/* =========================================================
+   Animated Bouncing Glowing Blob Card (From Uiverse.io)
+   ========================================================= */
+.blob-card {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  border-radius: 20px;
+  z-index: 10;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 10px 10px 30px rgba(13, 59, 46, 0.08), -10px -10px 30px #ffffff;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  background-color: #F8F6F0;
+}
+
+.blob-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 15px 15px 40px rgba(13, 59, 46, 0.14), -15px -15px 40px #ffffff;
+}
+
+.blob-card-bg {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.blob-card:hover .blob-card-bg {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.blob-shape {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  opacity: 0.85;
+  filter: blur(14px);
+  animation: blob-bounce 5s infinite ease-in-out;
+}
+
+.blob-emerald {
+  background-color: #10B981;
+}
+
+.blob-gold {
+  background-color: #F59E0B;
+}
+
+.blob-blue {
+  background-color: #3B82F6;
+}
+
+.blob-purple {
+  background-color: #A855F7;
+}
+
+@keyframes blob-bounce {
+  0% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+  }
+  50% {
+    transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
+  }
+  75% {
+    transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+  }
+  100% {
+    transform: translate(-100%, -100%) translate3d(0, 0, 0);
+  }
+}
+
+/* =========================================================
+   Animated Search Bar (From Uiverse.io by boryanakrasteva)
+   ========================================================= */
+.uiverse-search-bar {
+  position: relative;
+  background: #FFFFFF;
+  padding: 6px;
+  border-radius: 20px;
+  border: 2px solid rgba(13, 59, 46, 0.15);
+  box-shadow: 0 4px 20px rgba(13, 59, 46, 0.05);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uiverse-search-bar:focus-within {
+  border-color: #0D3B2E;
+  box-shadow: 0 8px 30px rgba(13, 59, 46, 0.15), 0 0 0 2px rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+}
+
+.uiverse-search-input-container {
+  position: relative;
+  flex: 1;
+}
+
+.uiverse-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0D3B2E;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.uiverse-search-bar:hover .uiverse-search-icon {
+  animation: search-icon-anim 1s linear infinite;
+  color: #C85A32;
+}
+
+@keyframes search-icon-anim {
+  0%, 100% {
+    transform: translateY(-50%) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.22) rotate(-10deg);
+  }
+}
+
+.uiverse-search-input {
+  width: 100%;
+  padding: 12px 16px 12px 46px;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1A2621;
+  border: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* =========================================================
+   Personalized Itinerary Planner Subtle Background
+   ========================================================= */
+.itinerary-page-bg {
+  background-color: #F8F6F0;
+  background-image: url('/images/itinerary_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+@media (min-width: 1536px) {
+  .itinerary-page-bg {
+    background-size: 100% auto;
+    background-position: center top;
+  }
+}
+
+@media (max-width: 768px) {
+  .itinerary-page-bg {
+    background-size: cover;
+    background-position: center top;
+  }
+}
+
+/* =========================================================
+   Ask Heritage AI Subtle Background
+   ========================================================= */
+.ask-ai-page-bg {
+  background-color: #F8F6F0;
+  background-image: url('/images/ask_ai_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+@media (min-width: 1536px) {
+  .ask-ai-page-bg {
+    background-size: 100% auto;
+    background-position: center top;
+  }
+}
+
+@media (max-width: 768px) {
+  .ask-ai-page-bg {
+    background-size: cover;
+    background-position: center top;
+  }
+}
+
+/* =========================================================
+   Scan Monument Subtle Background
+   ========================================================= */
+.scan-monument-page-bg {
+  background-color: #F8F6F0;
+  background-image: url('/images/scan_monument_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+@media (min-width: 1536px) {
+  .scan-monument-page-bg {
+    background-size: 100% auto;
+    background-position: center top;
+  }
+}
+
+@media (max-width: 768px) {
+  .scan-monument-page-bg {
+    background-size: cover;
+    background-position: center top;
+  }
+}
+
+/* =========================================================
+   Star Animation Buttons (From Uiverse.io by MuhammadHasann)
+   ========================================================= */
+.uiverse-star-btn {
+  position: relative;
+  padding: 8px 20px;
+  background: #fec195;
+  font-size: 13px;
+  font-weight: 600;
+  color: #181818;
+  border: 2px solid #fec195;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 #fec1958c;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.uiverse-star-btn.star-authority {
+  background: #DCE7F5;
+  border-color: #BFDBFE;
+  box-shadow: 0 0 0 rgba(191, 219, 254, 0.5);
+}
+
+.uiverse-star-btn:hover {
+  background: transparent;
+  color: #181818;
+  box-shadow: 0 0 25px #fec1958c;
+}
+
+.uiverse-star-btn.star-authority:hover {
+  background: transparent;
+  color: #0F2B48;
+  border-color: #93C5FD;
+  box-shadow: 0 0 25px rgba(147, 197, 253, 0.6);
+}
+
+.uiverse-star-btn .star-1 {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 25px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 1s cubic-bezier(0.05, 0.83, 0.43, 0.96);
+  pointer-events: none;
+}
+
+.uiverse-star-btn .star-2 {
+  position: absolute;
+  top: 45%;
+  left: 45%;
+  width: 15px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 1s cubic-bezier(0, 0.4, 0, 1.01);
+  pointer-events: none;
+}
+
+.uiverse-star-btn .star-3 {
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  width: 5px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 1s cubic-bezier(0, 0.4, 0, 1.01);
+  pointer-events: none;
+}
+
+.uiverse-star-btn .star-4 {
+  position: absolute;
+  top: 20%;
+  left: 40%;
+  width: 8px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 0.8s cubic-bezier(0, 0.4, 0, 1.01);
+  pointer-events: none;
+}
+
+.uiverse-star-btn .star-5 {
+  position: absolute;
+  top: 25%;
+  left: 45%;
+  width: 15px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 0.6s cubic-bezier(0, 0.4, 0, 1.01);
+  pointer-events: none;
+}
+
+.uiverse-star-btn .star-6 {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  width: 5px;
+  height: auto;
+  filter: drop-shadow(0 0 0 #fffdef);
+  z-index: -5;
+  transition: all 0.8s ease;
+  pointer-events: none;
+}
+
+.uiverse-star-btn:hover .star-1 {
+  position: absolute;
+  top: -80%;
+  left: -30%;
+  width: 25px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn:hover .star-2 {
+  position: absolute;
+  top: -25%;
+  left: 10%;
+  width: 15px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn:hover .star-3 {
+  position: absolute;
+  top: 55%;
+  left: 25%;
+  width: 5px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn:hover .star-4 {
+  position: absolute;
+  top: 30%;
+  left: 80%;
+  width: 8px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn:hover .star-5 {
+  position: absolute;
+  top: 25%;
+  left: 115%;
+  width: 15px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn:hover .star-6 {
+  position: absolute;
+  top: 5%;
+  left: 60%;
+  width: 5px;
+  height: auto;
+  filter: drop-shadow(0 0 10px #fffdef);
+  z-index: 20;
+}
+
+.uiverse-star-btn .fil0 {
+  fill: #D4AF37;
+}
+
+.uiverse-star-btn.star-authority .fil0 {
+  fill: #3B82F6;
+}
+
+/* =========================================================
+   3D Interactive Tracker Perspective Card (From Uiverse.io by 00Kubi)
+   ========================================================= */
+.tracker-container {
+  position: relative;
+  width: 100%;
+  max-width: 248px;
+  height: 195px;
+  transition: 200ms;
+}
+
+@media (max-width: 640px) {
+  .tracker-container {
+    max-width: 100%;
+    height: 185px;
+  }
+}
+
+.tracker-container:active {
+  transform: scale(0.97);
+}
+
+.tracker-canvas {
+  perspective: 800px;
+  inset: 0;
+  z-index: 20;
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 0px;
+  grid-template-areas:
+    "tr-1 tr-2 tr-3 tr-4 tr-5"
+    "tr-6 tr-7 tr-8 tr-9 tr-10"
+    "tr-11 tr-12 tr-13 tr-14 tr-15"
+    "tr-16 tr-17 tr-18 tr-19 tr-20"
+    "tr-21 tr-22 tr-23 tr-24 tr-25";
+}
+
+.tracker {
+  position: absolute;
+  z-index: 200;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.tracker.tr-1 { grid-area: tr-1; }
+.tracker.tr-2 { grid-area: tr-2; }
+.tracker.tr-3 { grid-area: tr-3; }
+.tracker.tr-4 { grid-area: tr-4; }
+.tracker.tr-5 { grid-area: tr-5; }
+.tracker.tr-6 { grid-area: tr-6; }
+.tracker.tr-7 { grid-area: tr-7; }
+.tracker.tr-8 { grid-area: tr-8; }
+.tracker.tr-9 { grid-area: tr-9; }
+.tracker.tr-10 { grid-area: tr-10; }
+.tracker.tr-11 { grid-area: tr-11; }
+.tracker.tr-12 { grid-area: tr-12; }
+.tracker.tr-13 { grid-area: tr-13; }
+.tracker.tr-14 { grid-area: tr-14; }
+.tracker.tr-15 { grid-area: tr-15; }
+.tracker.tr-16 { grid-area: tr-16; }
+.tracker.tr-17 { grid-area: tr-17; }
+.tracker.tr-18 { grid-area: tr-18; }
+.tracker.tr-19 { grid-area: tr-19; }
+.tracker.tr-20 { grid-area: tr-20; }
+.tracker.tr-21 { grid-area: tr-21; }
+.tracker.tr-22 { grid-area: tr-22; }
+.tracker.tr-23 { grid-area: tr-23; }
+.tracker.tr-24 { grid-area: tr-24; }
+.tracker.tr-25 { grid-area: tr-25; }
+
+.tracker-3d-card {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px 13px;
+  border-radius: 18px;
+  transition: 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  background: rgba(10, 20, 16, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 0, 0, 0.3);
+  transform-style: preserve-3d;
+}
+
+.tracker-3d-card.authority-style {
+  background: rgba(10, 17, 40, 0.78);
+  border-color: rgba(99, 179, 237, 0.4);
+}
+
+.tracker:hover ~ .tracker-3d-card {
+  filter: brightness(1.15);
+  border-color: #D4AF37;
+  box-shadow: 0 20px 45px rgba(212, 175, 55, 0.25), inset 0 0 25px rgba(0, 0, 0, 0.4);
+}
+
+.tracker:hover ~ .tracker-3d-card.authority-style {
+  border-color: #63B3ED;
+  box-shadow: 0 20px 45px rgba(99, 179, 237, 0.25), inset 0 0 25px rgba(0, 0, 0, 0.4);
+}
+
+/* 3D Rotations per Grid Cell */
+.tr-1:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(16deg) rotateY(-10deg) rotateZ(0deg); }
+.tr-2:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(16deg) rotateY(-5deg) rotateZ(0deg); }
+.tr-3:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(16deg) rotateY(0deg) rotateZ(0deg); }
+.tr-4:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(16deg) rotateY(5deg) rotateZ(0deg); }
+.tr-5:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(16deg) rotateY(10deg) rotateZ(0deg); }
+
+.tr-6:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(8deg) rotateY(-10deg) rotateZ(0deg); }
+.tr-7:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(8deg) rotateY(-5deg) rotateZ(0deg); }
+.tr-8:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(8deg) rotateY(0deg) rotateZ(0deg); }
+.tr-9:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(8deg) rotateY(5deg) rotateZ(0deg); }
+.tr-10:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(8deg) rotateY(10deg) rotateZ(0deg); }
+
+.tr-11:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(-10deg) rotateZ(0deg); }
+.tr-12:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(-5deg) rotateZ(0deg); }
+.tr-13:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+.tr-14:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(5deg) rotateZ(0deg); }
+.tr-15:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(10deg) rotateZ(0deg); }
+
+.tr-16:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-8deg) rotateY(-10deg) rotateZ(0deg); }
+.tr-17:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-8deg) rotateY(-5deg) rotateZ(0deg); }
+.tr-18:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-8deg) rotateY(0deg) rotateZ(0deg); }
+.tr-19:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-8deg) rotateY(5deg) rotateZ(0deg); }
+.tr-20:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-8deg) rotateY(10deg) rotateZ(0deg); }
+
+.tr-21:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-16deg) rotateY(-10deg) rotateZ(0deg); }
+.tr-22:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-16deg) rotateY(-5deg) rotateZ(0deg); }
+.tr-23:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-16deg) rotateY(0deg) rotateZ(0deg); }
+.tr-24:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-16deg) rotateY(5deg) rotateZ(0deg); }
+.tr-25:hover ~ .tracker-3d-card { transition: 125ms ease-in-out; transform: rotateX(-16deg) rotateY(10deg) rotateZ(0deg); }
+
+/* Card Content & Glows */
+.tracker-3d-card .card-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+
+.tracker:hover ~ .tracker-3d-card .card-glare {
+  opacity: 1;
+}
+
+.tracker-3d-card .glowing-elements {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tracker-3d-card .glow-1,
+.tracker-3d-card .glow-2,
+.tracker-3d-card .glow-3 {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(212, 175, 55, 0.4) 0%,
+    rgba(212, 175, 55, 0) 70%
+  );
+  filter: blur(15px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.tracker-3d-card.authority-style .glow-1,
+.tracker-3d-card.authority-style .glow-2,
+.tracker-3d-card.authority-style .glow-3 {
+  background: radial-gradient(
+    circle at center,
+    rgba(99, 179, 237, 0.45) 0%,
+    rgba(99, 179, 237, 0) 70%
+  );
+}
+
+.tracker-3d-card .glow-1 { top: -20px; left: -20px; }
+.tracker-3d-card .glow-2 { top: 50%; right: -30px; transform: translateY(-50%); }
+.tracker-3d-card .glow-3 { bottom: -20px; left: 30%; }
+
+.tracker:hover ~ .tracker-3d-card .glowing-elements div {
+  opacity: 1;
+}
+
+.tracker-3d-card .card-particles span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #D4AF37;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.tracker-3d-card.authority-style .card-particles span {
+  background: #63B3ED;
+}
+
+.tracker:hover ~ .tracker-3d-card .card-particles span {
+  animation: particleFloat 2s infinite;
+}
+
+.tracker-3d-card .card-particles span:nth-child(1) { --x: 1; --y: -1; top: 30%; left: 15%; }
+.tracker-3d-card .card-particles span:nth-child(2) { --x: -1; --y: -1; top: 60%; right: 15%; }
+.tracker-3d-card .card-particles span:nth-child(3) { --x: 0.5; --y: 1; top: 20%; left: 40%; }
+.tracker-3d-card .card-particles span:nth-child(4) { --x: -0.5; --y: 1; top: 80%; right: 40%; }
+.tracker-3d-card .card-particles span:nth-child(5) { --x: 1; --y: 0.5; top: 30%; left: 60%; }
+.tracker-3d-card .card-particles span:nth-child(6) { --x: -1; --y: 0.5; top: 70%; right: 60%; }
+
+.tracker-3d-card .corner-elements span {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.tracker-3d-card.authority-style .corner-elements span {
+  border-color: rgba(99, 179, 237, 0.4);
+}
+
+.tracker-3d-card .corner-elements span:nth-child(1) { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.tracker-3d-card .corner-elements span:nth-child(2) { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+.tracker-3d-card .corner-elements span:nth-child(3) { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+.tracker-3d-card .corner-elements span:nth-child(4) { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+.tracker:hover ~ .tracker-3d-card .corner-elements span {
+  border-color: #D4AF37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+}
+
+.tracker:hover ~ .tracker-3d-card.authority-style .corner-elements span {
+  border-color: #63B3ED;
+  box-shadow: 0 0 10px rgba(99, 179, 237, 0.6);
+}
+
+.tracker-3d-card .scan-line {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(212, 175, 55, 0.15),
+    transparent
+  );
+  transform: translateY(-100%);
+  animation: scanMove 2.5s linear infinite;
+  pointer-events: none;
+}
+
+.tracker-3d-card.authority-style .scan-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(99, 179, 237, 0.15),
+    transparent
+  );
+}
+
+.tracker-3d-card .cyber-lines span {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.3),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.tracker-3d-card.authority-style .cyber-lines span {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 179, 237, 0.3),
+    transparent
+  );
+}
+
+.tracker-3d-card .cyber-lines span:nth-child(1) { top: 20%; left: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: left; animation: lineGrow 3s linear infinite; }
+.tracker-3d-card .cyber-lines span:nth-child(2) { top: 40%; right: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: right; animation: lineGrow 3s linear infinite 1s; }
+.tracker-3d-card .cyber-lines span:nth-child(3) { top: 60%; left: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: left; animation: lineGrow 3s linear infinite 2s; }
+.tracker-3d-card .cyber-lines span:nth-child(4) { top: 80%; right: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: right; animation: lineGrow 3s linear infinite 1.5s; }
+
+
+
+
+
