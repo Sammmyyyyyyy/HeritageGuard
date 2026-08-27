@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from app.exceptions.ai import AIModelNotReady
+from app.exceptions.ai import AIServiceUnavailable
 
 
 class CrowdClient:
@@ -10,6 +10,12 @@ class CrowdClient:
         site_id: str,
     ) -> Dict[str, Any]:
 
-        raise AIModelNotReady(
-            "crowd prediction model is not integrated yet"
-        )
+        try:
+            result = predict_crowd(site_id)
+
+            return result.model_dump()
+
+        except Exception as exc:
+            raise AIServiceUnavailable(
+                f"Crowd AI prediction failed: {exc}"
+            ) from exc

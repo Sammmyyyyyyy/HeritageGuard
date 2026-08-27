@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     SUPABASE_URL: str
     SUPABASE_KEY: str
-    SUPABASE_STORAGE_BUCKET: str = "damage-images"
+    SUPABASE_STORAGE_BUCKET: str = "damage_image"
 
     # =========================================================
     # DAMAGE AI
