@@ -1,0 +1,91 @@
+site_id,monument_name,location,capacity,historical_importance,vulnerability,damage_severity,recent_deterioration,maintenance_delay_days
+SITE_001,Taj Mahal,"Agra, Uttar Pradesh",5000,5,4,2,2,15
+SITE_002,Red Fort,"Old Delhi, Delhi",7000,5,3,2,2,30
+SITE_003,Qutub Minar,"South Delhi, Delhi",3500,5,4,2,2,20
+SITE_004,Humayun's Tomb,"New Delhi, Delhi",4000,5,3,1,1,10
+SITE_005,Chhatrapati Shivaji Maharaj Terminus,"Mumbai, Maharashtra",8500,5,3,2,3,45
+SITE_006,Agra Fort,"Agra, Uttar Pradesh",6000,5,3,2,2,25
+SITE_007,Fatehpur Sikri,"Agra, Uttar Pradesh",4500,5,4,3,2,35
+SITE_008,Amber Fort,"Jaipur, Rajasthan",5500,5,3,2,2,20
+SITE_009,Hawa Mahal,"Jaipur, Rajasthan",2000,4,4,2,2,15
+SITE_010,City Palace Jaipur,"Jaipur, Rajasthan",4000,4,2,1,1,10
+SITE_011,Jantar Mantar,"Jaipur, Rajasthan",2500,5,3,2,2,15
+SITE_012,Mehrangarh Fort,"Jodhpur, Rajasthan",6000,4,2,1,1,5
+SITE_013,City Palace Udaipur,"Udaipur, Rajasthan",4500,4,2,1,1,10
+SITE_014,Jaisalmer Fort,"Jaisalmer, Rajasthan",3500,5,5,4,4,60
+SITE_015,Chittorgarh Fort,"Chittorgarh, Rajasthan",7500,5,3,3,2,40
+SITE_016,Kumbhalgarh Fort,"Rajsamand, Rajasthan",4000,5,3,2,2,25
+SITE_017,Golden Temple,"Amritsar, Punjab",10000,5,2,1,1,0
+SITE_018,Jallianwala Bagh,"Amritsar, Punjab",4000,4,2,1,1,15
+SITE_019,Varanasi Ghats,"Varanasi, Uttar Pradesh",9000,5,4,3,3,50
+SITE_020,Sarnath Archaeological Site,"Varanasi, Uttar Pradesh",3000,4,3,2,2,20
+SITE_021,Bada Imambara,"Lucknow, Uttar Pradesh",3500,4,4,3,3,35
+SITE_022,Ranthambore Fort,"Sawai Madhopur, Rajasthan",2500,4,4,3,3,40
+SITE_023,Junagarh Fort,"Bikaner, Rajasthan",3500,4,2,1,1,15
+SITE_024,Martand Sun Temple,"Anantnag, Jammu & Kashmir",1500,4,5,4,3,60
+SITE_025,Leh Palace,"Leh, Ladakh",1200,4,4,3,2,30
+SITE_026,Hemis Monastery,"Leh, Ladakh",1500,4,3,2,1,20
+SITE_027,Kedarnath Temple,"Rudraprayag, Uttarakhand",2500,5,5,3,2,20
+SITE_028,Badrinath Temple,"Chamoli, Uttarakhand",3000,5,4,2,2,15
+SITE_029,Kangra Fort,"Kangra, Himachal Pradesh",2000,3,4,4,2,45
+SITE_030,Tabo Monastery,"Spiti Valley, Himachal Pradesh",800,4,5,3,2,25
+SITE_031,Gateway of India,"Mumbai, Maharashtra",8000,4,3,2,2,20
+SITE_032,Elephanta Caves,"Mumbai, Maharashtra",2000,5,4,3,3,30
+SITE_033,Ajanta Caves,"Chhatrapati Sambhajinagar, Maharashtra",1500,5,5,3,2,25
+SITE_034,Ellora Caves,"Chhatrapati Sambhajinagar, Maharashtra",3000,5,4,2,2,20
+SITE_035,Shaniwar Wada,"Pune, Maharashtra",3000,3,3,3,3,40
+SITE_036,Raigad Fort,"Raigad, Maharashtra",3500,4,3,3,3,35
+SITE_037,Daulatabad Fort,"Chhatrapati Sambhajinagar, Maharashtra",2500,4,3,3,2,30
+SITE_038,Bibi Ka Maqbara,"Chhatrapati Sambhajinagar, Maharashtra",3000,3,3,2,2,20
+SITE_039,Rani Ki Vav,"Patan, Gujarat",2000,5,4,2,2,15
+SITE_040,Sun Temple Modhera,"Mehsana, Gujarat",2500,4,4,3,2,25
+SITE_041,Champaner-Pavagadh Archaeological Park,"Panchmahal, Gujarat",3500,5,3,3,3,40
+SITE_042,Somnath Temple,"Prabhas Patan, Gujarat",7000,4,2,1,1,10
+SITE_043,Dwarkadhish Temple,"Dwarka, Gujarat",6000,4,3,2,2,15
+SITE_044,Dholavira Harappan City,"Kutch, Gujarat",1500,5,4,3,2,30
+SITE_045,Basilica of Bom Jesus,"Old Goa, Goa",2500,5,4,3,3,25
+SITE_046,Se Cathedral,"Old Goa, Goa",3000,5,3,2,2,20
+SITE_047,Aguada Fort,"Candolim, Goa",4000,3,3,2,2,15
+SITE_048,Khajuraho Group of Monuments,"Chhatarpur, Madhya Pradesh",3500,5,4,2,2,20
+SITE_049,Sanchi Stupa,"Raisen, Madhya Pradesh",3000,5,3,2,1,15
+SITE_050,Gwalior Fort,"Gwalior, Madhya Pradesh",5000,4,3,2,2,25
+SITE_051,Orchha Fort Complex,"Niwari, Madhya Pradesh",3000,4,4,3,3,35
+SITE_052,Bhimbetka Rock Shelters,"Raisen, Madhya Pradesh",1500,5,4,2,2,20
+SITE_053,Jahaz Mahal,"Mandu, Madhya Pradesh",2500,4,3,3,2,30
+SITE_054,Bhoramdeo Temple,"Kabirdham, Chhattisgarh",1200,3,4,3,3,40
+SITE_055,Hampi Group of Monuments,"Vijayanagara, Karnataka",8000,5,4,3,2,30
+SITE_056,Mysore Palace,"Mysuru, Karnataka",6000,5,2,1,1,10
+SITE_057,Gol Gumbaz,"Vijayapura, Karnataka",3500,4,3,2,2,20
+SITE_058,Badami Cave Temples,"Bagalkot, Karnataka",2000,4,4,2,2,20
+SITE_059,Pattadakal Monuments,"Bagalkot, Karnataka",2500,5,4,2,2,20
+SITE_060,Belur Chennakeshava Temple,"Hassan, Karnataka",2500,5,3,2,1,15
+SITE_061,Halebidu Hoysaleshwara Temple,"Hassan, Karnataka",2500,5,3,2,1,15
+SITE_062,Brihadeeswarar Temple,"Thanjavur, Tamil Nadu",6000,5,3,2,1,15
+SITE_063,Shore Temple & Mahabalipuram Monuments,"Mamallapuram, Tamil Nadu",4000,5,4,3,3,25
+SITE_064,Meenakshi Amman Temple,"Madurai, Tamil Nadu",8000,5,2,1,1,5
+SITE_065,Ramanathaswamy Temple,"Rameswaram, Tamil Nadu",7000,4,3,2,2,15
+SITE_066,Airavatesvara Temple,"Darasuram, Tamil Nadu",2000,5,4,2,2,20
+SITE_067,Gangaikonda Cholapuram Temple,"Ariyalur, Tamil Nadu",2500,5,3,2,2,20
+SITE_068,Padmanabhaswamy Temple,"Thiruvananthapuram, Kerala",4500,4,3,1,1,10
+SITE_069,Bekal Fort,"Kasaragod, Kerala",3500,3,3,2,2,20
+SITE_070,Mattancherry Palace,"Kochi, Kerala",1500,4,4,2,2,15
+SITE_071,Charminar,"Hyderabad, Telangana",3000,4,4,3,3,35
+SITE_072,Golconda Fort,"Hyderabad, Telangana",5500,4,3,2,2,25
+SITE_073,Ramappa Temple,"Mulugu, Telangana",2000,5,3,2,1,15
+SITE_074,Lepakshi Veerabhadra Temple,"Sri Sathya Sai, Andhra Pradesh",2500,4,4,3,2,25
+SITE_075,Tirumala Venkateswara Temple,"Tirupati, Andhra Pradesh",12000,5,2,1,1,0
+SITE_076,Gandikota Fort,"Kadapa, Andhra Pradesh",3000,3,3,3,3,40
+SITE_077,Konark Sun Temple,"Puri, Odisha",4000,5,5,4,3,30
+SITE_078,Jagannath Temple,"Puri, Odisha",9000,5,3,2,2,15
+SITE_079,Lingaraj Temple,"Bhubaneswar, Odisha",4500,4,3,2,2,20
+SITE_080,Udayagiri and Khandagiri Caves,"Bhubaneswar, Odisha",2500,4,4,3,2,25
+SITE_081,Victoria Memorial,"Kolkata, West Bengal",6000,4,2,1,1,10
+SITE_082,Hazarduari Palace,"Murshidabad, West Bengal",3000,3,3,2,2,20
+SITE_083,Bishnupur Terracotta Temples,"Bankura, West Bengal",2000,4,5,3,3,35
+SITE_084,Nalanda Mahavihara,"Nalanda, Bihar",3500,5,4,3,2,25
+SITE_085,Mahabodhi Temple Complex,"Bodh Gaya, Bihar",5000,5,3,1,1,10
+SITE_086,Kamakhya Temple,"Guwahati, Assam",6000,4,3,2,2,15
+SITE_087,Rang Ghar,"Sivasagar, Assam",1500,3,4,3,2,30
+SITE_088,Rumtek Monastery,"Gangtok, Sikkim",1200,4,3,2,1,15
+SITE_089,Unakoti Rock Carvings,"Unakoti, Tripura",1500,4,5,4,3,45
+SITE_090,Tawang Monastery,"Tawang, Arunachal Pradesh",1800,4,3,2,1,15
