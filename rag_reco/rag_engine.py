@@ -12,7 +12,7 @@ load_dotenv()
 
 # --- Pydantic Schemas for Structured Output ---
 class SourceCitation(BaseModel):
-    file_name: str = Field(description="The name of the source file (e.g., delhi_guide.pdf)")
+    file_name: str = Field(description="The name of the source file (e.g., heritage_guide.pdf)")
     page: int = Field(description="The page number where the fact was found")
 
 class RAGResponse(BaseModel):
@@ -23,10 +23,10 @@ class RAGResponse(BaseModel):
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 vector_db = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
 
-# Uses your Gemini-via-OpenAI-compatible endpoint setup
 llm = ChatOpenAI(
-    model=os.getenv("OPENAI_MODEL", "gemini-2.5-flash"), 
+    model=os.getenv("OPENAI_MODEL", "gemini-3.6-flash"), 
     temperature=0, 
+    max_tokens=1000,
     base_url=os.getenv("OPENAI_API_BASE"),
     api_key=os.getenv("OPENAI_API_KEY")
 )
@@ -52,25 +52,30 @@ prompt_template = ChatPromptTemplate.from_messages([
 
 def ask_heritage_question(site_id: str, question: str, language: str = "English"):
     """
-    Handles multilingual queries across all 4 cities (Delhi, Mumbai, Jaipur, Prayagraj) 
-    using a zero-cost translation step for vector search and native multilingual generation.
+    Handles multilingual queries across heritage sites with strict metadata filtering.
     """
     try:
-        # 1. Zero-Cost Multilingual Search Strategy:
-        # If the user asks in Hindi (or any non-English language), translate the question 
-        # to English first so the English embedding model (all-MiniLM-L6-v2) can match it perfectly.
+        # 1. Zero-Cost Multilingual Search Strategy
         search_query = question
         if language.lower() != "english":
             translation_prompt = f"Translate the following tourist question into simple English. Return ONLY the translated text: {question}"
             translated_res = llm.invoke(translation_prompt)
             search_query = translated_res.content.strip()
 
-        # 2. Combine the monument's site_id (e.g., DEL001, BOM001, JAI001, PRA005) and the translated query
-        final_query = f"{site_id} {search_query}"
-        
-        # 3. Retrieve matching context chunks from ChromaDB
-        retriever = vector_db.as_retriever(search_kwargs={"k": 4})
-        docs = retriever.invoke(final_query)
+        # 2. Vector search with Metadata Filter (ONLY retrieve requested site_id)
+        docs = vector_db.similarity_search(
+            query=search_query,
+            k=4,
+            filter={"site_id": site_id}
+        )
+
+        print("🔎 SITE ID FILTER:", site_id)
+        print("🔎 SEARCH QUERY:", search_query)
+        print("📚 DOCS FOUND:", len(docs))
+
+        for d in docs:
+            print("📄 SOURCE METADATA:", d.metadata)
+            print("📝 TEXT:", d.page_content[:300])
         
         if not docs:
             return {
@@ -80,20 +85,28 @@ def ask_heritage_question(site_id: str, question: str, language: str = "English"
                 "sources": []
             }
             
-        # 4. Format context with file names and page numbers for citations
+        # 3. Format context
         formatted_context = ""
         for d in docs:
             filename = d.metadata.get('file_name', 'heritage_guide.pdf')
-            page = d.metadata.get('page', 0) + 1 
+            page = d.metadata.get('page', 1) 
             formatted_context += f"---\nSource: {filename} (Page {page})\nText: {d.page_content}\n"
             
-        # 5. Generate structured response in the target language using original question
+        print("🔥 FORMATTED CONTEXT:\n", formatted_context)
+        print("🔥 QUESTION:", question)
+        print("🔥 LANGUAGE:", language)
+
+        # 4. Invoke LLM Chain
         chain = prompt_template | structured_llm
         result = chain.invoke({
             "context": formatted_context,
-            "question": question, # Original Hindi/native question passed so Gemini responds in that language
+            "question": question,
             "language": language
         })
+        
+        print("🔥 LLM RESULT:", result)
+        print("🔥 LLM ANSWER:", result.answer)
+        print("🔥 LLM SOURCES:", result.sources)
         
         return {
             "site_id": site_id,

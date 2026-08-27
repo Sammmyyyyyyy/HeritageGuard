@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { 
   Search, 
   MapPin, 
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Monument, DamageScanResult } from '../../types/heritage';
 import { MONUMENTS_DATA } from '../../data/monumentsData';
+import { getSites, BackendSite } from '../../api/sites';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
 
 // Subcomponents for the Tourist Navigation View
@@ -44,6 +45,30 @@ export const TouristApp: React.FC<TouristAppProps> = ({
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState('All States');
+  const [backendSites, setBackendSites] = useState<BackendSite[]>([]);
+const [sitesLoading, setSitesLoading] = useState(true);
+const [sitesError, setSitesError] = useState<string | null>(null);
+useEffect(() => {
+  const loadSites = async () => {
+    try {
+      setSitesLoading(true);
+
+      const sites = await getSites();
+
+      console.log("Backend sites:", sites);
+
+      setBackendSites(sites);
+      setSitesError(null);
+    } catch (error) {
+      console.error("Failed to load sites:", error);
+      setSitesError("Unable to load heritage sites from backend.");
+    } finally {
+      setSitesLoading(false);
+    }
+  };
+
+  loadSites();
+}, []);
   const [selectedCategory, setSelectedCategory] = useState<'All' | 'Temples' | 'Tombs & Mausoleums' | 'Forts & Palaces' | 'Caves & Rock Cut' | 'UNESCO Sites'>('All');
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('All Time Periods');
   const [selectedStyle, setSelectedStyle] = useState('All Styles');
@@ -99,8 +124,29 @@ export const TouristApp: React.FC<TouristAppProps> = ({
     'Nagara Style Architecture'
   ];
 
+  const monumentsWithBackendData: Monument[] = MONUMENTS_DATA.map((monument) => {
+  const backendSite = backendSites.find(
+    (site) =>
+      site.name.toLowerCase() === monument.name.toLowerCase()
+  );
+
+  if (!backendSite) {
+    return monument;
+  }
+
+  return {
+    ...monument,
+    name: backendSite.name,
+    city: backendSite.city,
+    state: backendSite.state,
+    lat: backendSite.latitude,
+    lng: backendSite.longitude,
+    description: backendSite.description,
+    historicalSignificance: backendSite.historical_significance,
+  };
+});
   // Filter logic
-  const filteredMonuments = MONUMENTS_DATA.filter((m) => {
+  const filteredMonuments = monumentsWithBackendData.filter((m) => {
     const matchesSearch = 
       m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.city.toLowerCase().includes(searchQuery.toLowerCase()) ||

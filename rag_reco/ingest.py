@@ -1,53 +1,105 @@
-# ingest.py
 import os
+import re
+import shutil
 from pathlib import Path
+
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
+
 DATA_DIR = "./data"
 DB_DIR = "./chroma_db"
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+
 
 def ingest_documents():
-    print("Starting ingestion...")
+    print("🚀 Starting ingestion...")
+
     Path(DATA_DIR).mkdir(exist_ok=True, parents=True)
 
-    # 1. Load ALL PDFs in the directory at once (No for-loop needed!)
-    print(f"Scanning for PDF files in {DATA_DIR}...")
+    print(f"📂 Scanning for PDF files in {DATA_DIR}...")
+
     try:
         loader = PyPDFDirectoryLoader(DATA_DIR)
         documents = loader.load()
     except Exception as e:
-        print(f"Failed to load documents: {e}")
+        print(f"❌ Failed to load documents: {e}")
         return
 
     if not documents:
-        print(f"No PDF documents found. Please put your PDF(s) in the '{DATA_DIR}' folder.")
+        print(f"❌ No PDF documents found in '{DATA_DIR}'.")
         return
 
-    print(f"Loaded {len(documents)} pages from PDFs.")
+    print(f"📄 Loaded {len(documents)} PDF pages.")
 
-    # 2. Enrich metadata so rag_engine.py can accurately cite the file name
-    for doc in documents:
-        source_path = doc.metadata.get("source", "")
-        # Extracts just the filename (e.g., 'delhi_guide.pdf') from the full path
-        doc.metadata["file_name"] = os.path.basename(source_path)
+    # Combine all PDF page text into one large text block.
+    full_text = "\n".join(doc.page_content for doc in documents)
 
-    # 3. Split the text into AI-readable chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=150)
-    all_chunks = text_splitter.split_documents(documents)
+    # Regex to capture heritage site IDs (DEL001, BOM002, JAI003, PRA001 etc.)
+    pattern = r"(?=(?:DEL|BOM|JAI|PRA)\d{3}\s*:)"
+    records = re.split(pattern, full_text)
 
-    print(f"Saving {len(all_chunks)} chunks to vector database...")
-    
-    # 4. Save to ChromaDB
+    site_documents = []
+
+    for record in records:
+        record = record.strip()
+
+        if not record:
+            continue
+
+        match = re.match(r"((?:DEL|BOM|JAI|PRA)\d{3})\s*:\s*(.*)", record, re.DOTALL)
+
+        if not match:
+            continue
+
+        site_id = match.group(1)
+        content = match.group(2).strip()
+
+        # Keep the site ID inside the searchable content.
+        page_content = f"{site_id}: {content}"
+
+        site_documents.append(
+            Document(
+                page_content=page_content,
+                metadata={
+                    "site_id": site_id,
+                    "file_name": "heritage_guide.pdf",
+                    "page": 1
+                }
+            )
+        )
+
+    print(f"🏛️ Found {len(site_documents)} heritage site records.")
+
+    if not site_documents:
+        print("❌ No site records found. Check the DEL/BOM/JAI/PRA IDs in your PDF.")
+        return
+
+    # Remove the old Chroma database to prevent outdated chunk collisions.
+    if os.path.exists(DB_DIR):
+        print("🗑️ Removing old ChromaDB...")
+        shutil.rmtree(DB_DIR)
+
+    print("💾 Creating new ChromaDB with site_id metadata...")
+
     Chroma.from_documents(
-        documents=all_chunks,
+        documents=site_documents,
         embedding=embeddings,
         persist_directory=DB_DIR
     )
-    print("✅ Ingestion complete! Database is ready.")
+
+    print("✅ Ingestion complete!")
+    print(f"✅ Stored {len(site_documents)} site records in ChromaDB.")
+
+    print("\n📋 Sites indexed successfully:")
+    for doc in site_documents:
+        print(f"   - {doc.metadata['site_id']}")
+
 
 if __name__ == "__main__":
     ingest_documents()

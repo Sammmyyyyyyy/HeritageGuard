@@ -8,6 +8,10 @@ from datetime import datetime, timedelta
 from sklearn.ensemble import RandomForestRegressor
 import joblib
 
+def load_sites(file_path: str) -> list:
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 # ==========================================
 # 1. LIVE WEATHER API (Open-Meteo)
 # ==========================================
