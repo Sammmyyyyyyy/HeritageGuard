@@ -7,6 +7,7 @@ from .schemas import (
     RiskCategory,
     HeritageModelOutput,
     get_sample_response,
+    predict_crowd,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "RiskCategory",
     "HeritageModelOutput",
     "get_sample_response",
+    "predict_crowd",
 ]

@@ -85,7 +85,17 @@ def get_sample_response(site_id: str = "SITE_001") -> HeritageModelOutput:
     )
 
 
+def predict_crowd(site_id: str) -> HeritageModelOutput:
+    """
+    Main public inference entrypoint for the HeritageGuard Crowd & Pressure Model.
+    Currently delegates to get_sample_response(site_id).
+    The actual ML inference pipeline will replace this internal implementation later,
+    while maintaining this exact stable signature and HeritageModelOutput return type.
+    """
+    return get_sample_response(site_id)
+
+
 if __name__ == "__main__":
     import json
-    sample = get_sample_response("SITE_001")
+    sample = predict_crowd("SITE_001")
     print(json.dumps(sample.model_dump(), indent=2))
