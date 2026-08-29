@@ -24,6 +24,38 @@ import { MONUMENTS_DATA } from '../../data/monumentsData';
 import { getSites, BackendSite, createReport, } from '../../api/sites';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
 
+
+// =====================================================
+// LOCAL PUBLIC IMAGE MAPPING FOR THE 20 SUPPORTED SITES
+// Images are stored in frontend/public/images, so they are
+// referenced with /images/<filename> (not /src/assets/...).
+// =====================================================
+const SITE_IMAGE_PATHS: Record<string, string> = {
+  DEL001: '/images/red_fort.jpg',
+  DEL002: '/images/qutub_minar.jpg',
+  DEL003: '/images/india_gate.jpg',
+  DEL004: '/images/humayun_tomb.jpg',
+  DEL005: '/images/Lotus_temple.jpg',
+
+  JAI001: '/images/amer_fort.jpg',
+  JAI002: '/images/Hawa_mahal.jpg',
+  JAI003: '/images/city_palace.jpg',
+  JAI004: '/images/jantar_mantar.jpg',
+  JAI005: '/images/albert_hall.jpg',
+
+  BOM001: '/images/gate_way_of_india.jpg',
+  BOM002: '/images/elephanta_caves.jpg',
+  BOM003: '/images/chatrapati_shivaji_maharaj_terminus.jpg',
+  BOM004: '/images/Haj_ali_dargaah.jpg',
+  BOM005: '/images/sidhivinayak_temple.jpg',
+
+  PRA001: '/images/Triveni_sangam.jpg',
+  PRA002: '/images/allahabad_fort.jpg',
+  PRA003: '/images/Khusro_bagh.jpg',
+  PRA004: '/images/Anand_bhavan.jpg',
+  PRA005: '/images/ChandraShekhar_azad_park.jpg',
+};
+
 // Subcomponents for the Tourist Navigation View
 import { ScanMonument } from './ScanMonument';
 import { AskHeritageAI } from './AskHeritageAI';
@@ -59,6 +91,7 @@ const convertBackendSiteToMonument = (site: BackendSite): Monument => {
     reviewsCount: '0 reviews',
 
     imageUrl:
+      SITE_IMAGE_PATHS[site.site_id] ||
       MONUMENT_FALLBACKS[site.site_id] ||
       '/images/heritage-placeholder.jpg',
 
@@ -111,7 +144,7 @@ interface TouristAppProps {
   activeTab?: 'discover' | 'itinerary' | 'scan' | 'ai-assistant';
   onTabChange?: (tab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant') => void;
   onSelectMonument: (monument: Monument) => void;
-  onReportSubmitted?: (scan: DamageScanResult) => void | Promise<void>;
+  onReportSubmitted?: (scan: DamageScanResult) => void;
   selectedSiteId?: string;
 }
 
@@ -127,39 +160,6 @@ export const TouristApp: React.FC<TouristAppProps> = ({
   onSelectMonument,
   onReportSubmitted
 }) => {
-
-  // Persist citizen damage reports in the backend before notifying the parent.
-  const handleCitizenReportSubmitted = async (scan: DamageScanResult) => {
-    const payload = {
-      site_id: scan.monumentId,
-      damage_score: Number(scan.overallDamageScore ?? 0),
-      detections: scan.detections ?? [],
-      severity:
-        Number(scan.overallDamageScore ?? 0) >= 75
-          ? 'HIGH'
-          : Number(scan.overallDamageScore ?? 0) >= 50
-            ? 'MEDIUM'
-            : 'LOW',
-      report_type: 'CITIZEN_REPORT',
-      summary:
-        scan.detections?.length
-          ? `Citizen reported ${scan.detections.length} damage detection(s).`
-          : 'Citizen submitted a heritage damage report.',
-      image_url: scan.imageUrl || ''
-    };
-
-    console.log('TOURIST - REPORT PAYLOAD:', payload);
-
-    const savedReport = await createReport(payload);
-
-    console.log('TOURIST - REPORT SAVED:', savedReport);
-
-    // Keep existing app-level state/notifications working after successful save.
-    await onReportSubmitted?.({
-      ...scan,
-      status: 'Pending Review'
-    });
-  };
 
   // ===================================================
   // SEARCH & FILTER STATES
@@ -361,12 +361,27 @@ useEffect(() => {
     'Nagara Style Architecture'
   ];
 
-  // Backend is the source of truth once sites are loaded.
-  // This prevents stale/hardcoded monument data from overriding backend sites.
-  const monumentsWithBackendData: Monument[] =
-    backendSites.length > 0
-      ? backendMonuments
-      : MONUMENTS_DATA;
+  const monumentsWithBackendData: Monument[] = MONUMENTS_DATA.map((monument) => {
+  const backendSite = backendSites.find(
+    (site) =>
+      site.name.toLowerCase() === monument.name.toLowerCase()
+  );
+
+  if (!backendSite) {
+    return monument;
+  }
+
+  return {
+    ...monument,
+    name: backendSite.name,
+    city: backendSite.city,
+    state: backendSite.state,
+    lat: backendSite.latitude,
+    lng: backendSite.longitude,
+    description: backendSite.description,
+    historicalSignificance: backendSite.historical_significance,
+  };
+});
   // Filter logic
   const filteredMonuments = monumentsWithBackendData.filter((m) => {
     const matchesSearch = 
@@ -421,7 +436,7 @@ useEffect(() => {
         {activeTab === 'scan' && (
               <ScanMonument
                   language={language}
-                  onReportSubmitted={handleCitizenReportSubmitted}
+                  onReportSubmitted={onReportSubmitted}
 />
         )}
 
@@ -618,8 +633,8 @@ useEffect(() => {
                   const isBookmarked = bookmarkedIds.has(monument.id);
                   const isFailed = failedImages.has(monument.id);
                   const imageSrc = isFailed
-                    ? ''
-                    : monument.imageUrl;
+                    ? (SITE_IMAGE_PATHS[monument.id] || MONUMENT_FALLBACKS[monument.id] || '')
+                    : (SITE_IMAGE_PATHS[monument.id] || monument.imageUrl || '/images/heritage-placeholder.jpg');
 
                   return (
                     <div
@@ -628,19 +643,13 @@ useEffect(() => {
                       className="group bg-white rounded-3xl overflow-hidden border border-[#0D3B2E]/12 hover:border-[#0E382B] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
                     >
                       {/* Image Container */}
-                      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-100">
-                        {imageSrc ? (
-                          <img
-                            src={imageSrc}
-                            alt={monument.name}
-                            onError={() => handleImageError(monument.id)}
-                            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">
-                            Image unavailable
-                          </div>
-                        )}
+                      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-900">
+                        <img
+                          src={imageSrc}
+                          alt={monument.name}
+                          onError={() => handleImageError(monument.id)}
+                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                        />
 
                         {/* Top Left Badge */}
                         <div className="absolute top-3 left-3">

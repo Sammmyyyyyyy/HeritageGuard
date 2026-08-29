@@ -21,7 +21,7 @@ type Site = {
 };
 
 /* =========================================================
-   YOUR 20 HERITAGE SITES
+   20 PROJECT SITES
    ========================================================= */
 
 const SITES: Site[] = [
@@ -61,158 +61,95 @@ const SITES: Site[] = [
 ];
 
 /* =========================================================
-   JPG IMAGE LOADING
-   ---------------------------------------------------------
-   All your monument images are .jpg.
+   IMAGE LOADING
+   =========================================================
+   IMPORTANT:
+   Use an absolute Vite glob from /src/assets and recurse
+   through subfolders. This fixes the "Image not found"
+   problem when the image isn't directly under one folder.
 
-   This scans src/assets and its subfolders recursively.
+   Your asset filenames can be:
+     red_fort.jpg
+     red_fort.png
+     redfort.webp
+     qutub_minar.jpg
+     jantar_mantar.png
+     etc.
    ========================================================= */
 
 const LOCAL_IMAGES = import.meta.glob(
-  '/src/assets/**/*.jpg',
+  '/src/assets/**/*.{png,jpg,jpeg,webp,JPG,JPEG,PNG,WEBP}',
   {
     eager: true,
     import: 'default',
   }
 ) as Record<string, string>;
 
-/* =========================================================
-   IMAGE NAME NORMALIZATION
-   ========================================================= */
-
 const normalize = (value: string) =>
   value
     .toLowerCase()
-    .replace(/\.jpg$/i, '')
+    .replace(/\.(png|jpe?g|webp)$/i, '')
     .replace(/[^a-z0-9]/g, '');
 
-/* =========================================================
-   IMAGE ALIASES
-   ---------------------------------------------------------
-   Matches the filenames you showed in VS Code.
-   ========================================================= */
-
 const IMAGE_ALIASES: Record<string, string[]> = {
-  DEL001: [
-    'red_fort',
-    'redfort',
-  ],
-
-  DEL002: [
-    'qutub_minar',
-    'qutubminar',
-  ],
-
-  DEL003: [
-    'india_gate',
-    'indiagate',
-  ],
-
+  DEL001: ['redfort', 'red_fort', 'redfortdelhi'],
+  DEL002: ['qutubminar', 'qutub_minar', 'qutub'],
+  DEL003: ['indiagate', 'india_gate', 'india_gate_delhi'],
   DEL004: [
-    'humayun_tomb',
-    'humayuns_tomb',
     'humayunstomb',
+    'humayuns_tomb',
+    'humayun_tomb',
+    'humayun_tomb_delhi',
   ],
+  DEL005: ['lotustemple', 'lotus_temple', 'lotus'],
 
-  DEL005: [
-    'Lotus_temple',
-    'lotustemple',
-  ],
-
-  JAI001: [
-    'amber_fort',
-    'amberfort',
-    'amer_fort',
-    'amerfort',
-  ],
-
-  JAI002: [
-    'hawa_mahal',
-    'hawamahal',
-  ],
-
-  JAI003: [
-    'city_palace',
-    'citypalace',
-  ],
-
-  JAI004: [
-    'jantar_mantar',
-    'jantarmantar',
-  ],
-
+  JAI001: ['amerfort', 'amer_fort', 'amberfort', 'amber_fort', 'amber'],
+  JAI002: ['hawamahal', 'hawa_mahal'],
+  JAI003: ['citypalace', 'city_palace'],
+  JAI004: ['jantarmantar', 'jantar_mantar', 'jantar'],
   JAI005: [
-    'albert_hall',
-    'albert_hall_museum',
     'alberthall',
+    'albert_hall',
     'alberthallmuseum',
+    'albert_hall_museum',
   ],
 
   BOM001: [
-    'gate_way',
-    'gateway_of_india',
     'gatewayofindia',
+    'gateway_of_india',
+    'gate_way',
+    'gateway_india',
   ],
-
-  BOM002: [
-    'elephant',
-    'elephanta',
-    'elephanta_caves',
-    'elephantacaves',
-  ],
-
+  BOM002: ['elephantacaves', 'elephanta_caves', 'elephanta', 'elephant'],
   BOM003: [
     'chhatrapati',
     'chhatrapati_shivaji',
     'chhatrapati_shivaji_maharaj_terminus',
     'csmt',
   ],
-
   BOM004: [
-    'haj_ali_dargah',
-    'haji_ali_dargah',
     'hajialidargah',
+    'haji_ali_dargah',
+    'haj_ali_dargah',
     'hajiali',
   ],
-
   BOM005: [
     'siddhivinayak',
     'siddhivinayak_temple',
+    'siddhi_vinayak',
   ],
 
-  PRA001: [
-    'triveni_sangam',
-    'trivenisangam',
-    'triveni',
-  ],
-
-  PRA002: [
-    'allahabad_fort',
-    'allahabadfort',
-  ],
-
-  PRA003: [
-    'khusro_bagh',
-    'khusrobagh',
-    'khusro',
-  ],
-
-  PRA004: [
-    'anand_bhavan',
-    'anandbhavan',
-  ],
-
+  PRA001: ['trivenisangam', 'triveni_sangam', 'triveni'],
+  PRA002: ['allahabadfort', 'allahabad_fort'],
+  PRA003: ['khusrobagh', 'khusro_bagh', 'khusro'],
+  PRA004: ['anandbhavan', 'anand_bhavan'],
   PRA005: [
+    'chandrashekharazadpark',
     'chandrashekhar_azad_park',
     'chandrashekhar_azad',
-    'chandrashekharazadpark',
     'azadpark',
   ],
 };
-
-/* =========================================================
-   BUILD IMAGE INDEX
-   ========================================================= */
 
 const LOCAL_IMAGE_INDEX: Record<string, string> = {};
 
@@ -221,58 +158,34 @@ Object.entries(LOCAL_IMAGES).forEach(([filePath, url]) => {
   LOCAL_IMAGE_INDEX[normalize(fileName)] = url;
 });
 
-/* =========================================================
-   GET IMAGE FOR SITE
-   ========================================================= */
-
 const getSiteImage = (site: Site): string => {
-  /*
-   * 1. Existing explicit site_id mapping.
-   */
-  const explicitImage =
-    MONUMENT_FALLBACKS?.[site.site_id];
+  /* 1. Explicit existing mapping */
+  const mapped = MONUMENT_FALLBACKS?.[site.site_id];
 
-  if (explicitImage) {
-    return explicitImage;
-  }
+  if (mapped) return mapped;
 
-  /*
-   * 2. Filename aliases.
-   */
-  const aliases =
-    IMAGE_ALIASES[site.site_id] ?? [];
+  /* 2. Filename aliases */
+  const aliases = IMAGE_ALIASES[site.site_id] ?? [];
 
   for (const alias of aliases) {
-    const image =
-      LOCAL_IMAGE_INDEX[normalize(alias)];
+    const image = LOCAL_IMAGE_INDEX[normalize(alias)];
 
-    if (image) {
-      return image;
-    }
+    if (image) return image;
   }
 
-  /*
-   * 3. Exact normalized monument name.
-   */
-  const exact =
-    LOCAL_IMAGE_INDEX[normalize(site.name)];
+  /* 3. Exact normalized site name */
+  const exactName = LOCAL_IMAGE_INDEX[normalize(site.name)];
 
-  if (exact) {
-    return exact;
-  }
+  if (exactName) return exactName;
 
-  /*
-   * 4. Partial filename match.
-   */
-  const normalizedName =
-    normalize(site.name);
+  /* 4. Partial match against all loaded assets */
+  const siteTokens = normalize(site.name);
 
-  const partial =
-    Object.entries(LOCAL_IMAGE_INDEX).find(
-      ([fileName]) =>
-        fileName.includes(normalizedName) ||
-        normalizedName.includes(fileName)
-    );
+  const partial = Object.entries(LOCAL_IMAGE_INDEX).find(
+    ([fileName]) =>
+      fileName.includes(siteTokens) ||
+      siteTokens.includes(fileName)
+  );
 
   return partial?.[1] ?? '';
 };
@@ -284,18 +197,13 @@ const getSiteImage = (site: Site): string => {
 export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
   onDispatchTeam,
 }) => {
-  const [selectedSiteId, setSelectedSiteId] =
-    useState('DEL001');
-
-  const [imageError, setImageError] =
-    useState(false);
+  const [selectedSiteId, setSelectedSiteId] = useState('DEL001');
+  const [imageError, setImageError] = useState(false);
 
   const selectedSite = useMemo(
     () =>
-      SITES.find(
-        (site) =>
-          site.site_id === selectedSiteId
-      ) ?? SITES[0],
+      SITES.find((site) => site.site_id === selectedSiteId) ??
+      SITES[0],
     [selectedSiteId]
   );
 
@@ -304,9 +212,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
     [selectedSite]
   );
 
-  const handleSiteChange = (
-    siteId: string
-  ) => {
+  const handleSiteChange = (siteId: string) => {
     setSelectedSiteId(siteId);
     setImageError(false);
   };
@@ -314,14 +220,10 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
   return (
     <div className="space-y-6">
 
-      {/* =====================================================
-          HEADER
-          ===================================================== */}
-
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-3 border-b border-slate-200">
 
         <div>
-
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase tracking-wider">
             Multi-Spectral Computer Vision
           </div>
@@ -331,13 +233,12 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Select any of the 20 configured heritage sites
-            to review its monument image and conservation state.
+            Select any of the 20 configured heritage sites to review its
+            monument image and conservation state.
           </p>
-
         </div>
 
-        {/* SELECT */}
+        {/* MONUMENT SELECTOR */}
         <div className="flex items-center gap-3">
 
           <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
@@ -346,37 +247,23 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
           <select
             value={selectedSite.site_id}
-            onChange={(e) =>
-              handleSiteChange(e.target.value)
-            }
+            onChange={(e) => handleSiteChange(e.target.value)}
             className="w-full sm:w-80 bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#0F3D3E] cursor-pointer"
           >
-
             {SITES.map((site) => (
-              <option
-                key={site.site_id}
-                value={site.site_id}
-              >
+              <option key={site.site_id} value={site.site_id}>
                 {site.name} ({site.city})
               </option>
             ))}
-
           </select>
 
         </div>
-
       </div>
 
-      {/* =====================================================
-          MAIN GRID
-          ===================================================== */}
-
+      {/* MAIN */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-        {/* ===================================================
-            IMAGE PANEL
-            =================================================== */}
-
+        {/* IMAGE PANEL */}
         <div className="lg:col-span-8">
 
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -384,56 +271,29 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             <div className="relative h-[430px] bg-slate-950">
 
               {imageUrl && !imageError ? (
-
-                <img
-                  src={imageUrl}
-                  alt={selectedSite.name}
-                  className="w-full h-full object-cover"
-                  onError={() => {
-                    console.error(
-                      'AI DAMAGE IMAGE LOAD FAILED:',
-                      selectedSite.site_id,
-                      imageUrl
-                    );
-
-                    setImageError(true);
-                  }}
-                />
-
-              ) : (
-
-                <div className="w-full h-full flex flex-col items-center justify-center text-white/80 px-6 text-center">
-
-                  <ImageIcon className="w-12 h-12 mb-3 opacity-70" />
-
-                  <p className="font-semibold text-base">
-                    Image not available
-                  </p>
-
-                  <p className="text-xs text-white/70 mt-2">
-                    {selectedSite.name}
-                    {' '}
-                    ({selectedSite.site_id})
-                  </p>
-
-                  <p className="text-[10px] text-white/40 mt-1">
-                    Expected JPG asset inside src/assets.
-                  </p>
-
-                </div>
-
-              )}
-
-              {imageUrl && !imageError && (
                 <>
+
+                  <img
+                    src={imageUrl}
+                    alt={selectedSite.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error(
+                        'AI DAMAGE IMAGE LOAD FAILED',
+                        selectedSite.site_id,
+                        imageUrl
+                      );
+
+                      setImageError(true);
+                    }}
+                  />
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent pointer-events-none" />
 
                   <div className="absolute top-4 left-4">
-
                     <span className="px-3 py-1.5 rounded-full bg-[#0F3D3E]/90 text-white text-[10px] font-bold shadow-lg">
                       Heritage Site Image
                     </span>
-
                   </div>
 
                   <div className="absolute bottom-4 left-4 right-4">
@@ -447,9 +307,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                         </p>
 
                         <p className="text-xs text-white/80">
-                          {selectedSite.city}
-                          {', '}
-                          {selectedSite.state}
+                          {selectedSite.city}, {selectedSite.state}
                           {' • '}
                           {selectedSite.site_id}
                         </p>
@@ -463,12 +321,29 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                     </div>
 
                   </div>
+
                 </>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-white/80 px-6 text-center">
+
+                  <ImageIcon className="w-12 h-12 mb-3 opacity-70" />
+
+                  <p className="font-semibold text-base">
+                    Image not available
+                  </p>
+
+                  <p className="text-xs text-white/70 mt-2">
+                    {selectedSite.name} ({selectedSite.site_id})
+                  </p>
+
+                  <p className="text-[10px] text-white/40 mt-1">
+                    Check the image filename inside src/assets.
+                  </p>
+
+                </div>
               )}
 
             </div>
-
-            {/* IMAGE FOOTER */}
 
             <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100">
 
@@ -490,9 +365,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
           </div>
 
-          {/* =================================================
-              AI DETECTION LAYER
-              ================================================= */}
+          {/* AI DETECTION LAYER */}
 
           <div className="mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
 
@@ -526,9 +399,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
         </div>
 
-        {/* =================================================
-            DIAGNOSTICS
-            ================================================= */}
+        {/* DIAGNOSTICS PANEL */}
 
         <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
 
@@ -543,9 +414,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             </h3>
 
             <p className="text-xs text-slate-500">
-              {selectedSite.city}
-              {', '}
-              {selectedSite.state}
+              {selectedSite.city}, {selectedSite.state}
             </p>
 
           </div>
@@ -601,8 +470,8 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
               </p>
 
               <p className="text-[11px] text-slate-500 mt-1 max-w-xs">
-                Select a site and run its damage scan to populate
-                AI detections and conservation recommendations.
+                Select a site and run its damage scan to populate AI
+                detections and conservation recommendations.
               </p>
 
             </div>
@@ -618,35 +487,28 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             }
             className="mt-4 w-full py-3 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
           >
-
             <Send className="w-4 h-4 text-[#D4AF37]" />
-
             Dispatch ASI Conservation Team
-
           </button>
 
         </div>
 
       </div>
 
-      {/* =====================================================
-          QUICK SITE SELECT
-          ===================================================== */}
+      {/* QUICK SITE SELECT */}
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
 
         <div className="flex items-center justify-between mb-3">
 
           <div>
-
             <h3 className="text-xs font-bold text-[#0F3D3E]">
               Configured Heritage Sites
             </h3>
 
             <p className="text-[10px] text-slate-500">
-              Each site uses its own local JPG image.
+              Each site uses its own local image asset.
             </p>
-
           </div>
 
           <span className="text-[10px] font-mono text-slate-400">
@@ -659,11 +521,9 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
           {SITES.map((site) => {
 
-            const hasImage =
-              Boolean(getSiteImage(site));
+            const hasImage = Boolean(getSiteImage(site));
 
             return (
-
               <button
                 key={site.site_id}
                 onClick={() =>
@@ -687,7 +547,6 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                 {site.name}
 
               </button>
-
             );
           })}
 
