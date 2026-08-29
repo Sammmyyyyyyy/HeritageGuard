@@ -1,0 +1,382 @@
+[
+  {
+    "site_id": "DEL001",
+    "name": "Red Fort",
+    "city": "Delhi",
+    "state": "Delhi",
+    "region": "Delhi NCR",
+    "dataset_place": "Red Fort, Delhi",
+    "open_hour": 9,
+    "close_hour": 16,
+    "safe_capacity": 15000,
+    "physical_vulnerability": 78,
+    "recent_deterioration": 62,
+    "maintenance_delay_days": 45,
+    "historical_importance": 95,
+    "coords": {
+      "lat": 28.6562,
+      "lng": 77.2410
+    }
+  },
+  {
+    "site_id": "DEL002",
+    "name": "Qutub Minar",
+    "city": "Delhi",
+    "state": "Delhi",
+    "region": "Delhi NCR",
+    "dataset_place": "Qutub Minar, Delhi",
+    "open_hour": 7,
+    "close_hour": 17,
+    "safe_capacity": 10000,
+    "physical_vulnerability": 75,
+    "recent_deterioration": 55,
+    "maintenance_delay_days": 30,
+    "historical_importance": 92,
+    "coords": {
+      "lat": 28.5245,
+      "lng": 77.1855
+    }
+  },
+  {
+    "site_id": "DEL003",
+    "name": "India Gate",
+    "city": "Delhi",
+    "state": "Delhi",
+    "region": "Delhi NCR",
+    "dataset_place": "India Gate, Delhi",
+    "open_hour": 0,
+    "close_hour": 24,
+    "safe_capacity": 50000,
+    "physical_vulnerability": 65,
+    "recent_deterioration": 48,
+    "maintenance_delay_days": 20,
+    "historical_importance": 88,
+    "coords": {
+      "lat": 28.6129,
+      "lng": 77.2295
+    }
+  },
+  {
+    "site_id": "DEL004",
+    "name": "Humayun's Tomb",
+    "city": "Delhi",
+    "state": "Delhi",
+    "region": "Delhi NCR",
+    "dataset_place": "Humayun's Tomb, Delhi",
+    "open_hour": 6,
+    "close_hour": 18,
+    "safe_capacity": 25000,
+    "physical_vulnerability": 70,
+    "recent_deterioration": 50,
+    "maintenance_delay_days": 25,
+    "historical_importance": 90,
+    "coords": {
+      "lat": 28.5933,
+      "lng": 77.2507
+    }
+  },
+  {
+    "site_id": "DEL005",
+    "name": "Lotus Temple",
+    "city": "Delhi",
+    "state": "Delhi",
+    "region": "Delhi NCR",
+    "dataset_place": "Lotus Temple, Delhi",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 2500,
+    "physical_vulnerability": 68,
+    "recent_deterioration": 42,
+    "maintenance_delay_days": 15,
+    "historical_importance": 82,
+    "coords": {
+      "lat": 28.5535,
+      "lng": 77.2588
+    }
+  },
+  {
+    "site_id": "JAI001",
+    "name": "Amer Fort",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "region": "Rajasthan",
+    "dataset_place": "Amer Fort, Jaipur",
+    "open_hour": 8,
+    "close_hour": 17,
+    "safe_capacity": 5000,
+    "physical_vulnerability": 82,
+    "recent_deterioration": 68,
+    "maintenance_delay_days": 40,
+    "historical_importance": 94,
+    "coords": {
+      "lat": 26.9855,
+      "lng": 75.8513
+    }
+  },
+  {
+    "site_id": "JAI002",
+    "name": "Hawa Mahal",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "region": "Rajasthan",
+    "dataset_place": "Hawa Mahal, Jaipur",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 1000,
+    "physical_vulnerability": 85,
+    "recent_deterioration": 70,
+    "maintenance_delay_days": 50,
+    "historical_importance": 91,
+    "coords": {
+      "lat": 26.9239,
+      "lng": 75.8267
+    }
+  },
+  {
+    "site_id": "JAI003",
+    "name": "City Palace",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "region": "Rajasthan",
+    "dataset_place": "City Palace, Jaipur",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 2000,
+    "physical_vulnerability": 72,
+    "recent_deterioration": 52,
+    "maintenance_delay_days": 20,
+    "historical_importance": 89,
+    "coords": {
+      "lat": 26.9255,
+      "lng": 75.8236
+    }
+  },
+  {
+    "site_id": "JAI004",
+    "name": "Jantar Mantar",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "region": "Rajasthan",
+    "dataset_place": "Jantar Mantar, Jaipur",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 1500,
+    "physical_vulnerability": 76,
+    "recent_deterioration": 58,
+    "maintenance_delay_days": 35,
+    "historical_importance": 93,
+    "coords": {
+      "lat": 26.9247,
+      "lng": 75.8245
+    }
+  },
+  {
+    "site_id": "JAI005",
+    "name": "Albert Hall Museum",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "region": "Rajasthan",
+    "dataset_place": "Albert Hall Museum, Jaipur",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 1000,
+    "physical_vulnerability": 64,
+    "recent_deterioration": 45,
+    "maintenance_delay_days": 18,
+    "historical_importance": 84,
+    "coords": {
+      "lat": 26.9116,
+      "lng": 75.8195
+    }
+  },
+  {
+    "site_id": "BOM001",
+    "name": "Gateway of India",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "region": "Maharashtra",
+    "dataset_place": "Gateway of India, Mumbai",
+    "open_hour": 6,
+    "close_hour": 23,
+    "safe_capacity": 45000,
+    "physical_vulnerability": 88,
+    "recent_deterioration": 76,
+    "maintenance_delay_days": 60,
+    "historical_importance": 94,
+    "coords": {
+      "lat": 18.9220,
+      "lng": 72.8347
+    }
+  },
+  {
+    "site_id": "BOM002",
+    "name": "Elephanta Caves",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "region": "Maharashtra",
+    "dataset_place": "Elephanta Caves, Mumbai",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 2000,
+    "physical_vulnerability": 86,
+    "recent_deterioration": 74,
+    "maintenance_delay_days": 55,
+    "historical_importance": 93,
+    "coords": {
+      "lat": 18.9633,
+      "lng": 72.9315
+    }
+  },
+  {
+    "site_id": "BOM003",
+    "name": "Chhatrapati Shivaji Maharaj Terminus",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "region": "Maharashtra",
+    "dataset_place": "Chhatrapati Shivaji Maharaj Terminus, Mumbai",
+    "open_hour": 0,
+    "close_hour": 24,
+    "safe_capacity": 100000,
+    "physical_vulnerability": 80,
+    "recent_deterioration": 66,
+    "maintenance_delay_days": 30,
+    "historical_importance": 95,
+    "coords": {
+      "lat": 18.9400,
+      "lng": 72.8355
+    }
+  },
+  {
+    "site_id": "BOM004",
+    "name": "Haji Ali Dargah",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "region": "Maharashtra",
+    "dataset_place": "Haji Ali Dargah, Mumbai",
+    "open_hour": 5,
+    "close_hour": 22,
+    "safe_capacity": 15000,
+    "physical_vulnerability": 84,
+    "recent_deterioration": 72,
+    "maintenance_delay_days": 40,
+    "historical_importance": 87,
+    "coords": {
+      "lat": 18.9827,
+      "lng": 72.8089
+    }
+  },
+  {
+    "site_id": "BOM005",
+    "name": "Siddhivinayak Temple",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "region": "Maharashtra",
+    "dataset_place": "Siddhivinayak Temple, Mumbai",
+    "open_hour": 5,
+    "close_hour": 22,
+    "safe_capacity": 15000,
+    "physical_vulnerability": 78,
+    "recent_deterioration": 60,
+    "maintenance_delay_days": 25,
+    "historical_importance": 88,
+    "coords": {
+      "lat": 19.0166,
+      "lng": 72.8304
+    }
+  },
+  {
+    "site_id": "PRA001",
+    "name": "Triveni Sangam",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "region": "Uttar Pradesh",
+    "dataset_place": "Triveni Sangam, Prayagraj",
+    "open_hour": 0,
+    "close_hour": 24,
+    "safe_capacity": 100000,
+    "physical_vulnerability": 85,
+    "recent_deterioration": 75,
+    "maintenance_delay_days": 45,
+    "historical_importance": 96,
+    "coords": {
+      "lat": 25.4299,
+      "lng": 81.8848
+    }
+  },
+  {
+    "site_id": "PRA002",
+    "name": "Allahabad Fort",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "region": "Uttar Pradesh",
+    "dataset_place": "Allahabad Fort, Prayagraj",
+    "open_hour": 7,
+    "close_hour": 18,
+    "safe_capacity": 2000,
+    "physical_vulnerability": 74,
+    "recent_deterioration": 58,
+    "maintenance_delay_days": 35,
+    "historical_importance": 90,
+    "coords": {
+      "lat": 25.4287,
+      "lng": 81.8761
+    }
+  },
+  {
+    "site_id": "PRA003",
+    "name": "Khusro Bagh",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "region": "Uttar Pradesh",
+    "dataset_place": "Khusro Bagh, Prayagraj",
+    "open_hour": 6,
+    "close_hour": 19,
+    "safe_capacity": 3000,
+    "physical_vulnerability": 68,
+    "recent_deterioration": 48,
+    "maintenance_delay_days": 30,
+    "historical_importance": 85,
+    "coords": {
+      "lat": 25.4429,
+      "lng": 81.8153
+    }
+  },
+  {
+    "site_id": "PRA004",
+    "name": "Anand Bhavan",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "region": "Uttar Pradesh",
+    "dataset_place": "Anand Bhavan, Prayagraj",
+    "open_hour": 9,
+    "close_hour": 17,
+    "safe_capacity": 1000,
+    "physical_vulnerability": 62,
+    "recent_deterioration": 40,
+    "maintenance_delay_days": 15,
+    "historical_importance": 89,
+    "coords": {
+      "lat": 25.4615,
+      "lng": 81.8596
+    }
+  },
+  {
+    "site_id": "PRA005",
+    "name": "Chandrashekhar Azad Park",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "region": "Uttar Pradesh",
+    "dataset_place": "Chandrashekhar Azad Park, Prayagraj",
+    "open_hour": 5,
+    "close_hour": 21,
+    "safe_capacity": 10000,
+    "physical_vulnerability": 58,
+    "recent_deterioration": 38,
+    "maintenance_delay_days": 20,
+    "historical_importance": 83,
+    "coords": {
+      "lat": 25.4542,
+      "lng": 81.8499
+    }
+  }
+]

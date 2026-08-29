@@ -1,41 +1,32 @@
-from typing import List
-
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class BoundingBox(BaseModel):
-    x1: float
-    y1: float
-    x2: float
-    y2: float
+class HourlyPrediction(BaseModel):
+    time: str
+    crowd_percent: int = Field(ge=0, le=100)
+    expected_visitors: int = Field(ge=0)
 
 
-class DamageDetection(BaseModel):
-    type: str
-
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-    )
-
-    bbox: BoundingBox
-
-
-class DamageAIResponse(BaseModel):
+class CrowdPredictionRequest(BaseModel):
     site_id: str
-
-    damage_score: float = Field(
-        ge=0,
-        le=100,
-    )
-
-    priority: str
-
-    detections: List[
-        DamageDetection
-    ]
+    date: Optional[str] = None
+    weather: Optional[str] = None
+    temperature: Optional[float] = None
 
 
-class DamageAnalysisResponse(BaseModel):
-    success: bool = True
-    data: DamageAIResponse
+class CrowdPredictionResponse(BaseModel):
+    site_id: str
+    site_name: str
+    city: str
+    state: str
+    date: str
+    day_of_week: str
+    operating_hours: str
+    weather: str
+    temperature_c: float
+    safe_capacity: int
+    daily_expected_total: int
+    predictions: List[HourlyPrediction]
+    peak_hours: List[str]
+    best_time: str

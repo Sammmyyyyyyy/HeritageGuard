@@ -1,0 +1,400 @@
+{
+  "overall": {
+    "mae": 710.17,
+    "rmse": 2397.53,
+    "r2": 0.9958,
+    "mape": 57.44,
+    "smape": 32.8
+  },
+  "per_site": {
+    "BOM001": {
+      "mae": 196.82,
+      "rmse": 259.7,
+      "r2": 0.9263,
+      "mape": 22.58,
+      "smape": 20.31,
+      "sample_count": 1314,
+      "mean_actual": 1139.66,
+      "mean_pred": 1104.42
+    },
+    "BOM002": {
+      "mae": 78.26,
+      "rmse": 93.08,
+      "r2": 0.667,
+      "mape": 25.04,
+      "smape": 21.18,
+      "sample_count": 494,
+      "mean_actual": 403.16,
+      "mean_pred": 435.54
+    },
+    "BOM003": {
+      "mae": 5499.59,
+      "rmse": 7679.17,
+      "r2": 0.9879,
+      "mape": 5.29,
+      "smape": 5.25,
+      "sample_count": 1314,
+      "mean_actual": 103359.96,
+      "mean_pred": 105240.36
+    },
+    "BOM005": {
+      "mae": 245.69,
+      "rmse": 257.08,
+      "r2": 0.9238,
+      "mape": 18.62,
+      "smape": 16.31,
+      "sample_count": 986,
+      "mean_actual": 1830.71,
+      "mean_pred": 2054.43
+    },
+    "DEL001": {
+      "mae": 203.6,
+      "rmse": 272.3,
+      "r2": 0.6871,
+      "mape": 13.02,
+      "smape": 14.04,
+      "sample_count": 439,
+      "mean_actual": 1360.6,
+      "mean_pred": 1177.56
+    },
+    "DEL002": {
+      "mae": 128.99,
+      "rmse": 186.17,
+      "r2": 0.8326,
+      "mape": 13.97,
+      "smape": 13.86,
+      "sample_count": 603,
+      "mean_actual": 924.3,
+      "mean_pred": 855.16
+    },
+    "DEL003": {
+      "mae": 450.05,
+      "rmse": 768.47,
+      "r2": 0.8877,
+      "mape": 12.12,
+      "smape": 13.37,
+      "sample_count": 1314,
+      "mean_actual": 2726.49,
+      "mean_pred": 2281.08
+    },
+    "DEL004": {
+      "mae": 115.47,
+      "rmse": 128.53,
+      "r2": 0.585,
+      "mape": 68.32,
+      "smape": 41.87,
+      "sample_count": 713,
+      "mean_actual": 335.24,
+      "mean_pred": 439.83
+    },
+    "DEL005": {
+      "mae": 206.89,
+      "rmse": 282.06,
+      "r2": 0.7503,
+      "mape": 12.35,
+      "smape": 13.43,
+      "sample_count": 494,
+      "mean_actual": 1411.03,
+      "mean_pred": 1211.32
+    },
+    "JAI001": {
+      "mae": 111.52,
+      "rmse": 154.5,
+      "r2": 0.847,
+      "mape": 12.51,
+      "smape": 12.31,
+      "sample_count": 548,
+      "mean_actual": 907.68,
+      "mean_pred": 860.61
+    },
+    "JAI002": {
+      "mae": 84.07,
+      "rmse": 97.22,
+      "r2": 0.7478,
+      "mape": 22.86,
+      "smape": 19.48,
+      "sample_count": 494,
+      "mean_actual": 483.8,
+      "mean_pred": 543.24
+    },
+    "JAI003": {
+      "mae": 91.09,
+      "rmse": 101.49,
+      "r2": 0.6041,
+      "mape": 30.24,
+      "smape": 24.64,
+      "sample_count": 494,
+      "mean_actual": 403.16,
+      "mean_pred": 481.88
+    },
+    "JAI004": {
+      "mae": 126.3,
+      "rmse": 134.1,
+      "r2": -0.9157,
+      "mape": 68.23,
+      "smape": 46.96,
+      "sample_count": 494,
+      "mean_actual": 241.91,
+      "mean_pred": 365.33
+    },
+    "JAI005": {
+      "mae": 142.52,
+      "rmse": 147.61,
+      "r2": -2.356,
+      "mape": 89.79,
+      "smape": 57.61,
+      "sample_count": 494,
+      "mean_actual": 201.6,
+      "mean_pred": 343.92
+    },
+    "PRA001": {
+      "mae": 241.88,
+      "rmse": 285.29,
+      "r2": 0.1808,
+      "mape": 79.44,
+      "smape": 50.88,
+      "sample_count": 1314,
+      "mean_actual": 489.26,
+      "mean_pred": 727.44
+    },
+    "PRA003": {
+      "mae": 212.87,
+      "rmse": 213.4,
+      "r2": -18.9685,
+      "mape": 376.84,
+      "smape": 119.34,
+      "sample_count": 767,
+      "mean_actual": 82.28,
+      "mean_pred": 295.15
+    },
+    "PRA004": {
+      "mae": 120.63,
+      "rmse": 128.6,
+      "r2": -0.7618,
+      "mape": 65.45,
+      "smape": 45.48,
+      "sample_count": 494,
+      "mean_actual": 241.91,
+      "mean_pred": 359.13
+    },
+    "PRA005": {
+      "mae": 215.23,
+      "rmse": 217.18,
+      "r2": -0.5977,
+      "mape": 105.08,
+      "smape": 64.02,
+      "sample_count": 932,
+      "mean_actual": 290.73,
+      "mean_pred": 505.97
+    }
+  },
+  "per_hour": {
+    "0": {
+      "mae": 478.5,
+      "rmse": 815.17,
+      "r2": 0.9934,
+      "mape": 46.39,
+      "smape": 30.73,
+      "sample_count": 216
+    },
+    "1": {
+      "mae": 479.65,
+      "rmse": 815.52,
+      "r2": 0.9934,
+      "mape": 46.44,
+      "smape": 30.81,
+      "sample_count": 216
+    },
+    "2": {
+      "mae": 481.2,
+      "rmse": 815.8,
+      "r2": 0.9934,
+      "mape": 46.92,
+      "smape": 31.04,
+      "sample_count": 216
+    },
+    "3": {
+      "mae": 481.79,
+      "rmse": 815.9,
+      "r2": 0.9934,
+      "mape": 46.98,
+      "smape": 31.11,
+      "sample_count": 216
+    },
+    "4": {
+      "mae": 481.79,
+      "rmse": 815.9,
+      "r2": 0.9934,
+      "mape": 46.98,
+      "smape": 31.11,
+      "sample_count": 216
+    },
+    "5": {
+      "mae": 423.75,
+      "rmse": 685.19,
+      "r2": 0.9937,
+      "mape": 72.85,
+      "smape": 44.4,
+      "sample_count": 324
+    },
+    "6": {
+      "mae": 678.44,
+      "rmse": 1721.85,
+      "r2": 0.9955,
+      "mape": 64.1,
+      "smape": 37.95,
+      "sample_count": 436
+    },
+    "7": {
+      "mae": 618.47,
+      "rmse": 1606.5,
+      "r2": 0.9957,
+      "mape": 48.01,
+      "smape": 32.06,
+      "sample_count": 490
+    },
+    "8": {
+      "mae": 1155.06,
+      "rmse": 3806.0,
+      "r2": 0.9958,
+      "mape": 37.35,
+      "smape": 26.09,
+      "sample_count": 546
+    },
+    "9": {
+      "mae": 725.51,
+      "rmse": 2888.21,
+      "r2": 0.9958,
+      "mape": 51.22,
+      "smape": 34.06,
+      "sample_count": 981
+    },
+    "10": {
+      "mae": 774.78,
+      "rmse": 2915.62,
+      "r2": 0.9957,
+      "mape": 70.93,
+      "smape": 36.25,
+      "sample_count": 990
+    },
+    "11": {
+      "mae": 547.15,
+      "rmse": 1616.64,
+      "r2": 0.9958,
+      "mape": 64.86,
+      "smape": 33.33,
+      "sample_count": 990
+    },
+    "12": {
+      "mae": 587.08,
+      "rmse": 1642.79,
+      "r2": 0.9956,
+      "mape": 62.01,
+      "smape": 31.89,
+      "sample_count": 990
+    },
+    "13": {
+      "mae": 547.83,
+      "rmse": 1606.0,
+      "r2": 0.9958,
+      "mape": 58.43,
+      "smape": 29.09,
+      "sample_count": 990
+    },
+    "14": {
+      "mae": 508.75,
+      "rmse": 1582.5,
+      "r2": 0.996,
+      "mape": 60.6,
+      "smape": 30.36,
+      "sample_count": 990
+    },
+    "15": {
+      "mae": 474.85,
+      "rmse": 1570.22,
+      "r2": 0.996,
+      "mape": 63.81,
+      "smape": 32.22,
+      "sample_count": 990
+    },
+    "16": {
+      "mae": 467.43,
+      "rmse": 1566.42,
+      "r2": 0.9961,
+      "mape": 72.6,
+      "smape": 37.37,
+      "sample_count": 990
+    },
+    "17": {
+      "mae": 737.52,
+      "rmse": 2930.13,
+      "r2": 0.9959,
+      "mape": 59.04,
+      "smape": 38.52,
+      "sample_count": 935
+    },
+    "18": {
+      "mae": 1407.55,
+      "rmse": 4266.83,
+      "r2": 0.9956,
+      "mape": 62.62,
+      "smape": 36.33,
+      "sample_count": 440
+    },
+    "19": {
+      "mae": 1581.16,
+      "rmse": 4560.85,
+      "r2": 0.9955,
+      "mape": 41.1,
+      "smape": 27.0,
+      "sample_count": 385
+    },
+    "20": {
+      "mae": 1794.09,
+      "rmse": 4908.65,
+      "r2": 0.9955,
+      "mape": 18.78,
+      "smape": 16.27,
+      "sample_count": 330
+    },
+    "21": {
+      "mae": 796.02,
+      "rmse": 1925.91,
+      "r2": 0.9956,
+      "mape": 56.09,
+      "smape": 36.86,
+      "sample_count": 330
+    },
+    "22": {
+      "mae": 914.12,
+      "rmse": 2107.72,
+      "r2": 0.9954,
+      "mape": 37.93,
+      "smape": 27.6,
+      "sample_count": 275
+    },
+    "23": {
+      "mae": 1093.89,
+      "rmse": 2354.38,
+      "r2": 0.9952,
+      "mape": 38.44,
+      "smape": 27.03,
+      "sample_count": 220
+    }
+  },
+  "peak_period": {
+    "mae": 1345.17,
+    "rmse": 4128.72,
+    "r2": 0.9951,
+    "mape": 23.45,
+    "smape": 19.84
+  },
+  "non_peak_period": {
+    "mae": 488.46,
+    "rmse": 1342.89,
+    "r2": 0.997,
+    "mape": 69.31,
+    "smape": 37.32
+  },
+  "total_test_samples": 13702
+}
