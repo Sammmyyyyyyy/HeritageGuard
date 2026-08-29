@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PressureFactors(BaseModel):
-
     visitor_pressure: float = Field(
         ge=0,
         le=100,
@@ -20,7 +19,6 @@ class PressureFactors(BaseModel):
 
 
 class PressureResponse(BaseModel):
-
     site_id: str
 
     pressure_score: float = Field(
