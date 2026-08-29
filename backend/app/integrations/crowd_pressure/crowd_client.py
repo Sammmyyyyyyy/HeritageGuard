@@ -11,9 +11,14 @@ class CrowdClient:
     ) -> Dict[str, Any]:
 
         try:
-            result = predict_crowd(site_id)
-
-            return result.model_dump()
+            # Temporary response until Shagun's model is integrated
+            return {
+                "site_id": site_id,
+                "predictions": [],
+                "best_time": None,
+                "pressure_score": 0,
+                "risk": "LOW",
+            }
 
         except Exception as exc:
             raise AIServiceUnavailable(

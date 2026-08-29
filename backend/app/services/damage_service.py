@@ -1,15 +1,10 @@
+import uuid
 from typing import Any, Dict
 
 from app.db.storage import upload_image
-from app.integrations.damage.client import (
-    DamageAIClient,
-)
-from app.repositories.damage_repository import (
-    DamageRepository,
-)
-from app.repositories.alert_repository import (
-    AlertRepository,
-)
+from app.integrations.damage.client import DamageAIClient
+from app.repositories.damage_repository import DamageRepository
+from app.repositories.alert_repository import AlertRepository
 from app.utils.files import validate_image
 
 
@@ -49,13 +44,23 @@ class DamageService:
         )
 
         # -----------------------------------------
-        # 3. Upload image to Supabase Storage
+        # 3. Generate UNIQUE image path
         # -----------------------------------------
+
+        filename = file.filename or "image.jpg"
+
+        unique_filename = (
+            f"{uuid.uuid4()}_{filename}"
+        )
 
         image_path = (
             f"{site_id}/"
-            f"{file.filename or 'image.jpg'}"
+            f"{unique_filename}"
         )
+
+        # -----------------------------------------
+        # 4. Upload image to Supabase Storage
+        # -----------------------------------------
 
         image_url = upload_image(
             image_bytes,
@@ -64,7 +69,7 @@ class DamageService:
         )
 
         # -----------------------------------------
-        # 4. Prepare database record
+        # 5. Prepare database record
         # -----------------------------------------
 
         report_data = {
@@ -76,7 +81,7 @@ class DamageService:
         }
 
         # -----------------------------------------
-        # 5. Save damage report
+        # 6. Save damage report
         # -----------------------------------------
 
         report = self.damage_repository.create(
@@ -84,14 +89,13 @@ class DamageService:
         )
 
         # -----------------------------------------
-        # 6. Create alert for serious damage
+        # 7. Create alert for serious damage
         # -----------------------------------------
 
         if result["priority"] in {
             "HIGH",
             "CRITICAL",
         }:
-
             self.alert_repository.create(
                 {
                     "site_id": site_id,
@@ -107,7 +111,7 @@ class DamageService:
             )
 
         # -----------------------------------------
-        # 7. Return response
+        # 8. Return response
         # -----------------------------------------
 
         return {
