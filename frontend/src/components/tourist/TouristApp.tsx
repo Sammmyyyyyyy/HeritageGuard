@@ -1,25 +1,27 @@
-import React, { useState , useEffect } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  Star, 
-  Calendar, 
-  ShieldCheck, 
-  SlidersHorizontal, 
-  Heart, 
-  Sparkles, 
-  ArrowRight, 
-  Camera, 
-  Bot, 
-  Compass, 
-  AlertTriangle, 
-  Settings, 
+import React, { useState, useEffect } from 'react';
+
+import {
+  Search,
+  MapPin,
+  Star,
+  Calendar,
+  ShieldCheck,
+  SlidersHorizontal,
+  Heart,
+  Sparkles,
+  ArrowRight,
+  Camera,
+  Bot,
+  Compass,
+  AlertTriangle,
+  Settings,
   Filter,
   Users
 } from 'lucide-react';
+
 import { Monument, DamageScanResult } from '../../types/heritage';
 import { MONUMENTS_DATA } from '../../data/monumentsData';
-import { getSites, BackendSite } from '../../api/sites';
+import { getSites, BackendSite, createReport, } from '../../api/sites';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
 
 // Subcomponents for the Tourist Navigation View
@@ -27,13 +29,96 @@ import { ScanMonument } from './ScanMonument';
 import { AskHeritageAI } from './AskHeritageAI';
 import { ItineraryPlanner } from './ItineraryPlanner';
 
+
+// =====================================================
+// BACKEND SITE → FRONTEND MONUMENT CONVERTER
+// =====================================================
+
+const convertBackendSiteToMonument = (site: BackendSite): Monument => {
+  return {
+    id: site.site_id,
+
+    name: site.name,
+    hindiName: site.name,
+    tagline: site.description,
+
+    city: site.city,
+    state: site.state,
+
+    lat: site.latitude,
+    lng: site.longitude,
+
+    category: 'Other Heritage',
+
+    timePeriod: 'Historical Period',
+    architecturalStyle: 'Heritage Architecture',
+
+    isUnesco: false,
+
+    rating: 0,
+    reviewsCount: '0 reviews',
+
+    imageUrl:
+      MONUMENT_FALLBACKS[site.site_id] ||
+      '/images/heritage-placeholder.jpg',
+
+    gallery: [],
+
+    heritagePressureScore: 0,
+    damageScore: 0,
+
+    crowdLevel: 'Low',
+
+    liveFootfall: 0,
+    maxCapacity: 0,
+
+    bestVisitingWindow: {
+      start: '09:00 AM',
+      end: '05:00 PM',
+      reason: 'Recommended based on available site information.',
+      hindiReason: 'उपलब्ध साइट जानकारी के आधार पर अनुशंसित समय।'
+    },
+
+    openingHours: 'Check local timings',
+
+    entryFee: {
+      indian: 0,
+      foreigner: 0
+    },
+
+    deteriorationStatus: 'Good',
+
+    description: site.description,
+    hindiDescription: site.description,
+
+    historicalSignificance: site.historical_significance,
+
+    architectureHighlights: [],
+
+    alternativeSites: [],
+
+    hourlyFootfall: []
+  };
+};
+
+
+// =====================================================
+// TOURIST APP PROPS
+// =====================================================
+
 interface TouristAppProps {
   language: 'en' | 'hi';
   activeTab?: 'discover' | 'itinerary' | 'scan' | 'ai-assistant';
   onTabChange?: (tab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant') => void;
   onSelectMonument: (monument: Monument) => void;
-  onReportSubmitted?: (scan: DamageScanResult) => void;
+  onReportSubmitted?: (scan: DamageScanResult) => void | Promise<void>;
+  selectedSiteId?: string;
 }
+
+
+// =====================================================
+// TOURIST APP
+// =====================================================
 
 export const TouristApp: React.FC<TouristAppProps> = ({
   language,
@@ -42,12 +127,70 @@ export const TouristApp: React.FC<TouristAppProps> = ({
   onSelectMonument,
   onReportSubmitted
 }) => {
-  // Search & Filter States
+
+  // Persist citizen damage reports in the backend before notifying the parent.
+  const handleCitizenReportSubmitted = async (scan: DamageScanResult) => {
+    const payload = {
+      site_id: scan.monumentId,
+      damage_score: Number(scan.overallDamageScore ?? 0),
+      detections: scan.detections ?? [],
+      severity:
+        Number(scan.overallDamageScore ?? 0) >= 75
+          ? 'HIGH'
+          : Number(scan.overallDamageScore ?? 0) >= 50
+            ? 'MEDIUM'
+            : 'LOW',
+      report_type: 'CITIZEN_REPORT',
+      summary:
+        scan.detections?.length
+          ? `Citizen reported ${scan.detections.length} damage detection(s).`
+          : 'Citizen submitted a heritage damage report.',
+      image_url: scan.imageUrl || ''
+    };
+
+    console.log('TOURIST - REPORT PAYLOAD:', payload);
+
+    const savedReport = await createReport(payload);
+
+    console.log('TOURIST - REPORT SAVED:', savedReport);
+
+    // Keep existing app-level state/notifications working after successful save.
+    await onReportSubmitted?.({
+      ...scan,
+      status: 'Pending Review'
+    });
+  };
+
+  // ===================================================
+  // SEARCH & FILTER STATES
+  // ===================================================
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedState, setSelectedState] = useState('All States');
-  const [backendSites, setBackendSites] = useState<BackendSite[]>([]);
-const [sitesLoading, setSitesLoading] = useState(true);
-const [sitesError, setSitesError] = useState<string | null>(null);
+
+  const [selectedState, setSelectedState] =
+    useState('All States');
+
+
+  // ===================================================
+  // BACKEND STATES
+  // ===================================================
+
+  const [backendSites, setBackendSites] =
+    useState<BackendSite[]>([]);
+
+  const [backendMonuments, setBackendMonuments] =
+    useState<Monument[]>([]);
+
+  const [sitesLoading, setSitesLoading] =
+    useState(true);
+
+  const [sitesError, setSitesError] =
+    useState<string | null>(null);
+
+
+  // ===================================================
+  // LOAD SITES FROM BACKEND
+  // ===================================================
 useEffect(() => {
   const loadSites = async () => {
     try {
@@ -55,12 +198,24 @@ useEffect(() => {
 
       const sites = await getSites();
 
-      console.log("Backend sites:", sites);
+      console.log("========== DEBUG ==========");
+      console.log("SITES:", sites);
+      console.log("SITES TYPE:", typeof sites);
+      console.log("IS ARRAY:", Array.isArray(sites));
+      console.log("LENGTH:", sites?.length);
+      console.log("============================");
 
       setBackendSites(sites);
+
+      const monuments = sites.map(convertBackendSiteToMonument);
+
+      console.log("CONVERTED MONUMENTS:", monuments);
+
+      setBackendMonuments(monuments);
       setSitesError(null);
+
     } catch (error) {
-      console.error("Failed to load sites:", error);
+      console.error("BACKEND ERROR:", error);
       setSitesError("Unable to load heritage sites from backend.");
     } finally {
       setSitesLoading(false);
@@ -69,26 +224,108 @@ useEffect(() => {
 
   loadSites();
 }, []);
-  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Temples' | 'Tombs & Mausoleums' | 'Forts & Palaces' | 'Caves & Rock Cut' | 'UNESCO Sites'>('All');
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState('All Time Periods');
-  const [selectedStyle, setSelectedStyle] = useState('All Styles');
-  const [sortBy, setSortBy] = useState('Popular');
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set(['taj-mahal', 'hampi']));
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+
+  // ===================================================
+  // OTHER FILTER STATES
+  // ===================================================
+
+  const [selectedCategory, setSelectedCategory] =
+    useState<
+      | 'All'
+      | 'Temples'
+      | 'Tombs & Mausoleums'
+      | 'Forts & Palaces'
+      | 'Caves & Rock Cut'
+      | 'UNESCO Sites'
+    >('All');
+
+  const [selectedTimePeriod, setSelectedTimePeriod] =
+    useState('All Time Periods');
+
+  const [selectedStyle, setSelectedStyle] =
+    useState('All Styles');
+
+  const [sortBy, setSortBy] =
+    useState('Popular');
+
+
+  // ===================================================
+  // BOOKMARKS
+  // ===================================================
+
+  const [bookmarkedIds, setBookmarkedIds] =
+    useState<Set<string>>(
+      new Set(['taj-mahal', 'hampi'])
+    );
+
+
+  // ===================================================
+  // FAILED IMAGES
+  // ===================================================
+
+  const [failedImages, setFailedImages] =
+    useState<Set<string>>(new Set());
+
 
   const handleImageError = (id: string) => {
-    setFailedImages((prev) => new Set(prev).add(id));
+
+    setFailedImages(
+      (prev) => new Set(prev).add(id)
+    );
+
   };
 
-  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+
+  // ===================================================
+  // BOOKMARK TOGGLE
+  // ===================================================
+
+  const toggleBookmark = (
+    id: string,
+    e: React.MouseEvent
+  ) => {
+
     e.stopPropagation();
+
     setBookmarkedIds((prev) => {
+
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+
+      if (next.has(id)) {
+
+        next.delete(id);
+
+      } else {
+
+        next.add(id);
+
+      }
+
       return next;
+
     });
+
   };
+
+
+  // ===================================================
+  // TEMPORARY DEBUG
+  // ===================================================
+
+  console.log(
+    'FINAL BACKEND MONUMENTS:',
+    backendMonuments
+  );
+
+
+  // ===================================================
+  // YOUR EXISTING JSX / REST OF TOURIST APP
+  // ===================================================
+
+  // Yahan se tumhara existing 553-line TouristApp
+  // ka baaki code continue hoga.
+
 
   // Filter Categories matching Horizontal Chips
   const categories = [
@@ -124,27 +361,12 @@ useEffect(() => {
     'Nagara Style Architecture'
   ];
 
-  const monumentsWithBackendData: Monument[] = MONUMENTS_DATA.map((monument) => {
-  const backendSite = backendSites.find(
-    (site) =>
-      site.name.toLowerCase() === monument.name.toLowerCase()
-  );
-
-  if (!backendSite) {
-    return monument;
-  }
-
-  return {
-    ...monument,
-    name: backendSite.name,
-    city: backendSite.city,
-    state: backendSite.state,
-    lat: backendSite.latitude,
-    lng: backendSite.longitude,
-    description: backendSite.description,
-    historicalSignificance: backendSite.historical_significance,
-  };
-});
+  // Backend is the source of truth once sites are loaded.
+  // This prevents stale/hardcoded monument data from overriding backend sites.
+  const monumentsWithBackendData: Monument[] =
+    backendSites.length > 0
+      ? backendMonuments
+      : MONUMENTS_DATA;
   // Filter logic
   const filteredMonuments = monumentsWithBackendData.filter((m) => {
     const matchesSearch = 
@@ -197,11 +419,10 @@ useEffect(() => {
 
         {/* Sub-View: AI Damage Scanner */}
         {activeTab === 'scan' && (
-          <ScanMonument
-            language={language}
-            onReportSubmitted={onReportSubmitted}
-            onNavigateToAI={() => handleNavigateTab('ai-assistant')}
-          />
+              <ScanMonument
+                  language={language}
+                  onReportSubmitted={handleCitizenReportSubmitted}
+/>
         )}
 
         {/* Sub-View: Ask Heritage AI */}
@@ -396,8 +617,8 @@ useEffect(() => {
                 {filteredMonuments.map((monument) => {
                   const isBookmarked = bookmarkedIds.has(monument.id);
                   const isFailed = failedImages.has(monument.id);
-                  const imageSrc = isFailed 
-                    ? (MONUMENT_FALLBACKS[monument.id] || MONUMENT_FALLBACKS['taj-mahal'])
+                  const imageSrc = isFailed
+                    ? ''
                     : monument.imageUrl;
 
                   return (
@@ -407,13 +628,19 @@ useEffect(() => {
                       className="group bg-white rounded-3xl overflow-hidden border border-[#0D3B2E]/12 hover:border-[#0E382B] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
                     >
                       {/* Image Container */}
-                      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-900">
-                        <img
-                          src={imageSrc}
-                          alt={monument.name}
-                          onError={() => handleImageError(monument.id)}
-                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-                        />
+                      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-100">
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={monument.name}
+                            onError={() => handleImageError(monument.id)}
+                            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-semibold">
+                            Image unavailable
+                          </div>
+                        )}
 
                         {/* Top Left Badge */}
                         <div className="absolute top-3 left-3">

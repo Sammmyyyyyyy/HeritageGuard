@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createAlert } from './api/alerts';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { HomeLanding } from './components/home/HomeLanding';
@@ -99,20 +100,59 @@ export function App() {
     }, 4000);
   };
 
-  const handleReportSubmitted = (newScan: DamageScanResult) => {
+  const handleReportSubmitted = async (newScan: DamageScanResult) => {
+    // Keep the local citizen-report UI in sync immediately.
     setCitizenReports((prev) => [newScan, ...prev]);
-    
+
+    // Persist the damage alert in the backend.
+    try {
+      const siteId = newScan.monumentId;
+
+      await createAlert({
+        site_id: siteId,
+        title: `Citizen Damage Scan: ${newScan.monumentName.split('(')[0].trim()}`,
+        alert_type: 'DAMAGE',
+        severity:
+          newScan.overallDamageScore >= 80
+            ? 'CRITICAL'
+            : newScan.overallDamageScore >= 60
+            ? 'HIGH'
+            : newScan.overallDamageScore >= 30
+            ? 'MEDIUM'
+            : 'LOW',
+        message:
+          `New surface anomaly detected. Damage Score: ` +
+          `${newScan.overallDamageScore}/100.`,
+      });
+
+      console.log('BACKEND DAMAGE ALERT CREATED');
+    } catch (error) {
+      console.error('Failed to create backend damage alert:', error);
+    }
+
+    // Keep the existing local alert UI in sync as well.
     const newAlert: AlertItem = {
       id: 'alt-' + Date.now(),
       type: 'damage',
-      severity: 'high',
-      title: `Citizen Damage Scan: ${newScan.monumentName.split('(')[0]}`,
+      severity:
+        newScan.overallDamageScore >= 80
+          ? 'critical'
+          : newScan.overallDamageScore >= 60
+          ? 'high'
+          : newScan.overallDamageScore >= 30
+          ? 'medium'
+          : 'low',
+      title: `Citizen Damage Scan: ${newScan.monumentName.split('(')[0].trim()}`,
       monumentName: newScan.monumentName,
       timeAgo: 'Just now',
       timestamp: new Date().toLocaleTimeString(),
       status: 'unread',
-      details: `New surface anomaly detected (Score: ${newScan.overallDamageScore}/100). Review in Authority Portal.`
+      details:
+        `New surface anomaly detected ` +
+        `(Score: ${newScan.overallDamageScore}/100). ` +
+        `Review in Authority Portal.`
     };
+
     setAlerts((prev) => [newAlert, ...prev]);
 
     showToast(

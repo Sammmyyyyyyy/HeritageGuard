@@ -1,104 +1,472 @@
 import { AlertItem, AuthorityKPIs } from '../types/heritage';
 
+/* =========================================================
+   AUTHORITY KPI SUMMARY
+   ========================================================= */
+
 export const AUTHORITY_KPIS: AuthorityKPIs = {
-  totalSites: 1248,
-  highRiskSites: 28,
-  overcrowdedSites: 63,
-  activeAlerts: 42,
-  pendingInspections: 19,
-  totalFootfallToday: 342581,
-  footfallDeltaPercent: 18.6
+  totalSites: 20,
+  highRiskSites: 0,
+  overcrowdedSites: 0,
+  activeAlerts: 0,
+  pendingInspections: 0,
+  totalFootfallToday: 0,
+  footfallDeltaPercent: 0,
 };
 
-export const RISK_DISTRIBUTION = [
-  { label: 'Low Risk (0 - 30%)', count: 812, percentage: 65, color: '#10B981' },
-  { label: 'Moderate Risk (30 - 60%)', count: 338, percentage: 27, color: '#F59E0B' },
-  { label: 'High Risk (> 60%)', count: 98, percentage: 8, color: '#EF4444' }
-];
+/* =========================================================
+   RISK DISTRIBUTION
+   =========================================================
+   Site-level risk is now supplied by the backend pressure API.
+   Therefore this file does not invent risk counts/scores.
+   ========================================================= */
 
-export const HOURLY_OVERALL_CROWD = [
-  { hour: '00:00', footfall: 1200 },
-  { hour: '02:00', footfall: 800 },
-  { hour: '04:00', footfall: 1500 },
-  { hour: '06:00', footfall: 18400 },
-  { hour: '08:00', footfall: 42100 },
-  { hour: '10:00', footfall: 76500 },
-  { hour: '12:00', footfall: 92800 },
-  { hour: '14:00', footfall: 84300 },
-  { hour: '16:00', footfall: 89600 },
-  { hour: '18:00', count: 52000, footfall: 52000 },
-  { hour: '20:00', footfall: 21000 },
-  { hour: '22:00', footfall: 6400 }
-];
+export const RISK_DISTRIBUTION: Array<{
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}> = [];
 
-export const HIGH_RISK_SITES_SUMMARY = [
-  { id: 'taj-mahal', name: 'Taj Mahal', state: 'Uttar Pradesh', riskScore: 91, footfallRatio: '122% capacity', alertType: 'Overcrowding & Marble Stress' },
-  { id: 'hawa-mahal', name: 'Hawa Mahal', state: 'Rajasthan', riskScore: 87, footfallRatio: '115% capacity', alertType: 'Facade Vibration & Structural Shift' },
-  { id: 'konark-sun-temple', name: 'Konark Sun Temple', state: 'Odisha', riskScore: 82, footfallRatio: '138% capacity', alertType: 'Saline Exfoliation & Foundation Strain' },
-  { id: 'ajanta-caves', name: 'Ajanta Caves', state: 'Maharashtra', riskScore: 79, footfallRatio: '124% capacity', alertType: 'Cave Humidity & Pigment Flaking' },
-  { id: 'hampi-monuments', name: 'Hampi Vittala Complex', state: 'Karnataka', riskScore: 78, footfallRatio: '108% capacity', alertType: 'Pillar Resonant Abrasion' },
-  { id: 'fatehpur-sikri', name: 'Fatehpur Sikri Buland Darwaza', state: 'Uttar Pradesh', riskScore: 68, footfallRatio: '96% capacity', alertType: 'Red Sandstone Joint Weathering' },
-  { id: 'meenakshi-temple', name: 'Meenakshi Amman Temple', state: 'Tamil Nadu', riskScore: 66, footfallRatio: '145% capacity', alertType: 'Gopuram Crowd Bottleneck' }
-];
+/* =========================================================
+   HOURLY OVERALL CROWD
+   =========================================================
+   Keep empty until an aggregate hourly crowd endpoint is
+   available. Site-level crowd comes from the backend.
+   ========================================================= */
 
-export const RECENT_ALERTS: AlertItem[] = [
-  {
-    id: 'alt-1',
-    type: 'crowd',
-    severity: 'critical',
-    title: 'High footfall detected at Taj Mahal',
-    monumentName: 'Taj Mahal, Agra',
-    timeAgo: '3 min ago',
-    timestamp: '2026-08-24 16:55 IST',
-    status: 'investigating',
-    details: 'Live visitor count reached 42,800 against safe hourly threshold of 35,000. Recommend enabling tourist diversion flow to Mehtab Bagh.'
-  },
-  {
-    id: 'alt-2',
-    type: 'damage',
-    severity: 'high',
-    title: 'Structural damage detected at Ajanta Caves',
-    monumentName: 'Ajanta Cave 17, Maharashtra',
-    timeAgo: '18 min ago',
-    timestamp: '2026-08-24 16:40 IST',
-    status: 'unread',
-    details: 'Multi-spectral sensor detected 14% increase in capillary humidity above Cave 17 ceiling mural.'
-  },
-  {
-    id: 'alt-3',
-    type: 'unauthorized',
-    severity: 'medium',
-    title: 'Unauthorized activity reported in Hampi',
-    monumentName: 'Vittala Temple, Hampi',
-    timeAgo: '45 min ago',
-    timestamp: '2026-08-24 16:13 IST',
-    status: 'actioned',
-    details: 'AI CCTV detected tourists crossing cordoned acoustic pillar enclosure.'
-  },
-  {
-    id: 'alt-4',
-    type: 'crowd',
-    severity: 'high',
-    title: 'Crowd limit exceeded at Meenakshi Temple',
-    monumentName: 'Meenakshi Temple, Madurai',
-    timeAgo: '1 hr ago',
-    timestamp: '2026-08-24 15:58 IST',
-    status: 'actioned',
-    details: 'East Gopuram courtyard occupancy peaked at 145%. Queue gating initiated.'
-  }
-];
+export const HOURLY_OVERALL_CROWD: Array<{
+  hour: string;
+  footfall: number;
+}> = [];
+
+/* =========================================================
+   HIGH-RISK SITES
+   =========================================================
+   No fake Taj Mahal / Hampi / Konark etc.
+   Real site risk comes from Shagun/backend telemetry.
+   ========================================================= */
+
+export const HIGH_RISK_SITES_SUMMARY: Array<{
+  id: string;
+  site_id: string;
+  name: string;
+  state: string;
+  riskScore: number;
+  footfallRatio: string;
+  alertType: string;
+}> = [];
+
+/* =========================================================
+   RECENT ALERTS
+   =========================================================
+   Real alerts are loaded from the backend.
+   ========================================================= */
+
+export const RECENT_ALERTS: AlertItem[] = [];
+
+/* =========================================================
+   GIS MONUMENT PINS
+   =========================================================
+   Your exact 20-site database set.
+   Only 10 are rendered on the visual GIS map so labels
+   stay readable.
+
+   IMPORTANT:
+   - mapTop/mapLeft = visual map position only
+   - lat/lng = real site coordinates
+   - riskScore/footfall start at 0
+   - real pressure/crowd values come from backend
+   ========================================================= */
 
 export const GIS_MONUMENT_PINS = [
-  { id: 'pin-1', name: 'Taj Mahal', state: 'Uttar Pradesh', lat: 27.1751, lng: 78.0421, risk: 'high', riskScore: 91, footfall: 42800 },
-  { id: 'pin-2', name: 'Hampi', state: 'Karnataka', lat: 15.3350, lng: 76.4600, risk: 'high', riskScore: 78, footfall: 18400 },
-  { id: 'pin-3', name: 'Konark Sun Temple', state: 'Odisha', lat: 19.8876, lng: 86.0945, risk: 'high', riskScore: 82, footfall: 16500 },
-  { id: 'pin-4', name: 'Ajanta Caves', state: 'Maharashtra', lat: 20.5519, lng: 75.7033, risk: 'high', riskScore: 79, footfall: 11200 },
-  { id: 'pin-5', name: 'Qutub Minar', state: 'Delhi', lat: 28.5245, lng: 77.1855, risk: 'moderate', riskScore: 52, footfall: 14200 },
-  { id: 'pin-6', name: 'Brihadisvara Temple', state: 'Tamil Nadu', lat: 10.7828, lng: 79.1318, risk: 'moderate', riskScore: 48, footfall: 8600 },
-  { id: 'pin-7', name: 'Khajuraho Group', state: 'Madhya Pradesh', lat: 24.8318, lng: 79.9199, risk: 'moderate', riskScore: 54, footfall: 5200 },
-  { id: 'pin-8', name: 'Mehrangarh Fort', state: 'Rajasthan', lat: 26.2978, lng: 73.0185, risk: 'moderate', riskScore: 45, footfall: 9800 },
-  { id: 'pin-9', name: 'Airavatesvara Temple', state: 'Tamil Nadu', lat: 10.9492, lng: 79.3562, risk: 'low', riskScore: 19, footfall: 1200 },
-  { id: 'pin-10', name: 'Mehtab Bagh', state: 'Uttar Pradesh', lat: 27.1800, lng: 78.0422, risk: 'low', riskScore: 24, footfall: 2100 },
-  { id: 'pin-11', name: 'Rani ki Vav', state: 'Gujarat', lat: 23.8589, lng: 72.1017, risk: 'low', riskScore: 28, footfall: 3400 },
-  { id: 'pin-12', name: 'Badami Caves', state: 'Karnataka', lat: 15.9189, lng: 75.6766, risk: 'low', riskScore: 26, footfall: 2900 }
+  /* ------------------------- DELHI ------------------------- */
+
+  {
+    id: 'DEL001',
+    site_id: 'DEL001',
+    name: 'Red Fort',
+    city: 'Delhi',
+    state: 'Delhi',
+    lat: 28.6562,
+    lng: 77.2410,
+    mapTop: '16%',
+    mapLeft: '28%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'DEL002',
+    site_id: 'DEL002',
+    name: 'Qutub Minar',
+    city: 'Delhi',
+    state: 'Delhi',
+    lat: 28.5245,
+    lng: 77.1855,
+    mapTop: '27%',
+    mapLeft: '47%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'DEL003',
+    site_id: 'DEL003',
+    name: 'India Gate',
+    city: 'Delhi',
+    state: 'Delhi',
+    lat: 28.6129,
+    lng: 77.2295,
+    mapTop: '42%',
+    mapLeft: '78%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'DEL004',
+    site_id: 'DEL004',
+    name: "Humayun's Tomb",
+    city: 'Delhi',
+    state: 'Delhi',
+    lat: 28.5933,
+    lng: 77.2507,
+    mapTop: '73%',
+    mapLeft: '28%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'DEL005',
+    site_id: 'DEL005',
+    name: 'Lotus Temple',
+    city: 'Delhi',
+    state: 'Delhi',
+    lat: 28.5535,
+    lng: 77.2588,
+    mapTop: '78%',
+    mapLeft: '82%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  /* ------------------------ JAIPUR ------------------------- */
+
+  {
+    id: 'JAI001',
+    site_id: 'JAI001',
+    name: 'Amer Fort',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lat: 26.9855,
+    lng: 75.8513,
+    mapTop: '39%',
+    mapLeft: '22%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'JAI002',
+    site_id: 'JAI002',
+    name: 'Hawa Mahal',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lat: 26.9239,
+    lng: 75.8267,
+    mapTop: '53%',
+    mapLeft: '42%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'JAI003',
+    site_id: 'JAI003',
+    name: 'City Palace',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lat: 26.9255,
+    lng: 75.8236,
+    mapTop: '19%',
+    mapLeft: '61%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'JAI004',
+    site_id: 'JAI004',
+    name: 'Jantar Mantar',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lat: 26.9247,
+    lng: 75.8245,
+    mapTop: '22%',
+    mapLeft: '72%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'JAI005',
+    site_id: 'JAI005',
+    name: 'Albert Hall Museum',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lat: 26.9116,
+    lng: 75.8195,
+    mapTop: '84%',
+    mapLeft: '50%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  /* ------------------------ MUMBAI ------------------------- */
+
+  {
+    id: 'BOM001',
+    site_id: 'BOM001',
+    name: 'Gateway of India',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lat: 18.9220,
+    lng: 72.8347,
+    mapTop: '63%',
+    mapLeft: '20%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'BOM002',
+    site_id: 'BOM002',
+    name: 'Elephanta Caves',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lat: 18.9633,
+    lng: 72.9315,
+    mapTop: '88%',
+    mapLeft: '30%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'BOM003',
+    site_id: 'BOM003',
+    name: 'Chhatrapati Shivaji Maharaj Terminus',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lat: 18.9400,
+    lng: 72.8355,
+    mapTop: '78%',
+    mapLeft: '44%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'BOM004',
+    site_id: 'BOM004',
+    name: 'Haji Ali Dargah',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lat: 18.9827,
+    lng: 72.8089,
+    mapTop: '49%',
+    mapLeft: '87%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'BOM005',
+    site_id: 'BOM005',
+    name: 'Siddhivinayak Temple',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lat: 19.0166,
+    lng: 72.8304,
+    mapTop: '88%',
+    mapLeft: '66%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  /* ---------------------- PRAYAGRAJ ------------------------ */
+
+  {
+    id: 'PRA001',
+    site_id: 'PRA001',
+    name: 'Triveni Sangam',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    lat: 25.4299,
+    lng: 81.8848,
+    mapTop: '66%',
+    mapLeft: '63%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'PRA002',
+    site_id: 'PRA002',
+    name: 'Allahabad Fort',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    lat: 25.4287,
+    lng: 81.8761,
+    mapTop: '92%',
+    mapLeft: '52%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'PRA003',
+    site_id: 'PRA003',
+    name: 'Khusro Bagh',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    lat: 25.4429,
+    lng: 81.8153,
+    mapTop: '46%',
+    mapLeft: '11%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'PRA004',
+    site_id: 'PRA004',
+    name: 'Anand Bhavan',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    lat: 25.4615,
+    lng: 81.8596,
+    mapTop: '37%',
+    mapLeft: '82%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
+
+  {
+    id: 'PRA005',
+    site_id: 'PRA005',
+    name: 'Chandrashekhar Azad Park',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+    lat: 25.4542,
+    lng: 81.8499,
+    mapTop: '82%',
+    mapLeft: '72%',
+    risk: 'low' as const,
+    riskScore: 0,
+    footfall: 0,
+  },
 ];
+
+/* =========================================================
+   COMPLETE 20-SITE HELPERS
+   ========================================================= */
+
+export const ALL_HERITAGE_SITE_IDS = [
+  'DEL001',
+  'DEL002',
+  'DEL003',
+  'DEL004',
+  'DEL005',
+
+  'JAI001',
+  'JAI002',
+  'JAI003',
+  'JAI004',
+  'JAI005',
+
+  'BOM001',
+  'BOM002',
+  'BOM003',
+  'BOM004',
+  'BOM005',
+
+  'PRA001',
+  'PRA002',
+  'PRA003',
+  'PRA004',
+  'PRA005',
+] as const;
+
+export const GIS_SITE_NAME_BY_ID: Record<string, string> = {
+  DEL001: 'Red Fort',
+  DEL002: 'Qutub Minar',
+  DEL003: 'India Gate',
+  DEL004: "Humayun's Tomb",
+  DEL005: 'Lotus Temple',
+
+  JAI001: 'Amer Fort',
+  JAI002: 'Hawa Mahal',
+  JAI003: 'City Palace',
+  JAI004: 'Jantar Mantar',
+  JAI005: 'Albert Hall Museum',
+
+  BOM001: 'Gateway of India',
+  BOM002: 'Elephanta Caves',
+  BOM003: 'Chhatrapati Shivaji Maharaj Terminus',
+  BOM004: 'Haji Ali Dargah',
+  BOM005: 'Siddhivinayak Temple',
+
+  PRA001: 'Triveni Sangam',
+  PRA002: 'Allahabad Fort',
+  PRA003: 'Khusro Bagh',
+  PRA004: 'Anand Bhavan',
+  PRA005: 'Chandrashekhar Azad Park',
+};
+
+export const GIS_CITY_BY_ID: Record<string, string> = {
+  DEL001: 'Delhi',
+  DEL002: 'Delhi',
+  DEL003: 'Delhi',
+  DEL004: 'Delhi',
+  DEL005: 'Delhi',
+
+  JAI001: 'Jaipur',
+  JAI002: 'Jaipur',
+  JAI003: 'Jaipur',
+  JAI004: 'Jaipur',
+  JAI005: 'Jaipur',
+
+  BOM001: 'Mumbai',
+  BOM002: 'Mumbai',
+  BOM003: 'Mumbai',
+  BOM004: 'Mumbai',
+  BOM005: 'Mumbai',
+
+  PRA001: 'Prayagraj',
+  PRA002: 'Prayagraj',
+  PRA003: 'Prayagraj',
+  PRA004: 'Prayagraj',
+  PRA005: 'Prayagraj',
+};

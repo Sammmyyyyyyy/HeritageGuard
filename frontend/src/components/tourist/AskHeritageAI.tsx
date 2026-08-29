@@ -9,6 +9,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { HISTORICAL_KNOWLEDGE_BASE } from '../../data/historicalQnAData';
+import { getSites, queryHeritageRAG, BackendSite } from '../../api/sites';
 import { ChatMessage } from '../../types/heritage';
 
 interface AskHeritageAIProps {
@@ -33,6 +34,29 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeSpeechId, setActiveSpeechId] = useState<string | null>(null);
+
+  // Backend RAG state
+  const [backendSites, setBackendSites] = useState<BackendSite[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
+  const [ragError, setRagError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSites = async () => {
+      try {
+        const sites = await getSites();
+        console.log('RAG - BACKEND SITES:', sites);
+        setBackendSites(sites);
+
+        if (sites.length > 0) {
+          setSelectedSiteId(sites[0].site_id);
+        }
+      } catch (error) {
+        console.error('RAG - FAILED TO LOAD SITES:', error);
+      }
+    };
+
+    loadSites();
+  }, []);
   
   // Use scroll container ref rather than full window scrollIntoView
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -47,9 +71,10 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
     scrollChatToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = (textToSend?: string) => {
-    const query = textToSend || inputText;
-    if (!query.trim()) return;
+  const handleSend = async (textToSend?: string) => {
+    const query = (textToSend || inputText).trim();
+
+    if (!query || isTyping) return;
 
     const userMessage: ChatMessage = {
       id: 'user-' + Date.now(),
@@ -61,46 +86,100 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
     setIsTyping(true);
+    setRagError(null);
 
-    // Search knowledge base
-    setTimeout(() => {
+    try {
+      const siteId = selectedSiteId || backendSites[0]?.site_id || 'default_site';
+
+      console.log('RAG - QUERY:', {
+        siteId,
+        question: query
+      });
+
+      const response: any = await queryHeritageRAG({
+        site_id: siteId,
+        question: query
+      });
+
+      console.log('RAG - BACKEND RESPONSE:', response);
+
+      const answer =
+        response?.answer ??
+        response?.response ??
+        response?.text ??
+        response?.message ??
+        'The heritage knowledge service returned no answer.';
+
+      const hindiAnswer =
+        response?.hindi_answer ??
+        response?.answer_hi ??
+        response?.hindiText ??
+        response?.hindi_response;
+
+      const backendSources = Array.isArray(response?.sources)
+        ? response.sources
+            .map((source: any) => ({
+              title: source.title || source.name || 'Heritage Knowledge Source',
+              archive: source.archive || source.source || source.url || 'Backend RAG',
+              confidence: Number(source.confidence ?? source.score ?? 0)
+            }))
+            .filter((source: any) => Number.isFinite(source.confidence))
+        : [];
+
+      const aiResponse: ChatMessage = {
+        id: 'ai-' + Date.now(),
+        sender: 'ai',
+        text: String(answer),
+        hindiText: hindiAnswer ? String(hindiAnswer) : undefined,
+        timestamp: 'Just now',
+        sources: backendSources.length > 0 ? backendSources : undefined,
+        suggestedFollowUps: [
+          'Tell me about the best hours to visit to avoid crowds',
+          'How does AI detect structural cracks in monuments?'
+        ]
+      };
+
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error: any) {
+      console.error('RAG - BACKEND QUERY FAILED:', error);
+
+      setRagError(
+        error?.message || 'Unable to connect to the Heritage AI backend.'
+      );
+
+      // Preserve the existing local knowledge-base behaviour as a fallback.
       const qLower = query.toLowerCase();
       const matched = HISTORICAL_KNOWLEDGE_BASE.find((item) =>
         item.keywords.some((kw) => qLower.includes(kw.toLowerCase()))
       );
 
-      let aiResponse: ChatMessage;
+      const fallbackResponse: ChatMessage = matched
+        ? {
+            id: 'ai-' + Date.now(),
+            sender: 'ai',
+            text: matched.answerEn,
+            hindiText: matched.answerHi,
+            timestamp: 'Just now',
+            sources: matched.sources,
+            suggestedFollowUps: matched.followUps
+          }
+        : {
+            id: 'ai-' + Date.now(),
+            sender: 'ai',
+            text:
+              `I could not reach the backend Heritage AI right now. ` +
+              `Based on the local heritage knowledge base, "${query}" ` +
+              `relates to India's architectural and conservation heritage.`,
+            hindiText:
+              `अभी Heritage AI backend से कनेक्शन नहीं हो पाया। ` +
+              `"${query}" भारतीय स्थापत्य और संरक्षण विरासत से संबंधित है।`,
+            timestamp: 'Just now'
+          };
 
-      if (matched) {
-        aiResponse = {
-          id: 'ai-' + Date.now(),
-          sender: 'ai',
-          text: matched.answerEn,
-          hindiText: matched.answerHi,
-          timestamp: 'Just now',
-          sources: matched.sources,
-          suggestedFollowUps: matched.followUps
-        };
-      } else {
-        aiResponse = {
-          id: 'ai-' + Date.now(),
-          sender: 'ai',
-          text: `Based on ASI architectural records, "${query}" pertains to significant heritage parameters. India's monuments feature intricate stone interlocking systems, natural limestone lime mortar, and deep acoustic resonance engineering. Would you like me to look into specific excavation papers or crowd schedules for this site?`,
-          hindiText: `ASI के अभिलेखों के अनुसार, "${query}" हमारे प्राचीन स्थापत्य से संबंधित है। क्या आप इस स्मारक के विशेष इतिहास, संरक्षण कार्य या दर्शन के सर्वोत्तम समय के बारे में विस्तार से जानना चाहते हैं?`,
-          timestamp: 'Just now',
-          sources: [
-            { title: 'ASI Central Heritage Knowledge Repository', archive: 'National Archives of India', confidence: 0.92 }
-          ],
-          suggestedFollowUps: [
-            'Tell me about the best hours to visit to avoid crowds',
-            'How does AI detect structural cracks in monuments?'
-          ]
-        };
-      }
-
+      setMessages((prev) => [...prev, fallbackResponse]);
+    } finally {
       setIsTyping(false);
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    }
   };
 
   const handleSpeak = (msg: ChatMessage) => {
