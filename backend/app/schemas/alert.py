@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 class AlertCreate(BaseModel):
     site_id: str = Field(..., min_length=1)
 
+    title: str = Field(..., min_length=1)
+
     alert_type: str = Field(..., min_length=1)
 
     severity: str = Field(
@@ -25,6 +27,8 @@ class AlertResponse(BaseModel):
     id: Optional[str] = None
 
     site_id: str
+
+    title: str
 
     alert_type: str
 

@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 
-
 from app.routers import (
     sites,
     damage,
@@ -25,36 +24,36 @@ from app.routers import (
     rag,
 )
 
-
 # =========================================================
-# APPLICATION
+# APPLICATION INSTANCE (Only 1 instance)
 # =========================================================
-
 app = FastAPI(
-    title=settings.APP_NAME,
-    debug=settings.DEBUG,
+    title=getattr(settings, "APP_NAME", "HeritageGuard API"),
+    debug=getattr(settings, "DEBUG", True),
 )
 
-
 # =========================================================
-# CORS
+# CORS MIDDLEWARE
 # =========================================================
-
+# Note: allow_credentials=True requires exact origin matching, OR allow_origin_regex
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        settings.FRONTEND_URL,
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        getattr(settings, "FRONTEND_URL", "http://localhost:5173"),
     ],
+    allow_origin_regex="https?://.*",  # Standard dev origins bypass karne ke liye
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 # =========================================================
-# ROUTERS
+# ROUTERS (Include each router ONCE)
 # =========================================================
-
 app.include_router(sites.router)
 app.include_router(damage.router)
 app.include_router(alerts.router)
@@ -65,22 +64,15 @@ app.include_router(pressure.router)
 app.include_router(crowd.router)
 app.include_router(rag.router)
 
-
 # =========================================================
-# ROOT
+# ROOT & HEALTH CHECK
 # =========================================================
-
 @app.get("/")
 def root():
     return {
         "message": "HeritageGuard API is running",
         "status": "success",
     }
-
-
-# =========================================================
-# HEALTH CHECK
-# =========================================================
 
 @app.get("/health")
 def health_check():

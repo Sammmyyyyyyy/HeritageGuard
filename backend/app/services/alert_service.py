@@ -1,8 +1,5 @@
 from datetime import datetime, timezone
-
-from app.repositories.alert_repository import (
-    AlertRepository,
-)
+from app.repositories.alert_repository import AlertRepository
 
 
 class AlertService:
@@ -17,9 +14,8 @@ class AlertService:
         self,
         site_id: str | None = None,
     ):
-        return self.repository.get_all(
-            site_id
-        )
+        # Sirf un-resolved alerts fetch honge
+        return self.repository.get_all(site_id=site_id, only_unresolved=True)
 
     def create_alert(self, data):
         return self.repository.create(data)
@@ -32,8 +28,6 @@ class AlertService:
             alert_id,
             {
                 "is_resolved": True,
-                "resolved_at": datetime.now(
-                    timezone.utc
-                ).isoformat(),
+                "resolved_at": datetime.now(timezone.utc).isoformat(),
             },
         )
