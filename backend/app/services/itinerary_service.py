@@ -58,12 +58,30 @@ class ItineraryService:
         else:
             interests = []
 
-        # Payload expected by Harsh's Recommendation AI
+        starting_site_id = data.get("starting_site_id") or (data.get("itinerary", {}).get("starting_site_id"))
+        destination_site_id = data.get("destination_site_id") or (data.get("itinerary", {}).get("destination_site_id"))
+        
+        dest_lat = data.get("destination_latitude")
+        dest_lng = data.get("destination_longitude")
+        destination_coords = None
+        if dest_lat is not None and dest_lng is not None:
+            try:
+                destination_coords = {
+                    "lat": float(dest_lat),
+                    "lng": float(dest_lng)
+                }
+            except (TypeError, ValueError):
+                destination_coords = None
+
+        # Payload expected by Recommendation AI
         recommendation_payload = {
             "starting_coords": {
                 "lat": latitude,
                 "lng": longitude,
             },
+            "starting_site_id": starting_site_id,
+            "destination_site_id": destination_site_id,
+            "destination_coords": destination_coords,
             "start_time": data.get(
                 "start_time",
                 "09:00",
@@ -89,7 +107,7 @@ class ItineraryService:
             ),
         }
 
-        # Call Harsh Recommendation AI
+        # Call Recommendation AI
         if self.client:
             calculated_itinerary = await self.client.recommend(
                 recommendation_payload
@@ -97,7 +115,19 @@ class ItineraryService:
 
             data["itinerary"] = calculated_itinerary
 
-        return self.repository.create(data)
+        valid_columns = {
+            "starting_latitude",
+            "starting_longitude",
+            "start_time",
+            "available_time_minutes",
+            "budget",
+            "interests",
+            "crowd_tolerance",
+            "itinerary",
+        }
+        db_insert_data = {k: v for k, v in data.items() if k in valid_columns}
+
+        return self.repository.create(db_insert_data)
 
     async def get_itinerary(
         self,

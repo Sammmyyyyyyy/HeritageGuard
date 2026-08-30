@@ -6,11 +6,14 @@ from pydantic import BaseModel, Field
 class ItineraryCreate(BaseModel):
     starting_latitude: Optional[float] = None
     starting_longitude: Optional[float] = None
+    starting_site_id: Optional[str] = None
+
+    destination_latitude: Optional[float] = None
+    destination_longitude: Optional[float] = None
+    destination_site_id: Optional[str] = None
 
     start_time: Optional[str] = None
-
     available_time_minutes: Optional[int] = None
-
     budget: Optional[int] = None
 
     interests: Optional[Dict[str, Any]] = Field(

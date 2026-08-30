@@ -19,9 +19,21 @@ class PressureClient:
         observed_deterioration_override: Optional[float] = None,
         custom_damage_score: Optional[float] = None
     ) -> Dict[str, Any]:
-        # Try HTTP request to standalone microservice first
+        # Fast local in-process calculation first for maximum performance
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            service = get_pressure_service()
+            return service.calculate_pressure(
+                site_id=site_id,
+                predicted_visitors=predicted_visitors,
+                observed_deterioration_override=observed_deterioration_override,
+                custom_damage_score=custom_damage_score
+            )
+        except Exception:
+            pass
+
+        # Fallback to HTTP microservice request
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
                 response = await client.post(
                     f"{self.base_url}/pressure/calculate",
                     json={
@@ -39,17 +51,4 @@ class PressureClient:
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RequestError):
             pass
 
-        # Fallback to direct Python service
-        try:
-            service = get_pressure_service()
-            return service.calculate_pressure(
-                site_id=site_id,
-                predicted_visitors=predicted_visitors,
-                observed_deterioration_override=observed_deterioration_override,
-                custom_damage_score=custom_damage_score
-            )
-        except ValueError as e:
-            raise e
-        except Exception as e:
-            raise AIModelNotReady(f"Heritage pressure calculation failed: {e}")
-
+        raise AIModelNotReady("Heritage pressure calculation failed")

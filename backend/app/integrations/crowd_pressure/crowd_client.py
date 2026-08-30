@@ -19,9 +19,21 @@ class CrowdClient:
         weather: Optional[str] = None,
         temperature: Optional[float] = None
     ) -> Dict[str, Any]:
-        # Try HTTP request to standalone microservice first
+        # Fast local in-process inference first for maximum performance
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            service = get_crowd_service()
+            return service.predict_crowd(
+                site_id=site_id,
+                date=date,
+                weather=weather,
+                temperature=temperature
+            )
+        except Exception:
+            pass
+
+        # Fallback to HTTP microservice request
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
                 response = await client.post(
                     f"{self.base_url}/crowd/predict",
                     json={
@@ -39,17 +51,4 @@ class CrowdClient:
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RequestError):
             pass
 
-        # Fallback to direct Python service
-        try:
-            service = get_crowd_service()
-            return service.predict_crowd(
-                site_id=site_id,
-                date=date,
-                weather=weather,
-                temperature=temperature
-            )
-        except ValueError as e:
-            raise e
-        except Exception as e:
-            raise AIModelNotReady(f"Crowd prediction inference failed: {e}")
-
+        raise AIModelNotReady("Crowd prediction inference failed")

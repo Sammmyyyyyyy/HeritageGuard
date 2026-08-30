@@ -52,10 +52,19 @@ class DamageService:
         # 3. Upload image to Supabase Storage
         # -----------------------------------------
 
-        image_path = (
-            f"{site_id}/"
-            f"{file.filename or 'image.jpg'}"
-        )
+        import time
+        import uuid
+
+        raw_filename = file.filename or 'image.jpg'
+        unique_id = f"{int(time.time())}_{uuid.uuid4().hex[:6]}"
+
+        if "." in raw_filename:
+            base_name, ext = raw_filename.rsplit(".", 1)
+            unique_filename = f"{base_name}_{unique_id}.{ext}"
+        else:
+            unique_filename = f"{raw_filename}_{unique_id}.jpg"
+
+        image_path = f"{site_id}/{unique_filename}"
 
         image_url = upload_image(
             image_bytes,

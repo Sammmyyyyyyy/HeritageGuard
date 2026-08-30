@@ -58,6 +58,9 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
 def calculate_travel_time_minutes(coords_a: dict, coords_b: dict) -> int:
     if coords_a["lat"] == coords_b["lat"] and coords_a["lng"] == coords_b["lng"]: return 0
     dist_km = haversine_distance_km(coords_a["lat"], coords_a["lng"], coords_b["lat"], coords_b["lng"])
+    if dist_km > 80:
+        # High-speed inter-city express transit connection
+        return int(45 + (dist_km / 400.0) * 60)
     return int((dist_km / 25.0) * 60) + 5  # 25km/h avg speed + 5 min walking buffer
 
 # ==========================================
@@ -99,66 +102,170 @@ def add_mins(time_str, minutes):
     return (datetime.strptime(time_str, "%H:%M") + timedelta(minutes=minutes)).strftime("%H:%M")
 
 def generate_itinerary(user: dict, sites: list) -> dict:
-    coords = user.get("starting_coords", {"lat": 24.5854, "lng": 73.6828})
-    time_curr = user.get("start_time", "09:00")
-    t_left = user.get("available_time_minutes", 360)
-    b_left = user.get("budget", 1000)
+    start_coords = user.get("starting_coords", {"lat": 28.6562, "lng": 77.2410})
+    start_site_id = user.get("starting_site_id")
+    dest_site_id = user.get("destination_site_id")
+    dest_coords = user.get("destination_coords")
+
+    time_curr = user.get("start_time", "06:00")
+    t_left = user.get("available_time_minutes", 480)
+    b_left = user.get("budget", 20000)
     tol = user.get("crowd_tolerance", 0.5)
     interests = set(user.get("interests", []))
     weather = user.get("weather", {"temperature_c": 30.0, "rain_prob": 0.0, "is_weekend": 1})
+
+    # Resolve starting site and destination site
+    start_site = None
+    if start_site_id:
+        start_site = next((s for s in sites if s["site_id"] == start_site_id), None)
+    if not start_site and start_coords:
+        start_site = min(sites, key=lambda s: haversine_distance_km(start_coords["lat"], start_coords["lng"], s["coords"]["lat"], s["coords"]["lng"]))
+
+    dest_site = None
+    if dest_site_id:
+        dest_site = next((s for s in sites if s["site_id"] == dest_site_id), None)
+    if not dest_site and dest_coords:
+        dest_site = min(sites, key=lambda s: haversine_distance_km(dest_coords["lat"], dest_coords["lng"], s["coords"]["lat"], s["coords"]["lng"]))
 
     itinerary = []
     visited = set()
     reasons = ["Matching user preferences."]
     skipped_pressure = False
 
+    coords = start_site["coords"] if start_site else start_coords
+
+    # 1. First Stop: Starting Site
+    if start_site:
+        itinerary.append({
+            "site_id": start_site["site_id"],
+            "arrival": time_curr,
+            "duration_minutes": start_site["duration_minutes"]
+        })
+        visited.add(start_site["site_id"])
+        t_left -= start_site["duration_minutes"]
+        b_left -= start_site["entry_fee"]
+        coords = start_site["coords"]
+        time_curr = add_mins(time_curr, start_site["duration_minutes"])
+
+    start_city = start_site.get("city") if start_site else None
+    dest_city = dest_site.get("city") if dest_site else None
+
+    # 2. Intermediate & Destination Stops Loop
     while t_left > 0:
-        best_site, best_score, best_travel, best_arr = None, -9999, 0, time_curr
-        
-        for site in sites:
-            if site["site_id"] in visited: continue
+        # Check if we must force destination site now
+        if dest_site and dest_site["site_id"] not in visited:
+            t_to_dest = calculate_travel_time_minutes(coords, dest_site["coords"])
+            t_needed_dest = t_to_dest + dest_site["duration_minutes"]
             
+            # If remaining time is just enough for destination or budget is tight
+            if t_left <= t_needed_dest + 15:
+                arr_dest = add_mins(time_curr, t_to_dest)
+                itinerary.append({
+                    "site_id": dest_site["site_id"],
+                    "arrival": arr_dest,
+                    "duration_minutes": dest_site["duration_minutes"]
+                })
+                visited.add(dest_site["site_id"])
+                t_left -= (t_to_dest + dest_site["duration_minutes"])
+                break
+
+        best_site, best_score, best_travel, best_arr = None, -9999, 0, time_curr
+
+        for site in sites:
+            s_id = site["site_id"]
+            if s_id in visited:
+                continue
+
+            # Don't pick destination site prematurely if other candidates exist
+            if dest_site and s_id == dest_site["site_id"]:
+                continue
+
             travel_m = calculate_travel_time_minutes(coords, site["coords"])
+
+            # Ensure visiting site allows reaching destination within total time
+            if dest_site and dest_site["site_id"] not in visited:
+                travel_dest_after = calculate_travel_time_minutes(site["coords"], dest_site["coords"])
+                if travel_m + site["duration_minutes"] + travel_dest_after + dest_site["duration_minutes"] > t_left:
+                    continue
+
             if travel_m + site["duration_minutes"] > t_left or site["entry_fee"] > b_left:
                 continue
-                
+
             arr_est = add_mins(time_curr, travel_m)
             pred_crowd = predict_crowd(arr_est, site["heritage_pressure"], weather)
-            
-            # Heritage Protection Hard Cutoff
-            if pred_crowd > 0.90:
+
+            if pred_crowd > 0.95:
                 skipped_pressure = True
                 continue
-                
-            # Scoring
-            score = len(interests.intersection(site.get("tags", []))) * 15.0
-            score -= site["heritage_pressure"] * 12.0
-            score -= pred_crowd * 18.0 * (1.2 - tol)
-            score -= travel_m * 0.4
-            
-            # Weather logic
+
+            # Base score: proximity is heavily favored so nearby intermediate stops are selected
+            score = 100.0 - (travel_m * 1.2)
+            score += len(interests.intersection(site.get("tags", []))) * 10.0
+            score -= site["heritage_pressure"] * 8.0
+            score -= pred_crowd * 12.0 * (1.2 - tol)
+
+            # Preference logic for inter-city vs same-city
+            curr_city = site.get("city")
+            if start_city and dest_city and start_city != dest_city:
+                # Count visited in start_city
+                visited_in_start = sum(1 for s in itinerary if next((opt.get("city") for opt in sites if opt["site_id"] == s["site_id"]), None) == start_city)
+                if visited_in_start < 2 and curr_city == start_city:
+                    score += 35.0
+                elif visited_in_start >= 2 and curr_city == dest_city:
+                    score += 45.0
+            elif start_city and curr_city == start_city:
+                score += 25.0
+
             if weather["rain_prob"] > 0.4:
-                score += 15.0 if any(t in site["tags"] for t in ["museum", "indoor"]) else -20.0
+                score += 10.0 if any(t in site["tags"] for t in ["museum", "indoor"]) else -15.0
             elif weather["temperature_c"] > 36.0:
-                score += 10.0 if any(t in site["tags"] for t in ["museum", "lake"]) else -15.0
+                score += 8.0 if any(t in site["tags"] for t in ["museum", "lake"]) else -10.0
 
             if score > best_score:
                 best_score, best_site, best_travel, best_arr = score, site, travel_m, arr_est
 
-        if not best_site: break
+        if not best_site:
+            # Force add destination site if not visited yet
+            if dest_site and dest_site["site_id"] not in visited:
+                t_to_dest = calculate_travel_time_minutes(coords, dest_site["coords"])
+                arr_dest = add_mins(time_curr, t_to_dest)
+                itinerary.append({
+                    "site_id": dest_site["site_id"],
+                    "arrival": arr_dest,
+                    "duration_minutes": dest_site["duration_minutes"]
+                })
+                visited.add(dest_site["site_id"])
+            break
 
         itinerary.append({
             "site_id": best_site["site_id"],
             "arrival": best_arr,
             "duration_minutes": best_site["duration_minutes"]
         })
-        
+
         visited.add(best_site["site_id"])
         t_left -= (best_travel + best_site["duration_minutes"])
         b_left -= best_site["entry_fee"]
         coords, time_curr = best_site["coords"], add_mins(best_arr, best_site["duration_minutes"])
 
-    if skipped_pressure: reasons.append("Skipped highly vulnerable/congested sites to reduce heritage pressure.")
+    # Double check final destination requirement
+    if dest_site and dest_site["site_id"] not in visited:
+        t_to_dest = calculate_travel_time_minutes(coords, dest_site["coords"])
+        arr_dest = add_mins(time_curr, t_to_dest)
+        itinerary.append({
+            "site_id": dest_site["site_id"],
+            "arrival": arr_dest,
+            "duration_minutes": dest_site["duration_minutes"]
+        })
+        visited.add(dest_site["site_id"])
+
+    if dest_site and start_site:
+        if start_site.get("city") != dest_site.get("city"):
+            reasons.append(f"Sequenced inter-city route from {start_site['name']} ({start_site.get('city')}) to {dest_site['name']} ({dest_site.get('city')}).")
+        else:
+            reasons.append(f"Sequenced circuit from {start_site['name']} to {dest_site['name']}.")
+    
+    if skipped_pressure: reasons.append("Skipped highly congested sites to reduce heritage pressure.")
     if weather["rain_prob"] > 0.4: reasons.append("Prioritized sheltered locations due to rain forecast.")
     elif weather["temperature_c"] > 36.0: reasons.append("Adjusted for extreme heat.")
 

@@ -10,14 +10,17 @@ def upload_image(
 
     bucket = settings.SUPABASE_STORAGE_BUCKET
 
-    supabase.storage.from_(bucket).upload(
-        path,
-        file_bytes,
-        {
-            "content-type": content_type,
-            "upsert": "false",
-        },
-    )
+    try:
+        supabase.storage.from_(bucket).upload(
+            path,
+            file_bytes,
+            {
+                "content-type": content_type,
+                "upsert": "true",
+            },
+        )
+    except Exception as e:
+        print(f"Storage upload notice for path '{path}': {e}")
 
     return supabase.storage.from_(bucket).get_public_url(
         path

@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -39,6 +39,9 @@ class Coordinates(BaseModel):
 
 class RecommendationRequest(BaseModel):
     starting_coords: Coordinates
+    starting_site_id: Optional[str] = Field(default=None, example="DEL001", description="Starting site ID")
+    destination_coords: Optional[Coordinates] = Field(default=None, description="Destination coordinates")
+    destination_site_id: Optional[str] = Field(default=None, example="PRA005", description="Destination site ID")
     start_time: str = Field(default="10:00", example="10:00", description="Start time (HH:MM)")
     available_time_minutes: int = Field(default=240, example=240, description="Available duration in minutes")
     budget: int = Field(default=500, example=500, description="Budget in INR")
