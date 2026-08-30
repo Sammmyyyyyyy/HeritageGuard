@@ -5,3 +5,4 @@ pillow
 ultralytics
 roboflow
 python-dotenv
+supabase
