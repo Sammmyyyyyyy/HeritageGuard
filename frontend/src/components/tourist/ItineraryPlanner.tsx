@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   MapPin, 
   Clock, 
@@ -23,20 +23,30 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ITINERARY_CIRCUITS } from '../../data/itinerariesData';
-import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
 import { ItineraryPlan, ItineraryStop } from '../../types/heritage';
+import { createItinerary } from '../../api/sites';
 
 interface ItineraryPlannerProps {
   language: 'en' | 'hi';
   onSelectMonumentName?: (name: string) => void;
 }
 
+const interestOptions = [
+  'UNESCO Landmarks',
+  'Historical Epigraphs',
+  'Sunset & Photography',
+  'Architectural Marvels',
+  'Sufi & Spiritual Trails',
+  'Royal Cuisine & Bazaars',
+  'Eco Alternatives'
+];
+
 export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, onSelectMonumentName }) => {
   // Mode: 'custom' (Interactive Form) or 'curated' (Presets)
   const [plannerMode, setPlannerMode] = useState<'custom' | 'curated'>('custom');
 
   // Custom Generator Form States
-  const [destinationRegion, setDestinationRegion] = useState('Agra & Golden Triangle');
+  const [destinationRegion, setDestinationRegion] = useState('Red Fort');
   const [durationDays, setDurationDays] = useState(2);
   const [startDate, setStartDate] = useState('2026-08-28');
   const [startTime, setStartTime] = useState('08:00 AM');
@@ -57,24 +67,88 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
   // Preset circuits state
   const [selectedCircuitIndex, setSelectedCircuitIndex] = useState(0);
 
-  const interestOptions = [
-    'UNESCO Landmarks',
-    'Historical Epigraphs',
-    'Dravidian Temples',
-    'Mughal Heritage',
-    'Sunset & Photography',
-    'Peaceful & Low Crowd',
-    'Cave & Rock Art'
-  ];
+  // Backend recommendation state
+  const [backendError, setBackendError] = useState<string | null>(null);
+
+  // These are the 20 sites currently supported by the project database
+  // and the recommendation engine's supported cities.
+  // Local images for the 20 supported heritage sites.
+  // Put these files in: public/images/
+  const SITE_IMAGES: Record<string, string> = {
+    DEL001: '/images/red_fort.jpg',
+    DEL002: '/images/qutub_minar.jpg',
+    DEL003: '/images/india_gate.jpg',
+    DEL004: '/images/humayuns_tomb.jpg',
+    DEL005: '/images/Lotus_temple.jpg',
+    JAI001: '/images/amer_fort.jpg',
+    JAI002: '/images/Hawa_mahal.jpg',
+    JAI003: '/images/city_palace.jpg',
+    JAI004: '/images/jantar_mantar.jpg',
+    JAI005: '/images/albert_hall.jpg',
+    BOM001: '/images/gate_way_of_india.jpg',
+    BOM002: '/images/elephanta_caves.jpg',
+    BOM003: '/images/chatrapati_shivaji_maharaj_terminus.jpg',
+    BOM004: '/images/Haj_ali_dargaah.jpg',
+    BOM005: '/images/sidhivinayak_temple.jpg',
+    PRA001: '/images/Triveni_sangam.jpg',
+    PRA002: '/images/allahabad_fort.jpg',
+    PRA003: '/images/Khusro_bagh.jpg',
+    PRA004: '/images/Anand_bhavan.jpg',
+    PRA005: '/images/Chandrashekhar_azad_park.jpg'
+  };
 
   const destinationOptions = [
-    'Agra & Golden Triangle',
-    'Karnataka & Hampi Ruins',
-    'Tamil Nadu Sacred Chola Circuit',
-    'Rajasthan Forts & Palaces (Jodhpur-Jaipur)',
-    'Odisha Heritage (Konark & Puri)',
-    'Maharashtra Cave Trail (Ajanta & Ellora)'
+    { name: 'Red Fort', site_id: 'DEL001', city: 'Delhi', latitude: 28.6562, longitude: 77.2410 },
+    { name: 'Qutub Minar', site_id: 'DEL002', city: 'Delhi', latitude: 28.5245, longitude: 77.1855 },
+    { name: 'India Gate', site_id: 'DEL003', city: 'Delhi', latitude: 28.6129, longitude: 77.2295 },
+    { name: "Humayun's Tomb", site_id: 'DEL004', city: 'Delhi', latitude: 28.5933, longitude: 77.2507 },
+    { name: 'Lotus Temple', site_id: 'DEL005', city: 'Delhi', latitude: 28.5535, longitude: 77.2588 },
+
+    { name: 'Amer Fort', site_id: 'JAI001', city: 'Jaipur', latitude: 26.9855, longitude: 75.8513 },
+    { name: 'Hawa Mahal', site_id: 'JAI002', city: 'Jaipur', latitude: 26.9239, longitude: 75.8267 },
+    { name: 'City Palace', site_id: 'JAI003', city: 'Jaipur', latitude: 26.9255, longitude: 75.8236 },
+    { name: 'Jantar Mantar', site_id: 'JAI004', city: 'Jaipur', latitude: 26.9247, longitude: 75.8245 },
+    { name: 'Albert Hall Museum', site_id: 'JAI005', city: 'Jaipur', latitude: 26.9116, longitude: 75.8195 },
+
+    { name: 'Gateway of India', site_id: 'BOM001', city: 'Mumbai', latitude: 18.9220, longitude: 72.8347 },
+    { name: 'Elephanta Caves', site_id: 'BOM002', city: 'Mumbai', latitude: 18.9633, longitude: 72.9315 },
+    { name: 'Chhatrapati Shivaji Maharaj Terminus', site_id: 'BOM003', city: 'Mumbai', latitude: 18.9400, longitude: 72.8355 },
+    { name: 'Haji Ali Dargah', site_id: 'BOM004', city: 'Mumbai', latitude: 18.9827, longitude: 72.8089 },
+    { name: 'Siddhivinayak Temple', site_id: 'BOM005', city: 'Mumbai', latitude: 19.0166, longitude: 72.8304 },
+
+    { name: 'Triveni Sangam', site_id: 'PRA001', city: 'Prayagraj', latitude: 25.4299, longitude: 81.8848 },
+    { name: 'Allahabad Fort', site_id: 'PRA002', city: 'Prayagraj', latitude: 25.4287, longitude: 81.8761 },
+    { name: 'Khusro Bagh', site_id: 'PRA003', city: 'Prayagraj', latitude: 25.4429, longitude: 81.8153 },
+    { name: 'Anand Bhavan', site_id: 'PRA004', city: 'Prayagraj', latitude: 25.4615, longitude: 81.8596 },
+    { name: 'Chandrashekhar Azad Park', site_id: 'PRA005', city: 'Prayagraj', latitude: 25.4542, longitude: 81.8499 },
   ];
+
+  const normalizeStartTime = (time: string): string => {
+    if (!time) return '08:00';
+    const trimmed = time.trim();
+    if (!/[AaPp][Mm]$/.test(trimmed)) {
+      return trimmed;
+    }
+    const parts = trimmed.split(/\s+/);
+    const clock = parts[0];
+    const period = parts[1].toUpperCase();
+    let [hours, minutes] = clock.split(':').map(Number);
+
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const normalizeCrowd = (value: unknown): 'Low' | 'Moderate' | 'High' | '' => {
+    if (value === null || value === undefined || value === '') return '';
+
+    const crowd = String(value).toLowerCase();
+    if (crowd.includes('low')) return 'Low';
+    if (crowd.includes('high')) return 'High';
+    if (crowd.includes('moderate') || crowd.includes('medium')) return 'Moderate';
+    return '';
+  };
 
   const toggleInterest = (interest: string) => {
     setSelectedInterests((prev) =>
@@ -84,173 +158,277 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
     );
   };
 
-  // Generate Custom AI Plan based on form inputs
-  const handleGenerateCustomPlan = () => {
+  // Generate Custom AI Plan using the backend recommendation engine.
+  const handleGenerateCustomPlan = async () => {
     setIsGenerating(true);
+    setBackendError(null);
 
-    setTimeout(() => {
-      let customStops: ItineraryStop[] = [];
+    try {
+      const selectedSite = destinationOptions.find(
+        (site) => site.name === destinationRegion
+      );
 
-      if (destinationRegion.includes('Agra')) {
-        customStops = [
-          {
-            id: 'custom-1',
-            monumentId: 'taj-mahal',
-            monumentName: 'Taj Mahal (Sunrise Entry)',
-            city: 'Agra',
-            timeSlot: '06:00 AM – 08:30 AM',
-            recommendedDuration: '2.5 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 42,
-            travelTimeFromPrev: 'Start Point',
-            imageUrl: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80',
-            tips: 'Arrive 15 mins before gate opening for serene marble glow and zero queues.'
-          },
-          {
-            id: 'custom-2',
-            monumentId: 'fatehpur-sikri',
-            monumentName: 'Fatehpur Sikri & Buland Darwaza',
-            city: 'Agra Suburbs',
-            timeSlot: '11:00 AM – 02:00 PM',
-            recommendedDuration: '3 hrs',
-            expectedCrowd: 'Moderate',
-            pressureScore: 56,
-            travelTimeFromPrev: '45 mins drive',
-            imageUrl: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80',
-            tips: 'Explore the Diwan-i-Khas central pillar with audio guide.'
-          },
-          {
-            id: 'custom-3',
-            monumentId: 'mehtab-bagh',
-            monumentName: 'Mehtab Bagh (Sunset Eco-View)',
-            city: 'Agra (Across Yamuna)',
-            timeSlot: '04:30 PM – 06:30 PM',
-            recommendedDuration: '2 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 28,
-            isAlternativeRecommended: true,
-            alternativeSuggestion: 'Selected over Taj East Gate evening rush to reduce footfall congestion while enjoying panoramic golden hour reflections.',
-            travelTimeFromPrev: '30 mins drive',
-            imageUrl: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80',
-            tips: 'Carry water and telephoto lens for stunning Yamuna riverside silhouettes.'
+      if (!selectedSite) {
+        throw new Error('Please select a valid heritage site.');
+      }
+
+      const interests = selectedInterests.reduce(
+        (acc, interest) => {
+          acc[interest] = true;
+          return acc;
+        },
+        {} as Record<string, boolean>
+      );
+
+      if (includeEcoGems) {
+        interests['Eco Alternatives'] = true;
+      }
+
+      const availableTimeByPace: Record<typeof travelPace, number> = {
+        relaxed: 360,
+        moderate: 480,
+        fast: 600
+      };
+
+      const requestBody = {
+        starting_latitude: selectedSite.latitude,
+        starting_longitude: selectedSite.longitude,
+        start_time: normalizeStartTime(startTime),
+        available_time_minutes: availableTimeByPace[travelPace],
+        budget: 5000,
+        interests,
+        crowd_tolerance: avoidPeakCrowds ? 0.25 : 0.75,
+        itinerary: {
+          selected_site_id: selectedSite.site_id,
+          selected_site_name: selectedSite.name,
+          selected_city: selectedSite.city,
+          duration_days: durationDays,
+          travel_party: travelParty,
+          travel_pace: travelPace
+        }
+      };
+
+      const response: any = await createItinerary(requestBody as any);
+
+      const rawStops: any[] =
+        Array.isArray(response?.stops)
+          ? response.stops
+          : Array.isArray(response?.itinerary?.itinerary)
+            ? response.itinerary.itinerary
+            : Array.isArray(response?.itinerary)
+              ? response.itinerary
+              : Array.isArray(response?.items)
+                ? response.items
+                : [];
+
+      const stops: ItineraryStop[] = rawStops
+        .map((stop: any, index: number) => {
+          const monumentId = String(
+            stop?.monumentId ??
+            stop?.monument_id ??
+            stop?.site_id ??
+            ''
+          );
+
+          if (!monumentId) return null;
+
+          const site = destinationOptions.find(
+            (item) => item.site_id === monumentId
+          );
+
+          if (!site) {
+            console.warn(
+              'ITINERARY - UNKNOWN RECOMMENDED SITE:',
+              monumentId
+            );
+            return null;
           }
-        ];
-      } else if (destinationRegion.includes('Karnataka') || destinationRegion.includes('Hampi')) {
-        customStops = [
-          {
-            id: 'custom-k1',
-            monumentId: 'hampi-monuments',
-            monumentName: 'Vittala Temple & Stone Chariot',
-            city: 'Hampi',
-            timeSlot: '07:00 AM – 09:30 AM',
-            recommendedDuration: '2.5 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 35,
+
+          const crowd = normalizeCrowd(
+            stop?.expectedCrowd ??
+            stop?.expected_crowd
+          );
+
+          return {
+            id: String(
+              stop?.id ??
+              stop?.stop_id ??
+              `backend-stop-${Date.now()}-${index}`
+            ),
+            monumentId: site.site_id,
+            monumentName: site.name,
+            city: site.city,
+            timeSlot: String(
+              stop?.timeSlot ??
+              stop?.time_slot ??
+              stop?.arrival ??
+              stop?.start_time ??
+              ''
+            ),
+            recommendedDuration:
+              stop?.duration_minutes != null
+                ? `${Number(stop.duration_minutes)} mins`
+                : String(
+                    stop?.recommendedDuration ??
+                    stop?.recommended_duration ??
+                    stop?.duration ??
+                    ''
+                  ),
+            expectedCrowd: crowd,
+            pressureScore: Number(
+              stop?.pressureScore ??
+              stop?.pressure_score ??
+              0
+            ),
+            travelTimeFromPrev: String(
+              stop?.travelTimeFromPrev ??
+              stop?.travel_time_from_prev ??
+              (index === 0 ? 'Start Point' : '')
+            ),
+            imageUrl: String(
+              stop?.imageUrl ??
+              stop?.image_url ??
+              SITE_IMAGES[site.site_id] ??
+              ''
+            ),
+            tips: String(
+              stop?.tips ??
+              stop?.tip ??
+              ''
+            ),
+            isAlternativeRecommended: Boolean(
+              stop?.isAlternativeRecommended ??
+              stop?.is_alternative_recommended ??
+              false
+            ),
+            alternativeSuggestion:
+              stop?.alternativeSuggestion ??
+              stop?.alternative_suggestion
+          } as ItineraryStop;
+        })
+        .filter(
+          (stop): stop is ItineraryStop =>
+            stop !== null
+        );
+
+      if (stops.length === 0 && response?.site_id) {
+        const site = destinationOptions.find(
+          (item) => item.site_id === String(response.site_id)
+        );
+
+        if (site) {
+          stops.push({
+            id: `backend-stop-${Date.now()}`,
+            monumentId: site.site_id,
+            monumentName: site.name,
+            city: site.city,
+            timeSlot: String(
+              response.arrival ??
+              response.time_slot ??
+              response.start_time ??
+              ''
+            ),
+            recommendedDuration:
+              response.duration_minutes != null
+                ? `${Number(response.duration_minutes)} mins`
+                : String(
+                    response.duration ??
+                    response.recommended_duration ??
+                    ''
+                  ),
+            expectedCrowd: normalizeCrowd(
+              response.expected_crowd
+            ),
+            pressureScore: Number(
+              response.pressure_score ?? 0
+            ),
             travelTimeFromPrev: 'Start Point',
-            imageUrl: 'https://images.unsplash.com/photo-1600100397608-f010f445b23e?auto=format&fit=crop&w=800&q=80',
-            tips: 'Inspect musical pillars acoustic carvings during morning quiet.'
-          },
-          {
-            id: 'custom-k2',
-            monumentId: 'badami-caves',
-            monumentName: 'Badami Cave Temples',
-            city: 'Bagalkot',
-            timeSlot: '11:30 AM – 02:00 PM',
-            recommendedDuration: '2.5 hrs',
-            expectedCrowd: 'Moderate',
-            pressureScore: 40,
-            travelTimeFromPrev: '1 hr 15 mins drive',
-            imageUrl: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=800&q=80',
-            tips: 'Wear comfortable grip shoes for stone stairs.'
-          },
-          {
-            id: 'custom-k3',
-            monumentId: 'hampi-monuments',
-            monumentName: 'Hemakuta Hill Sunset Ruins',
-            city: 'Hampi',
-            timeSlot: '05:00 PM – 06:45 PM',
-            recommendedDuration: '1.75 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 25,
-            isAlternativeRecommended: true,
-            alternativeSuggestion: 'Peaceful panoramic vantage point with 0 crowd pressure and breathtaking sunset view over Virupaksha.',
-            travelTimeFromPrev: '20 mins walk',
-            imageUrl: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=800&q=80',
-            tips: 'Watch sunset behind the banana plantations.'
-          }
-        ];
-      } else {
-        customStops = [
-          {
-            id: 'custom-gen1',
-            monumentId: 'konark-sun-temple',
-            monumentName: 'Konark Sun Temple',
-            city: 'Puri',
-            timeSlot: '06:30 AM – 09:00 AM',
-            recommendedDuration: '2.5 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 45,
-            travelTimeFromPrev: 'Start Point',
-            imageUrl: 'https://images.unsplash.com/photo-1599818816824-747201c10712?auto=format&fit=crop&w=800&q=80',
-            tips: 'Check shadow calculations on the 24 sundial chariot wheels.'
-          },
-          {
-            id: 'custom-gen2',
-            monumentId: 'brihadisvara-temple',
-            monumentName: 'Brihadisvara Great Living Chola Temple',
-            city: 'Thanjavur',
-            timeSlot: '11:00 AM – 01:30 PM',
-            recommendedDuration: '2.5 hrs',
-            expectedCrowd: 'Moderate',
-            pressureScore: 50,
-            travelTimeFromPrev: 'Local Transport',
-            imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80',
-            tips: 'Observe the 80-tonne granite monolithic Kumbam dome atop the vimana.'
-          },
-          {
-            id: 'custom-gen3',
-            monumentId: 'airavatesvara-temple',
-            monumentName: 'Airavatesvara Temple (Eco-Alternative)',
-            city: 'Darasuram',
-            timeSlot: '04:00 PM – 06:00 PM',
-            recommendedDuration: '2 hrs',
-            expectedCrowd: 'Low',
-            pressureScore: 18,
-            isAlternativeRecommended: true,
-            alternativeSuggestion: 'Exquisite musical steps and intricate miniature carvings with undisturbed peaceful atmosphere.',
-            travelTimeFromPrev: '40 mins drive',
-            imageUrl: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=800&q=80',
-            tips: 'Experience undisturbed stone acoustic steps at the porch entry.'
-          }
-        ];
+            imageUrl: String(
+              response.image_url ??
+              SITE_IMAGES[site.site_id] ??
+              ''
+            ),
+            tips: String(
+              response.tips ?? ''
+            ),
+            isAlternativeRecommended: Boolean(
+              response.is_alternative_recommended
+            ),
+            alternativeSuggestion:
+              response.alternative_suggestion
+          } as ItineraryStop);
+        }
+      }
+
+      if (stops.length === 0) {
+        throw new Error('Backend returned no itinerary stops.');
       }
 
       const newPlan: ItineraryPlan = {
-        id: 'custom-plan-' + Date.now(),
-        title: `${destinationRegion} Custom Eco-Circuit`,
-        region: destinationRegion,
-        durationDays: durationDays,
-        idealFor: `${travelParty} • ${travelPace.toUpperCase()} Pace`,
-        stops: customStops,
-        totalDistanceKm: 120,
-        sustainabilityScore: 94,
-        crowdAvoidancePercent: 68
+        id: String(
+          response?.id ??
+          response?.plan_id ??
+          `backend-plan-${Date.now()}`
+        ),
+        title: String(
+          response?.title ??
+          response?.plan_title ??
+          `${destinationRegion} Custom AI Itinerary`
+        ),
+        region: String(
+          response?.region ??
+          response?.destination ??
+          destinationRegion
+        ),
+        durationDays: Number(
+          response?.durationDays ??
+          response?.duration_days ??
+          durationDays
+        ),
+        idealFor: String(
+          response?.idealFor ??
+          response?.ideal_for ??
+          `${travelParty} • ${travelPace.toUpperCase()} Pace`
+        ),
+        stops,
+        totalDistanceKm: Number(
+          response?.totalDistanceKm ??
+          response?.total_distance_km ??
+          0
+        ),
+        sustainabilityScore: Number(
+          response?.sustainabilityScore ??
+          response?.sustainability_score ??
+          0
+        ),
+        crowdAvoidancePercent: Number(
+          response?.crowdAvoidancePercent ??
+          response?.crowd_avoidance_percent ??
+          0
+        )
       };
 
       setGeneratedPlan(newPlan);
-      setIsGenerating(false);
 
-      // Celebration Confetti
       try {
         confetti({
           particleCount: 50,
           spread: 60,
           origin: { y: 0.7 }
         });
-      } catch (e) {
-        // ignore
+      } catch {
+        // Optional animation only.
       }
-    }, 1200);
+    } catch (error: any) {
+      console.error('ITINERARY - BACKEND GENERATION FAILED:', error);
+      setBackendError(
+        error?.message ||
+        'Unable to generate itinerary from recommendation engine.'
+      );
+      setGeneratedPlan(null);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const activePlan: ItineraryPlan = plannerMode === 'custom' && generatedPlan
@@ -340,9 +518,16 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 className="w-full p-3 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs font-semibold text-[#1A2621] outline-none cursor-pointer focus:ring-2 focus:ring-[#0D3B2E]/20"
               >
                 {destinationOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt.site_id} value={opt.name}>
+                    {opt.name} — {opt.city} ({opt.site_id})
+                  </option>
                 ))}
               </select>
+              {destinationRegion && (
+                <p className="text-[10px] text-[#1A2621]/60 mt-1">
+                  Site ID: {destinationOptions.find((site) => site.name === destinationRegion)?.site_id ?? '—'}
+                </p>
+              )}
             </div>
 
             {/* Trip Duration */}
@@ -474,6 +659,12 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               })}
             </div>
           </div>
+
+          {backendError && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl px-3 py-2 text-xs">
+              Backend recommendation unavailable. Showing the existing local itinerary.
+            </div>
+          )}
 
           {/* Submit Generator Button */}
           <div className="pt-4">
@@ -612,8 +803,6 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="space-y-4 relative before:absolute before:inset-0 before:left-6 before:w-0.5 before:bg-[#0D3B2E]/20">
               {activePlan.stops.map((stop, sIdx) => {
                 const isAlternative = stop.isAlternativeRecommended;
-                const fallbackImg = MONUMENT_FALLBACKS[stop.monumentId] || MONUMENT_FALLBACKS['taj-mahal'];
-
                 return (
                   <div key={stop.id} className="relative pl-14 group animate-fadeIn">
                     
@@ -643,62 +832,57 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                             <span className="text-[10px] text-gray-500 font-semibold">
                               ⏱️ {stop.recommendedDuration}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              stop.expectedCrowd === 'Low'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : stop.expectedCrowd === 'Moderate'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              👥 {stop.expectedCrowd} Crowd
-                            </span>
                           </div>
 
-                          <h3 
-                            onClick={() => onSelectMonumentName && onSelectMonumentName(stop.monumentName)}
-                            className="text-lg font-bold text-[#0D3B2E] font-serif-heritage cursor-pointer hover:text-[#C85A32] transition-colors"
+                          <h4 
+                            onClick={() => onSelectMonumentName?.(stop.monumentName)}
+                            className="text-lg font-bold text-[#0D3B2E] font-serif-heritage hover:text-[#C85A32] transition-colors cursor-pointer"
                           >
                             {stop.monumentName}
-                          </h3>
+                          </h4>
 
-                          <p className="text-xs text-gray-500">
-                            {stop.city} • Travel from previous: <span className="font-semibold text-gray-700">{stop.travelTimeFromPrev}</span>
+                          <p className="text-xs text-[#1A2621]/70">
+                            {stop.city}
+                            {stop.expectedCrowd && (
+                              <>
+                                {' • '}
+                                <span className="font-semibold">Crowd Level:</span>{' '}
+                                {stop.expectedCrowd}
+                              </>
+                            )}
                           </p>
 
-                          {/* Explorer Tip */}
                           {stop.tips && (
-                            <p className="text-[11px] text-[#1A2621]/75 bg-[#F8F6F0] p-2 rounded-xl border border-gray-200/70">
-                              <span className="font-bold text-[#0D3B2E]">💡 Tip:</span> {stop.tips}
+                            <p className="text-xs text-[#1A2621]/80 bg-[#F8F6F0] p-2.5 rounded-xl border border-gray-100 mt-2">
+                              💡 <span className="font-semibold">AI Tip:</span> {stop.tips}
                             </p>
                           )}
 
-                          {/* Alternative Recommendation Highlight */}
                           {isAlternative && stop.alternativeSuggestion && (
-                            <div className="mt-2 p-3 bg-white/90 border border-amber-300 rounded-2xl text-xs text-amber-950 space-y-1">
-                              <p className="font-bold flex items-center space-x-1 text-amber-800">
-                                <span>🌿 Smart Eco-Alternative Selected:</span>
-                              </p>
-                              <p className="text-[11px] leading-relaxed">{stop.alternativeSuggestion}</p>
+                            <div className="mt-2 p-2.5 bg-amber-100/60 border border-amber-300 rounded-xl text-xs text-amber-950 flex items-center space-x-2">
+                              <AlertCircle className="w-4 h-4 text-amber-800 shrink-0" />
+                              <span>{stop.alternativeSuggestion}</span>
                             </div>
                           )}
                         </div>
 
-                        {/* Thumbnail */}
-                        <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-gray-200 bg-slate-900 shadow-xs">
-                          <img
-                            src={stop.imageUrl}
-                            alt={stop.monumentName}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = fallbackImg;
-                            }}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
+                        {/* Monument Thumbnail */}
+                        {stop.imageUrl ? (
+                          <div className="w-full sm:w-28 h-28 rounded-2xl overflow-hidden shrink-0 border border-gray-200">
+                            <img
+                              src={stop.imageUrl}
+                              alt={stop.monumentName}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : null}
 
                       </div>
 
                     </div>
-
                   </div>
                 );
               })}
@@ -706,72 +890,38 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
           </div>
 
-          {/* Right Column: Route Optimization Telemetry & Guidance (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Right Column: Sidebar Map / Quick Guidance (4 cols) */}
+          <div className="lg:col-span-4 space-y-6 sticky top-6">
             
-            {/* Sustainability Metrics Card */}
-            <div className="bg-[#0D3B2E] text-white p-6 rounded-3xl border border-[#D4AF37]/30 shadow-xl space-y-4">
-              <h3 className="text-base font-bold font-serif-heritage text-[#D4AF37]">
-                Route Sustainability Index
-              </h3>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-white/80">Carrying Capacity Balance</span>
-                    <span className="font-mono font-bold text-emerald-400">92%</span>
-                  </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div className="bg-emerald-400 h-full rounded-full w-[92%]"></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-white/80">Crowd Avoidance Optimization</span>
-                    <span className="font-mono font-bold text-[#D4AF37]">{activePlan.crowdAvoidancePercent}%</span>
-                  </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#D4AF37] h-full rounded-full" style={{ width: `${activePlan.crowdAvoidancePercent}%` }}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-white/80">Local Community Support</span>
-                    <span className="font-mono font-bold text-emerald-400">95%</span>
-                  </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div className="bg-emerald-400 h-full rounded-full w-[95%]"></div>
-                  </div>
-                </div>
+            <div className="bg-[#0D3B2E] text-white p-6 rounded-3xl shadow-xl space-y-4">
+              <div className="flex items-center space-x-2.5">
+                <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
+                <h3 className="text-base font-bold font-serif-heritage">
+                  Heritage Protection Pledge
+                </h3>
               </div>
-
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-[11px] text-white/80 leading-relaxed">
-                By adhering to these timed slots, you contribute directly to easing structural pressure on fragile marble and sandstone foundations.
+              <p className="text-xs text-white/80 leading-relaxed">
+                By following this AI-sequenced circuit, you directly contribute to minimizing footfall pressure spikes, preserving historic stonework, and supporting local artisan communities.
+              </p>
+              <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/70">
+                <span>Certified Sustainable</span>
+                <span className="text-[#D4AF37] font-bold">ASI Aligned</span>
               </div>
             </div>
 
-            {/* Travel Essentials Card */}
-            <div className="bg-white p-6 rounded-3xl border border-[#0D3B2E]/15 shadow-sm space-y-3 text-xs">
-              <h3 className="text-base font-bold text-[#0D3B2E] font-serif-heritage">
-                Heritage Explorer Tips
-              </h3>
-
-              <div className="space-y-2 text-[#1A2621]/80">
-                <div className="flex items-start space-x-2">
-                  <span>👟</span>
-                  <span>Footwear: Several temples require bare feet or shoe covers.</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span>📸</span>
-                  <span>Photography: Tripods and drones require special ASI permits.</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <span>💧</span>
-                  <span>Hydration: Carry reusable bottles; RO refill stations are available at ASI gates.</span>
-                </div>
-              </div>
+            <div className="bg-white p-6 rounded-3xl border border-[#0D3B2E]/15 shadow-sm space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#0D3B2E]">
+                Need Help on the Ground?
+              </h4>
+              <p className="text-xs text-[#1A2621]/70 leading-relaxed">
+                Access real-time audio guides, multilingual epigraph translations, and emergency assistance directly from any monument profile page.
+              </p>
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-full py-2.5 bg-[#F8F6F0] hover:bg-gray-200 text-[#0D3B2E] font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Back to Top / Modify Search
+              </button>
             </div>
 
           </div>

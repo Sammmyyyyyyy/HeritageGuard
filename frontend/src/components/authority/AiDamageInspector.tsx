@@ -1,294 +1,554 @@
-import React, { useState } from 'react';
-import { 
-  Sliders, 
-  Layers, 
-  Sparkles, 
-  ShieldAlert, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Send, 
-  Maximize2, 
-  Download,
-  Info,
-  Calendar,
-  Activity
+import React, { useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Image as ImageIcon,
+  Send,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { PRESET_DAMAGE_SCANS } from '../../data/damageScansData';
+
+import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
 
 interface AiDamageInspectorProps {
   language: 'en' | 'hi';
-  initialMonumentId?: string;
   onDispatchTeam: (monumentName: string, actionType: string) => void;
 }
 
+type Site = {
+  site_id: string;
+  name: string;
+  city: string;
+  state: string;
+};
+
+/* =========================================================
+   20 PROJECT SITES
+   ========================================================= */
+
+const SITES: Site[] = [
+  { site_id: 'DEL001', name: 'Red Fort', city: 'Delhi', state: 'Delhi' },
+  { site_id: 'DEL002', name: 'Qutub Minar', city: 'Delhi', state: 'Delhi' },
+  { site_id: 'DEL003', name: 'India Gate', city: 'Delhi', state: 'Delhi' },
+  { site_id: 'DEL004', name: "Humayun's Tomb", city: 'Delhi', state: 'Delhi' },
+  { site_id: 'DEL005', name: 'Lotus Temple', city: 'Delhi', state: 'Delhi' },
+
+  { site_id: 'JAI001', name: 'Amer Fort', city: 'Jaipur', state: 'Rajasthan' },
+  { site_id: 'JAI002', name: 'Hawa Mahal', city: 'Jaipur', state: 'Rajasthan' },
+  { site_id: 'JAI003', name: 'City Palace', city: 'Jaipur', state: 'Rajasthan' },
+  { site_id: 'JAI004', name: 'Jantar Mantar', city: 'Jaipur', state: 'Rajasthan' },
+  { site_id: 'JAI005', name: 'Albert Hall Museum', city: 'Jaipur', state: 'Rajasthan' },
+
+  { site_id: 'BOM001', name: 'Gateway of India', city: 'Mumbai', state: 'Maharashtra' },
+  { site_id: 'BOM002', name: 'Elephanta Caves', city: 'Mumbai', state: 'Maharashtra' },
+  {
+    site_id: 'BOM003',
+    name: 'Chhatrapati Shivaji Maharaj Terminus',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+  },
+  { site_id: 'BOM004', name: 'Haji Ali Dargah', city: 'Mumbai', state: 'Maharashtra' },
+  { site_id: 'BOM005', name: 'Siddhivinayak Temple', city: 'Mumbai', state: 'Maharashtra' },
+
+  { site_id: 'PRA001', name: 'Triveni Sangam', city: 'Prayagraj', state: 'Uttar Pradesh' },
+  { site_id: 'PRA002', name: 'Allahabad Fort', city: 'Prayagraj', state: 'Uttar Pradesh' },
+  { site_id: 'PRA003', name: 'Khusro Bagh', city: 'Prayagraj', state: 'Uttar Pradesh' },
+  { site_id: 'PRA004', name: 'Anand Bhavan', city: 'Prayagraj', state: 'Uttar Pradesh' },
+  {
+    site_id: 'PRA005',
+    name: 'Chandrashekhar Azad Park',
+    city: 'Prayagraj',
+    state: 'Uttar Pradesh',
+  },
+];
+
+/* =========================================================
+   IMAGE LOADING
+   =========================================================
+   IMPORTANT:
+   Use an absolute Vite glob from /src/assets and recurse
+   through subfolders. This fixes the "Image not found"
+   problem when the image isn't directly under one folder.
+
+   Your asset filenames can be:
+     red_fort.jpg
+     red_fort.png
+     redfort.webp
+     qutub_minar.jpg
+     jantar_mantar.png
+     etc.
+   ========================================================= */
+
+const LOCAL_IMAGES = import.meta.glob(
+  '/src/assets/**/*.{png,jpg,jpeg,webp,JPG,JPEG,PNG,WEBP}',
+  {
+    eager: true,
+    import: 'default',
+  }
+) as Record<string, string>;
+
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/\.(png|jpe?g|webp)$/i, '')
+    .replace(/[^a-z0-9]/g, '');
+
+const IMAGE_ALIASES: Record<string, string[]> = {
+  DEL001: ['redfort', 'red_fort', 'redfortdelhi'],
+  DEL002: ['qutubminar', 'qutub_minar', 'qutub'],
+  DEL003: ['indiagate', 'india_gate', 'india_gate_delhi'],
+  DEL004: [
+    'humayunstomb',
+    'humayuns_tomb',
+    'humayun_tomb',
+    'humayun_tomb_delhi',
+  ],
+  DEL005: ['lotustemple', 'lotus_temple', 'lotus'],
+
+  JAI001: ['amerfort', 'amer_fort', 'amberfort', 'amber_fort', 'amber'],
+  JAI002: ['hawamahal', 'hawa_mahal'],
+  JAI003: ['citypalace', 'city_palace'],
+  JAI004: ['jantarmantar', 'jantar_mantar', 'jantar'],
+  JAI005: [
+    'alberthall',
+    'albert_hall',
+    'alberthallmuseum',
+    'albert_hall_museum',
+  ],
+
+  BOM001: [
+    'gatewayofindia',
+    'gateway_of_india',
+    'gate_way',
+    'gateway_india',
+  ],
+  BOM002: ['elephantacaves', 'elephanta_caves', 'elephanta', 'elephant'],
+  BOM003: [
+    'chhatrapati',
+    'chhatrapati_shivaji',
+    'chhatrapati_shivaji_maharaj_terminus',
+    'csmt',
+  ],
+  BOM004: [
+    'hajialidargah',
+    'haji_ali_dargah',
+    'haj_ali_dargah',
+    'hajiali',
+  ],
+  BOM005: [
+    'siddhivinayak',
+    'siddhivinayak_temple',
+    'siddhi_vinayak',
+  ],
+
+  PRA001: ['trivenisangam', 'triveni_sangam', 'triveni'],
+  PRA002: ['allahabadfort', 'allahabad_fort'],
+  PRA003: ['khusrobagh', 'khusro_bagh', 'khusro'],
+  PRA004: ['anandbhavan', 'anand_bhavan'],
+  PRA005: [
+    'chandrashekharazadpark',
+    'chandrashekhar_azad_park',
+    'chandrashekhar_azad',
+    'azadpark',
+  ],
+};
+
+const LOCAL_IMAGE_INDEX: Record<string, string> = {};
+
+Object.entries(LOCAL_IMAGES).forEach(([filePath, url]) => {
+  const fileName = filePath.split('/').pop() ?? '';
+  LOCAL_IMAGE_INDEX[normalize(fileName)] = url;
+});
+
+const getSiteImage = (site: Site): string => {
+  /* 1. Explicit existing mapping */
+  const mapped = MONUMENT_FALLBACKS?.[site.site_id];
+
+  if (mapped) return mapped;
+
+  /* 2. Filename aliases */
+  const aliases = IMAGE_ALIASES[site.site_id] ?? [];
+
+  for (const alias of aliases) {
+    const image = LOCAL_IMAGE_INDEX[normalize(alias)];
+
+    if (image) return image;
+  }
+
+  /* 3. Exact normalized site name */
+  const exactName = LOCAL_IMAGE_INDEX[normalize(site.name)];
+
+  if (exactName) return exactName;
+
+  /* 4. Partial match against all loaded assets */
+  const siteTokens = normalize(site.name);
+
+  const partial = Object.entries(LOCAL_IMAGE_INDEX).find(
+    ([fileName]) =>
+      fileName.includes(siteTokens) ||
+      siteTokens.includes(fileName)
+  );
+
+  return partial?.[1] ?? '';
+};
+
+/* =========================================================
+   COMPONENT
+   ========================================================= */
+
 export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
-  language,
-  initialMonumentId,
-  onDispatchTeam
+  onDispatchTeam,
 }) => {
-  const [selectedScanIdx, setSelectedScanIdx] = useState(0);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
-  const [showCracksLayer, setShowCracksLayer] = useState(true);
-  const [showMoistureLayer, setShowMoistureLayer] = useState(true);
-  const [showErosionLayer, setShowErosionLayer] = useState(true);
-  const [isDispatched, setIsDispatched] = useState(false);
+  const [selectedSiteId, setSelectedSiteId] = useState('DEL001');
+  const [imageError, setImageError] = useState(false);
 
-  const scan = PRESET_DAMAGE_SCANS[selectedScanIdx];
+  const selectedSite = useMemo(
+    () =>
+      SITES.find((site) => site.site_id === selectedSiteId) ??
+      SITES[0],
+    [selectedSiteId]
+  );
 
-  const handleSliderMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const x = clientX - rect.left;
-    const percentage = Math.max(5, Math.min(95, (x / rect.width) * 100));
-    setSliderPosition(percentage);
-  };
+  const imageUrl = useMemo(
+    () => getSiteImage(selectedSite),
+    [selectedSite]
+  );
 
-  const handleDispatchAction = () => {
-    setIsDispatched(true);
-    confetti({
-      particleCount: 60,
-      spread: 60,
-      origin: { y: 0.7 }
-    });
-    onDispatchTeam(scan.monumentName, 'ASI Structural Consolidation & Lime Grout Injection');
+  const handleSiteChange = (siteId: string) => {
+    setSelectedSiteId(siteId);
+    setImageError(false);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#0D3B2E]/10">
+    <div className="space-y-6">
+
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-3 border-b border-slate-200">
+
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900 border border-indigo-200">
-              Multi-Spectral Computer Vision
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1128] font-serif-heritage">
-              AI Damage Inspector & Baseline Comparison
-            </h1>
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase tracking-wider">
+            Multi-Spectral Computer Vision
           </div>
-          <p className="text-xs sm:text-sm text-[#1A2621]/70 mt-1">
-            Compare 1995 Archival Baseline photographs against 2026 AI multi-spectral scans with crack progression vectors.
+
+          <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
+            AI Damage Inspector & Baseline Comparison
+          </h2>
+
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            Select any of the 20 configured heritage sites to review its
+            monument image and conservation state.
           </p>
         </div>
 
-        {/* Site Selector */}
-        <div className="flex items-center space-x-2">
-          <label className="text-xs font-bold text-[#0A1128]">Select Monument:</label>
+        {/* MONUMENT SELECTOR */}
+        <div className="flex items-center gap-3">
+
+          <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
+            Select Monument:
+          </label>
+
           <select
-            value={selectedScanIdx}
-            onChange={(e) => {
-              setSelectedScanIdx(Number(e.target.value));
-              setIsDispatched(false);
-            }}
-            className="bg-white border border-[#0D3B2E]/20 rounded-xl px-3 py-2 text-xs font-bold text-[#0A1128] shadow-sm outline-none"
+            value={selectedSite.site_id}
+            onChange={(e) => handleSiteChange(e.target.value)}
+            className="w-full sm:w-80 bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#0F3D3E] cursor-pointer"
           >
-            {PRESET_DAMAGE_SCANS.map((s, idx) => (
-              <option key={s.id} value={idx}>{s.monumentName}</option>
+            {SITES.map((site) => (
+              <option key={site.site_id} value={site.site_id}>
+                {site.name} ({site.city})
+              </option>
             ))}
           </select>
+
         </div>
       </div>
 
-      {/* Main Grid: Split Comparison Slider + Telemetry Diagnostics */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left: Interactive Split Image Comparison (8 cols) */}
-        <div className="lg:col-span-8 space-y-4">
-          
-          <div
-            className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden bg-black shadow-2xl border-2 border-[#0A1128] cursor-ew-resize select-none"
-            onMouseMove={(e) => { if (isDragging || e.buttons === 1) handleSliderMove(e); }}
-            onTouchMove={handleSliderMove}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
-          >
-            {/* Right / Background Image: 2026 AI Scan with Overlays */}
-            <div className="absolute inset-0">
-              <img
-                src={scan.imageUrl}
-                alt="2026 Present Condition"
-                className="w-full h-full object-cover"
-              />
+      {/* MAIN */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-              {/* AI Damage Heatmap Layer */}
-              {showMoistureLayer && (
-                <div className="absolute inset-0 bg-blue-500/15 mix-blend-color pointer-events-none" />
+        {/* IMAGE PANEL */}
+        <div className="lg:col-span-8">
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+            <div className="relative h-[430px] bg-slate-950">
+
+              {imageUrl && !imageError ? (
+                <>
+
+                  <img
+                    src={imageUrl}
+                    alt={selectedSite.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error(
+                        'AI DAMAGE IMAGE LOAD FAILED',
+                        selectedSite.site_id,
+                        imageUrl
+                      );
+
+                      setImageError(true);
+                    }}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent pointer-events-none" />
+
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1.5 rounded-full bg-[#0F3D3E]/90 text-white text-[10px] font-bold shadow-lg">
+                      Heritage Site Image
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4">
+
+                    <div className="flex items-end justify-between gap-3">
+
+                      <div className="text-white">
+
+                        <p className="text-lg font-bold">
+                          {selectedSite.name}
+                        </p>
+
+                        <p className="text-xs text-white/80">
+                          {selectedSite.city}, {selectedSite.state}
+                          {' • '}
+                          {selectedSite.site_id}
+                        </p>
+
+                      </div>
+
+                      <div className="px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur text-[10px] font-semibold text-white">
+                        Local project image
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-white/80 px-6 text-center">
+
+                  <ImageIcon className="w-12 h-12 mb-3 opacity-70" />
+
+                  <p className="font-semibold text-base">
+                    Image not available
+                  </p>
+
+                  <p className="text-xs text-white/70 mt-2">
+                    {selectedSite.name} ({selectedSite.site_id})
+                  </p>
+
+                  <p className="text-[10px] text-white/40 mt-1">
+                    Check the image filename inside src/assets.
+                  </p>
+
+                </div>
               )}
 
-              {/* AI Bounding Boxes & Vectors */}
-              {showCracksLayer && scan.detections.map((det) => (
-                <div
-                  key={det.id}
-                  className="absolute border-2 border-red-500 bg-red-500/25 pointer-events-none animate-pulse"
-                  style={{
-                    left: `${det.bbox.x}%`,
-                    top: `${det.bbox.y}%`,
-                    width: `${det.bbox.width}%`,
-                    height: `${det.bbox.height}%`
-                  }}
-                >
-                  <span className="absolute -top-5 left-0 px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-red-950 text-red-200 border border-red-500">
-                    {det.title} ({Math.round(det.confidence * 100)}%)
-                  </span>
-                </div>
-              ))}
-
-              {/* Label Badge Right */}
-              <div className="absolute top-4 right-4 bg-red-950/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono font-bold text-red-200 border border-red-500/40">
-                2026 AI Multi-Spectral Scan
-              </div>
             </div>
 
-            {/* Left Image: 1995 Archival Baseline (Clipped via clip-path) */}
-            <div
-              className="absolute inset-0 overflow-hidden"
-              style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
-            >
-              <img
-                src={scan.imageUrl}
-                alt="1995 Archival Baseline"
-                className="w-full h-full object-cover filter sepia-[0.35] brightness-90 contrast-95"
-              />
+            <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100">
 
-              {/* Label Badge Left */}
-              <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono font-bold text-amber-200 border border-amber-500/40">
-                1995 Archival Baseline (ASI Monograph)
-              </div>
-            </div>
+              <div className="flex items-center gap-2 text-[10px] text-slate-500">
 
-            {/* Central Vertical Split Drag Handle */}
-            <div
-              className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] cursor-ew-resize z-30"
-              style={{ left: `${sliderPosition}%` }}
-            >
-              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white text-[#0A1128] shadow-2xl flex items-center justify-center font-bold text-xs border-2 border-[#0A1128]">
-                ↔
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+
+                <span>
+                  {selectedSite.name} selected
+                </span>
+
               </div>
+
+              <span className="text-[10px] font-mono text-slate-400">
+                {selectedSite.site_id}
+              </span>
+
             </div>
 
           </div>
 
-          {/* Layer Toggles Toolbar */}
-          <div className="bg-white p-4 rounded-2xl border border-[#0D3B2E]/10 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-            <span className="font-bold text-[#0A1128] flex items-center space-x-1.5">
-              <Layers className="w-4 h-4 text-[#C85A32]" />
-              <span>AI Detection Layer Overlays:</span>
-            </span>
+          {/* AI DETECTION LAYER */}
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowCracksLayer(!showCracksLayer)}
-                className={`px-3 py-1.5 rounded-lg font-semibold border transition-all ${
-                  showCracksLayer
-                    ? 'bg-red-100 text-red-900 border-red-300 shadow-xs'
-                    : 'bg-gray-100 text-gray-400 border-gray-200'
-                }`}
-              >
-                ⚡ Micro-Crack Vectors
-              </button>
+          <div className="mt-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
 
-              <button
-                onClick={() => setShowMoistureLayer(!showMoistureLayer)}
-                className={`px-3 py-1.5 rounded-lg font-semibold border transition-all ${
-                  showMoistureLayer
-                    ? 'bg-blue-100 text-blue-900 border-blue-300 shadow-xs'
-                    : 'bg-gray-100 text-gray-400 border-gray-200'
-                }`}
-              >
-                💧 Moisture Saturation Heatmap
-              </button>
+            <div className="flex items-center space-x-2 mb-3">
 
-              <button
-                onClick={() => setShowErosionLayer(!showErosionLayer)}
-                className={`px-3 py-1.5 rounded-lg font-semibold border transition-all ${
-                  showErosionLayer
-                    ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
-                    : 'bg-gray-100 text-gray-400 border-gray-200'
-                }`}
-              >
-                🌾 Salt Exfoliation Fissures
-              </button>
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+
+              <h3 className="text-xs font-bold text-[#0F3D3E]">
+                AI Detection Layer
+              </h3>
+
             </div>
+
+            <div className="flex flex-wrap gap-2">
+
+              <span className="px-3 py-1.5 rounded-lg bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold">
+                Micro-Crack Vectors
+              </span>
+
+              <span className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold">
+                Moisture Saturation
+              </span>
+
+              <span className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                Surface / Salt Exfoliation
+              </span>
+
+            </div>
+
           </div>
 
         </div>
 
-        {/* Right: Telemetry & Conservation Action Panel (4 cols) */}
-        <div className="lg:col-span-4 space-y-5">
-          
-          {/* Defect Diagnostics Card */}
-          <div className="bg-white p-6 rounded-2xl border border-[#0D3B2E]/10 shadow-sm space-y-4">
-            
-            <div className="pb-3 border-b border-[#0D3B2E]/10">
-              <span className="text-[10px] uppercase font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">
-                Telemetry Diagnostics
-              </span>
-              <h3 className="text-base font-bold text-[#0A1128] mt-1 font-serif-heritage">
-                {scan.monumentName}
-              </h3>
-              <p className="text-xs text-gray-500">{scan.locationDetails}</p>
+        {/* DIAGNOSTICS PANEL */}
+
+        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+
+          <div className="mb-4">
+
+            <span className="inline-flex px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider">
+              Telemetry Diagnostics
+            </span>
+
+            <h3 className="text-xl font-bold text-[#0F3D3E] mt-2 font-serif-heritage">
+              {selectedSite.name}
+            </h3>
+
+            <p className="text-xs text-slate-500">
+              {selectedSite.city}, {selectedSite.state}
+            </p>
+
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-5">
+
+            <div className="p-4 rounded-2xl bg-[#F8F6F0] border border-slate-200">
+
+              <p className="text-[10px] text-slate-500 font-bold uppercase">
+                Surface Damage
+              </p>
+
+              <p className="text-3xl font-bold text-slate-400 mt-2">
+                —
+              </p>
+
+              <p className="text-[10px] text-slate-400 mt-1">
+                Run damage scan
+              </p>
+
             </div>
 
-            {/* Damage Severity Metrics */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-[#F8F6F0] p-3 rounded-xl border border-[#0D3B2E]/10">
-                <span className="text-gray-500 text-[10px] uppercase font-bold">Surface Damage</span>
-                <p className="text-2xl font-bold font-mono text-red-600 mt-0.5">
-                  {scan.overallDamageScore}<span className="text-xs text-gray-400">/100</span>
-                </p>
-              </div>
+            <div className="p-4 rounded-2xl bg-[#F8F6F0] border border-slate-200">
 
-              <div className="bg-[#F8F6F0] p-3 rounded-xl border border-[#0D3B2E]/10">
-                <span className="text-gray-500 text-[10px] uppercase font-bold">Crack Velocity</span>
-                <p className="text-xl font-bold font-mono text-amber-700 mt-0.5">
-                  +0.04 <span className="text-[10px] font-normal">mm/yr</span>
-                </p>
-              </div>
-            </div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase">
+                Crack Velocity
+              </p>
 
-            {/* Detections List */}
-            <div>
-              <p className="text-xs font-bold text-[#0A1128] uppercase mb-2">Detected Anomalies ({scan.detections.length})</p>
-              <div className="space-y-2">
-                {scan.detections.map((det) => (
-                  <div key={det.id} className="p-3 rounded-xl bg-red-50/60 border border-red-200/80 text-xs">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-red-950">{det.title}</span>
-                      <span className="text-[10px] font-mono font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded">
-                        {det.severity}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-red-900/80 leading-snug">{det.description}</p>
-                    <p className="text-[10px] text-red-950 font-semibold mt-1 pt-1 border-t border-red-200/50">
-                      Recommendation: {det.recommendedAction}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+              <p className="text-2xl font-bold text-slate-400 mt-3">
+                —
+              </p>
 
-            {/* Dispatch Action Button */}
-            <div className="pt-2">
-              {isDispatched ? (
-                <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-300 text-xs font-bold text-center flex items-center justify-center space-x-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>ASI Conservation Team Dispatched!</span>
-                </div>
-              ) : (
-                <button
-                  onClick={handleDispatchAction}
-                  className="w-full py-3 bg-[#0A1128] hover:bg-[#131E3A] text-[#D4AF37] font-bold text-xs rounded-xl shadow-lg border border-[#D4AF37]/30 transition-all flex items-center justify-center space-x-2"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Dispatch ASI Conservation Team</span>
-                </button>
-              )}
+              <p className="text-[10px] text-slate-400 mt-1">
+                Run damage scan
+              </p>
+
             </div>
 
           </div>
+
+          <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+
+            <h4 className="text-xs font-bold text-slate-800 mb-2">
+              Detected Anomalies
+            </h4>
+
+            <div className="flex flex-col items-center justify-center min-h-[190px] text-center">
+
+              <CheckCircle2 className="w-9 h-9 text-emerald-500 mb-2" />
+
+              <p className="text-sm font-semibold text-slate-700">
+                No AI scan result loaded
+              </p>
+
+              <p className="text-[11px] text-slate-500 mt-1 max-w-xs">
+                Select a site and run its damage scan to populate AI
+                detections and conservation recommendations.
+              </p>
+
+            </div>
+
+          </div>
+
+          <button
+            onClick={() =>
+              onDispatchTeam(
+                selectedSite.name,
+                'Field Conservation Inspection'
+              )
+            }
+            className="mt-4 w-full py-3 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+          >
+            <Send className="w-4 h-4 text-[#D4AF37]" />
+            Dispatch ASI Conservation Team
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* QUICK SITE SELECT */}
+
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+
+        <div className="flex items-center justify-between mb-3">
+
+          <div>
+            <h3 className="text-xs font-bold text-[#0F3D3E]">
+              Configured Heritage Sites
+            </h3>
+
+            <p className="text-[10px] text-slate-500">
+              Each site uses its own local image asset.
+            </p>
+          </div>
+
+          <span className="text-[10px] font-mono text-slate-400">
+            20 sites
+          </span>
+
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+
+          {SITES.map((site) => {
+
+            const hasImage = Boolean(getSiteImage(site));
+
+            return (
+              <button
+                key={site.site_id}
+                onClick={() =>
+                  handleSiteChange(site.site_id)
+                }
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all ${
+                  selectedSite.site_id === site.site_id
+                    ? 'bg-[#0F3D3E] text-white border-[#0F3D3E]'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-[#0F3D3E]'
+                }`}
+              >
+
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    hasImage
+                      ? 'bg-emerald-500'
+                      : 'bg-red-400'
+                  }`}
+                />
+
+                {site.name}
+
+              </button>
+            );
+          })}
 
         </div>
 
@@ -297,3 +557,5 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
     </div>
   );
 };
+
+export default AiDamageInspector;

@@ -1,31 +1,143 @@
-import React, { useState , useEffect } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  Star, 
-  Calendar, 
-  ShieldCheck, 
-  SlidersHorizontal, 
-  Heart, 
-  Sparkles, 
-  ArrowRight, 
-  Camera, 
-  Bot, 
-  Compass, 
-  AlertTriangle, 
-  Settings, 
+import React, { useState, useEffect } from 'react';
+
+import {
+  Search,
+  MapPin,
+  Star,
+  Calendar,
+  ShieldCheck,
+  SlidersHorizontal,
+  Heart,
+  Sparkles,
+  ArrowRight,
+  Camera,
+  Bot,
+  Compass,
+  AlertTriangle,
+  Settings,
   Filter,
   Users
 } from 'lucide-react';
+
 import { Monument, DamageScanResult } from '../../types/heritage';
 import { MONUMENTS_DATA } from '../../data/monumentsData';
-import { getSites, BackendSite } from '../../api/sites';
+import { getSites, BackendSite, createReport, } from '../../api/sites';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
+
+
+// =====================================================
+// LOCAL PUBLIC IMAGE MAPPING FOR THE 20 SUPPORTED SITES
+// Images are stored in frontend/public/images, so they are
+// referenced with /images/<filename> (not /src/assets/...).
+// =====================================================
+const SITE_IMAGE_PATHS: Record<string, string> = {
+  DEL001: '/images/red_fort.jpg',
+  DEL002: '/images/qutub_minar.jpg',
+  DEL003: '/images/india_gate.jpg',
+  DEL004: '/images/humayun_tomb.jpg',
+  DEL005: '/images/Lotus_temple.jpg',
+
+  JAI001: '/images/amer_fort.jpg',
+  JAI002: '/images/Hawa_mahal.jpg',
+  JAI003: '/images/city_palace.jpg',
+  JAI004: '/images/jantar_mantar.jpg',
+  JAI005: '/images/albert_hall.jpg',
+
+  BOM001: '/images/gate_way_of_india.jpg',
+  BOM002: '/images/elephanta_caves.jpg',
+  BOM003: '/images/chatrapati_shivaji_maharaj_terminus.jpg',
+  BOM004: '/images/Haj_ali_dargaah.jpg',
+  BOM005: '/images/sidhivinayak_temple.jpg',
+
+  PRA001: '/images/Triveni_sangam.jpg',
+  PRA002: '/images/allahabad_fort.jpg',
+  PRA003: '/images/Khusro_bagh.jpg',
+  PRA004: '/images/Anand_bhavan.jpg',
+  PRA005: '/images/ChandraShekhar_azad_park.jpg',
+};
 
 // Subcomponents for the Tourist Navigation View
 import { ScanMonument } from './ScanMonument';
 import { AskHeritageAI } from './AskHeritageAI';
 import { ItineraryPlanner } from './ItineraryPlanner';
+
+
+// =====================================================
+// BACKEND SITE → FRONTEND MONUMENT CONVERTER
+// =====================================================
+
+const convertBackendSiteToMonument = (site: BackendSite): Monument => {
+  return {
+    id: site.site_id,
+
+    name: site.name,
+    hindiName: site.name,
+    tagline: site.description,
+
+    city: site.city,
+    state: site.state,
+
+    lat: site.latitude,
+    lng: site.longitude,
+
+    category: 'Other Heritage',
+
+    timePeriod: 'Historical Period',
+    architecturalStyle: 'Heritage Architecture',
+
+    isUnesco: false,
+
+    rating: 0,
+    reviewsCount: '0 reviews',
+
+    imageUrl:
+      SITE_IMAGE_PATHS[site.site_id] ||
+      MONUMENT_FALLBACKS[site.site_id] ||
+      '/images/heritage-placeholder.jpg',
+
+    gallery: [],
+
+    heritagePressureScore: 0,
+    damageScore: 0,
+
+    crowdLevel: 'Low',
+
+    liveFootfall: 0,
+    maxCapacity: 0,
+
+    bestVisitingWindow: {
+      start: '09:00 AM',
+      end: '05:00 PM',
+      reason: 'Recommended based on available site information.',
+      hindiReason: 'उपलब्ध साइट जानकारी के आधार पर अनुशंसित समय।'
+    },
+
+    openingHours: 'Check local timings',
+
+    entryFee: {
+      indian: 0,
+      foreigner: 0
+    },
+
+    deteriorationStatus: 'Good',
+
+    description: site.description,
+    hindiDescription: site.description,
+
+    historicalSignificance: site.historical_significance,
+
+    architectureHighlights: [],
+
+    alternativeSites: [],
+
+    hourlyFootfall: []
+  };
+};
+
+
+// =====================================================
+// TOURIST APP PROPS
+// =====================================================
 
 interface TouristAppProps {
   language: 'en' | 'hi';
@@ -33,7 +145,13 @@ interface TouristAppProps {
   onTabChange?: (tab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant') => void;
   onSelectMonument: (monument: Monument) => void;
   onReportSubmitted?: (scan: DamageScanResult) => void;
+  selectedSiteId?: string;
 }
+
+
+// =====================================================
+// TOURIST APP
+// =====================================================
 
 export const TouristApp: React.FC<TouristAppProps> = ({
   language,
@@ -42,12 +160,37 @@ export const TouristApp: React.FC<TouristAppProps> = ({
   onSelectMonument,
   onReportSubmitted
 }) => {
-  // Search & Filter States
+
+  // ===================================================
+  // SEARCH & FILTER STATES
+  // ===================================================
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedState, setSelectedState] = useState('All States');
-  const [backendSites, setBackendSites] = useState<BackendSite[]>([]);
-const [sitesLoading, setSitesLoading] = useState(true);
-const [sitesError, setSitesError] = useState<string | null>(null);
+
+  const [selectedState, setSelectedState] =
+    useState('All States');
+
+
+  // ===================================================
+  // BACKEND STATES
+  // ===================================================
+
+  const [backendSites, setBackendSites] =
+    useState<BackendSite[]>([]);
+
+  const [backendMonuments, setBackendMonuments] =
+    useState<Monument[]>([]);
+
+  const [sitesLoading, setSitesLoading] =
+    useState(true);
+
+  const [sitesError, setSitesError] =
+    useState<string | null>(null);
+
+
+  // ===================================================
+  // LOAD SITES FROM BACKEND
+  // ===================================================
 useEffect(() => {
   const loadSites = async () => {
     try {
@@ -55,12 +198,24 @@ useEffect(() => {
 
       const sites = await getSites();
 
-      console.log("Backend sites:", sites);
+      console.log("========== DEBUG ==========");
+      console.log("SITES:", sites);
+      console.log("SITES TYPE:", typeof sites);
+      console.log("IS ARRAY:", Array.isArray(sites));
+      console.log("LENGTH:", sites?.length);
+      console.log("============================");
 
       setBackendSites(sites);
+
+      const monuments = sites.map(convertBackendSiteToMonument);
+
+      console.log("CONVERTED MONUMENTS:", monuments);
+
+      setBackendMonuments(monuments);
       setSitesError(null);
+
     } catch (error) {
-      console.error("Failed to load sites:", error);
+      console.error("BACKEND ERROR:", error);
       setSitesError("Unable to load heritage sites from backend.");
     } finally {
       setSitesLoading(false);
@@ -69,26 +224,108 @@ useEffect(() => {
 
   loadSites();
 }, []);
-  const [selectedCategory, setSelectedCategory] = useState<'All' | 'Temples' | 'Tombs & Mausoleums' | 'Forts & Palaces' | 'Caves & Rock Cut' | 'UNESCO Sites'>('All');
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState('All Time Periods');
-  const [selectedStyle, setSelectedStyle] = useState('All Styles');
-  const [sortBy, setSortBy] = useState('Popular');
-  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set(['taj-mahal', 'hampi']));
-  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+
+  // ===================================================
+  // OTHER FILTER STATES
+  // ===================================================
+
+  const [selectedCategory, setSelectedCategory] =
+    useState<
+      | 'All'
+      | 'Temples'
+      | 'Tombs & Mausoleums'
+      | 'Forts & Palaces'
+      | 'Caves & Rock Cut'
+      | 'UNESCO Sites'
+    >('All');
+
+  const [selectedTimePeriod, setSelectedTimePeriod] =
+    useState('All Time Periods');
+
+  const [selectedStyle, setSelectedStyle] =
+    useState('All Styles');
+
+  const [sortBy, setSortBy] =
+    useState('Popular');
+
+
+  // ===================================================
+  // BOOKMARKS
+  // ===================================================
+
+  const [bookmarkedIds, setBookmarkedIds] =
+    useState<Set<string>>(
+      new Set(['taj-mahal', 'hampi'])
+    );
+
+
+  // ===================================================
+  // FAILED IMAGES
+  // ===================================================
+
+  const [failedImages, setFailedImages] =
+    useState<Set<string>>(new Set());
+
 
   const handleImageError = (id: string) => {
-    setFailedImages((prev) => new Set(prev).add(id));
+
+    setFailedImages(
+      (prev) => new Set(prev).add(id)
+    );
+
   };
 
-  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+
+  // ===================================================
+  // BOOKMARK TOGGLE
+  // ===================================================
+
+  const toggleBookmark = (
+    id: string,
+    e: React.MouseEvent
+  ) => {
+
     e.stopPropagation();
+
     setBookmarkedIds((prev) => {
+
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+
+      if (next.has(id)) {
+
+        next.delete(id);
+
+      } else {
+
+        next.add(id);
+
+      }
+
       return next;
+
     });
+
   };
+
+
+  // ===================================================
+  // TEMPORARY DEBUG
+  // ===================================================
+
+  console.log(
+    'FINAL BACKEND MONUMENTS:',
+    backendMonuments
+  );
+
+
+  // ===================================================
+  // YOUR EXISTING JSX / REST OF TOURIST APP
+  // ===================================================
+
+  // Yahan se tumhara existing 553-line TouristApp
+  // ka baaki code continue hoga.
+
 
   // Filter Categories matching Horizontal Chips
   const categories = [
@@ -197,11 +434,10 @@ useEffect(() => {
 
         {/* Sub-View: AI Damage Scanner */}
         {activeTab === 'scan' && (
-          <ScanMonument
-            language={language}
-            onReportSubmitted={onReportSubmitted}
-            onNavigateToAI={() => handleNavigateTab('ai-assistant')}
-          />
+              <ScanMonument
+                  language={language}
+                  onReportSubmitted={onReportSubmitted}
+/>
         )}
 
         {/* Sub-View: Ask Heritage AI */}
@@ -396,9 +632,9 @@ useEffect(() => {
                 {filteredMonuments.map((monument) => {
                   const isBookmarked = bookmarkedIds.has(monument.id);
                   const isFailed = failedImages.has(monument.id);
-                  const imageSrc = isFailed 
-                    ? (MONUMENT_FALLBACKS[monument.id] || MONUMENT_FALLBACKS['taj-mahal'])
-                    : monument.imageUrl;
+                  const imageSrc = isFailed
+                    ? (SITE_IMAGE_PATHS[monument.id] || MONUMENT_FALLBACKS[monument.id] || '')
+                    : (SITE_IMAGE_PATHS[monument.id] || monument.imageUrl || '/images/heritage-placeholder.jpg');
 
                   return (
                     <div

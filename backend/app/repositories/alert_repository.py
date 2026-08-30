@@ -1,6 +1,5 @@
 from typing import Any, Dict, List
-
-from  app.db.supabase import supabase
+from app.db.supabase import supabase
 from app.exceptions.database import DatabaseError
 
 
@@ -12,7 +11,6 @@ class AlertRepository:
         self,
         data: Dict[str, Any],
     ) -> Dict[str, Any]:
-
         try:
             response = (
                 supabase
@@ -22,9 +20,7 @@ class AlertRepository:
             )
 
             if not response.data:
-                raise DatabaseError(
-                    "Alert was not created"
-                )
+                raise DatabaseError("Alert was not created")
 
             return response.data[0]
 
@@ -32,13 +28,12 @@ class AlertRepository:
             raise
 
         except Exception as exc:
-            raise DatabaseError(
-                f"Failed to create alert: {exc}"
-            )
+            raise DatabaseError(f"Failed to create alert: {exc}")
 
     def get_all(
         self,
         site_id: str | None = None,
+        only_unresolved: bool = True,  # Default True rakhein
     ) -> List[Dict[str, Any]]:
 
         try:
@@ -48,11 +43,12 @@ class AlertRepository:
                 .select("*")
             )
 
+            # SIRF ACTIVE ALERTS FILTER KAREIN
+            if only_unresolved:
+                query = query.eq("is_resolved", False)
+
             if site_id:
-                query = query.eq(
-                    "site_id",
-                    site_id,
-                )
+                query = query.eq("site_id", site_id)
 
             response = query.order(
                 "created_at",
@@ -62,9 +58,7 @@ class AlertRepository:
             return response.data or []
 
         except Exception as exc:
-            raise DatabaseError(
-                f"Failed to fetch alerts: {exc}"
-            )
+            raise DatabaseError(f"Failed to fetch alerts: {exc}")
 
     def update(
         self,
@@ -82,9 +76,7 @@ class AlertRepository:
             )
 
             if not response.data:
-                raise DatabaseError(
-                    "Alert not found"
-                )
+                raise DatabaseError("Alert not found")
 
             return response.data[0]
 
@@ -92,6 +84,4 @@ class AlertRepository:
             raise
 
         except Exception as exc:
-            raise DatabaseError(
-                f"Failed to update alert: {exc}"
-            )
+            raise DatabaseError(f"Failed to update alert: {exc}")

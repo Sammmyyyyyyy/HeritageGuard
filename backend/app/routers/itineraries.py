@@ -1,73 +1,39 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from typing import Dict, Any
 
-from app.repositories.itinerary_repository import (
-    ItineraryRepository,
-)
-
-from app.schemas.itinerary import (
-    ItineraryCreate,
-)
-
-from app.services.itinerary_service import (
-    ItineraryService,
-)
-
+from app.repositories.itinerary_repository import ItineraryRepository
+from app.schemas.itinerary import ItineraryCreate
+from app.services.itinerary_service import ItineraryService
+from app.integrations.recommendation.client import RecommendationAIClient
 
 router = APIRouter(
     prefix="/api/itineraries",
     tags=["Itineraries"],
 )
 
+# Dependency Factory Functions (Reloading Safety)
+def get_repository() -> ItineraryRepository:
+    return ItineraryRepository()
 
-repository = ItineraryRepository()
-service = ItineraryService(repository)
+def get_ai_client() -> RecommendationAIClient:
+    return RecommendationAIClient()
 
+def get_service(
+    repo: ItineraryRepository = Depends(get_repository),
+    client: RecommendationAIClient = Depends(get_ai_client),
+) -> ItineraryService:
+    return ItineraryService(repository=repo, client=client)
 
-# =========================================================
-# CREATE ITINERARY
-# =========================================================
 
 @router.post("")
-def create_itinerary(
+async def create_itinerary(
     itinerary: ItineraryCreate,
+    service: ItineraryService = Depends(get_service),
 ):
-
     try:
-
-        data = itinerary.model_dump(
-            exclude_none=True
-        )
-
-        return service.create_itinerary(
-            data
-        )
-
+        data = itinerary.model_dump(exclude_none=True)
+        return await service.create_itinerary(data)
     except ValueError as e:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(e),
-        )
-
-
-# =========================================================
-# GET ITINERARY
-# =========================================================
-
-@router.get("/{itinerary_id}")
-def get_itinerary(
-    itinerary_id: str,
-):
-
-    try:
-
-        return service.get_itinerary(
-            itinerary_id
-        )
-
-    except ValueError as e:
-
-        raise HTTPException(
-            status_code=404,
-            detail=str(e),
-        )
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
