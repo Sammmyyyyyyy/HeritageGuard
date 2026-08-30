@@ -63,7 +63,7 @@ export const BestVisitWindowCard: React.FC<BestVisitWindowCardProps> = ({ foreca
         <div className="space-y-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold border border-red-200">
             <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-            <span>{language === 'hi' ? '⚠️ अत्यधिक भीड़ का समय' : '⚠️ Peak Density: Avoid If Flexible'}</span>
+            <span>{language === 'hi' ? '⚠️ अत्यधिक भीड़ का समय (PEAK HOURS)' : '⚠️ PEAK HOURS'}</span>
           </div>
 
           <div>
@@ -87,9 +87,11 @@ export const BestVisitWindowCard: React.FC<BestVisitWindowCardProps> = ({ foreca
         <div className="pt-3 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-900 font-medium">
           <span className="flex items-center space-x-1">
             <Clock className="w-3.5 h-3.5 text-[#C85A32]" />
-            <span>Estimated Queue Time:</span>
+            <span>{language === 'hi' ? 'अनुशंसित वैकल्पिक समय:' : 'Recommended Alternative Window:'}</span>
           </span>
-          <span className="font-bold text-red-700 font-mono-stat">35–55 mins</span>
+          <span className="font-bold text-[#0D3B2E] font-mono-stat">
+            {forecast.bestVisitingWindow.start} – {forecast.bestVisitingWindow.end}
+          </span>
         </div>
       </div>
 

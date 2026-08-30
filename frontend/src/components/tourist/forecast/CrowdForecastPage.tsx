@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Monument } from '../../../types/heritage';
-import { getMonumentCrowdForecast } from '../../../data/crowdForecastData';
+import { Monument, MonumentCrowdForecast, DailyCrowdForecast } from '../../../types/heritage';
+import {
+  fetchSiteCrowdForecast,
+  fetchSingleDateCrowdForecast,
+  getTodayDateString,
+  formatDateLabel,
+} from '../../../data/crowdForecastData';
 import { DateSelector } from './DateSelector';
 import { CrowdSummaryCards } from './CrowdSummaryCards';
 import { BestVisitWindowCard } from './BestVisitWindowCard';
@@ -18,7 +23,10 @@ import {
   Bot, 
   ShieldCheck,
   Compass,
-  Check
+  Check,
+  Loader2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 
 interface CrowdForecastPageProps {
@@ -26,53 +34,162 @@ interface CrowdForecastPageProps {
   language: 'en' | 'hi';
   onBackToMonument: (monument: Monument) => void;
   onPlanVisit: (monument: Monument) => void;
+  initialDate?: string;
 }
 
 export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
   monument,
   language,
   onBackToMonument,
-  onPlanVisit
+  onPlanVisit,
+  initialDate
 }) => {
-  // Load dynamic 7-day forecast bundle
-  const forecastBundle = getMonumentCrowdForecast(monument);
+  const [forecastBundle, setForecastBundle] = useState<MonumentCrowdForecast | null>(null);
+  const [cachedDays, setCachedDays] = useState<Record<string, DailyCrowdForecast>>({});
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate || getTodayDateString());
+  const [isLoadingInitial, setIsLoadingInitial] = useState<boolean>(true);
+  const [isLoadingDate, setIsLoadingDate] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  // Selected date state (defaults to today)
-  const [selectedDate, setSelectedDate] = useState<string>(
-    forecastBundle.days[0]?.date || ''
-  );
-  const [isCopied, setIsCopied] = useState(false);
+  // Initial load: Fetch 7-day forecast bundle from backend AI model
+  const loadInitialForecast = async () => {
+    setIsLoadingInitial(true);
+    setErrorMessage(null);
+    try {
+      const bundle = await fetchSiteCrowdForecast(monument);
+      setForecastBundle(bundle);
 
-  // Update selected date if monument changes
-  useEffect(() => {
-    if (forecastBundle.days.length > 0) {
-      setSelectedDate(forecastBundle.days[0].date);
+      const dayMap: Record<string, DailyCrowdForecast> = {};
+      bundle.days.forEach((d) => {
+        dayMap[d.date] = d;
+      });
+
+      // If an initial custom date was requested and isn't in the initial 7 days, fetch it
+      const targetDate = initialDate && initialDate.trim().length > 0 ? initialDate : bundle.days[0].date;
+      setSelectedDate(targetDate);
+
+      if (!dayMap[targetDate]) {
+        try {
+          const baselineTotal = bundle.days[0]?.expectedVisitors || bundle.currentLiveFootfall;
+          const customDay = await fetchSingleDateCrowdForecast(monument, targetDate, baselineTotal);
+          dayMap[targetDate] = customDay;
+        } catch {
+          // If custom date fails, fallback to today
+          setSelectedDate(bundle.days[0].date);
+        }
+      }
+
+      setCachedDays(dayMap);
+      setIsLoadingInitial(false);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Crowd prediction backend currently unavailable.');
+      setIsLoadingInitial(false);
     }
+  };
+
+  useEffect(() => {
+    loadInitialForecast();
   }, [monument.id]);
 
-  // Active selected day's forecast
-  const activeDayForecast =
-    forecastBundle.days.find((d) => d.date === selectedDate) || forecastBundle.days[0];
+  // Handle user selecting any date (quick select or custom date picker)
+  const handleSelectDate = async (newDate: string) => {
+    if (!newDate || newDate === selectedDate) return;
+    setSelectedDate(newDate);
+
+    // Update URL hash parameter seamlessly without page reload
+    if (window.history?.replaceState) {
+      window.history.replaceState(null, '', `#forecast-${monument.id}?date=${newDate}`);
+    }
+
+    // If date is already cached, no need to fetch
+    if (cachedDays[newDate]) {
+      return;
+    }
+
+    // Fetch live backend prediction for this custom date
+    setIsLoadingDate(true);
+    try {
+      const baselineTotal = forecastBundle?.days[0]?.expectedVisitors || monument.liveFootfall;
+      const customDay = await fetchSingleDateCrowdForecast(monument, newDate, baselineTotal);
+      setCachedDays((prev) => ({
+        ...prev,
+        [newDate]: customDay,
+      }));
+      setIsLoadingDate(false);
+    } catch (err: any) {
+      setIsLoadingDate(false);
+      setErrorMessage(`Failed to fetch prediction for ${newDate}: ${err?.message || 'Network error'}`);
+    }
+  };
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href);
+    const url = `${window.location.origin}${window.location.pathname}#forecast-${monument.id}?date=${selectedDate}`;
+    navigator.clipboard?.writeText(url);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2500);
   };
 
-  if (!activeDayForecast) {
+  // Active selected day's forecast
+  const activeDayForecast: DailyCrowdForecast | null =
+    cachedDays[selectedDate] ||
+    (forecastBundle?.days.find((d) => d.date === selectedDate) ?? forecastBundle?.days[0] ?? null);
+
+  // Initial Loading State
+  if (isLoadingInitial) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
-        <h2 className="text-xl font-bold text-[#0D3B2E]">Crowd forecast data unavailable</h2>
-        <button
-          onClick={() => onBackToMonument(monument)}
-          className="px-5 py-2 rounded-xl bg-[#0D3B2E] text-white font-bold text-xs"
-        >
-          Return to Monument
-        </button>
+      <div className="w-full bg-[#F8F6F0] min-h-screen text-[#1A2621] py-12 px-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-[#0D3B2E]/15 shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#0D3B2E] text-[#D4AF37] flex items-center justify-center mx-auto shadow-md animate-pulse">
+            <Compass className="w-7 h-7 animate-spin" />
+          </div>
+          <h2 className="text-xl font-bold text-[#0D3B2E] font-serif-heritage">
+            {language === 'hi' ? 'एआई भीड़ पूर्वानुमान लोड हो रहा है...' : 'Analyzing Crowd Predictions...'}
+          </h2>
+          <p className="text-xs text-gray-500 font-medium">
+            Fetching LightGBM crowd inference, safe capacity limits, and heritage pressure metrics for {monument.name}.
+          </p>
+          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <div className="bg-[#D4AF37] h-full rounded-full animate-pulse w-3/4" />
+          </div>
+        </div>
       </div>
     );
   }
+
+  // Error State
+  if (errorMessage && !activeDayForecast) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-5">
+        <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center mx-auto shadow-md">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <h2 className="text-2xl font-bold text-[#0D3B2E] font-serif-heritage">
+          {language === 'hi' ? 'भीड़ पूर्वानुमान सेवा अनुपलब्ध है' : 'Crowd Prediction Unavailable'}
+        </h2>
+        <p className="text-xs text-gray-600 max-w-md mx-auto">
+          {errorMessage}
+        </p>
+        <div className="flex items-center justify-center space-x-3 pt-2">
+          <button
+            onClick={() => onBackToMonument(monument)}
+            className="px-5 py-2.5 rounded-xl border border-[#0D3B2E]/20 text-xs font-bold text-[#0D3B2E] hover:bg-white transition-colors"
+          >
+            Return to {monument.name}
+          </button>
+          <button
+            onClick={loadInitialForecast}
+            className="px-5 py-2.5 rounded-xl bg-[#0D3B2E] text-white text-xs font-bold shadow-md hover:bg-[#08281E] transition-all flex items-center space-x-1.5"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Retry Connection</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeDayForecast || !forecastBundle) return null;
 
   return (
     <div className="w-full bg-[#F8F6F0] min-h-screen text-[#1A2621] py-6 sm:py-10 animate-fadeIn">
@@ -124,14 +241,14 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
                   <MapPin className="w-3.5 h-3.5 text-[#C85A32] shrink-0" />
                   <span>{monument.city}, {monument.state}</span>
                   <span className="text-gray-300">•</span>
-                  <span>Safe Capacity: {monument.maxCapacity.toLocaleString()} visitors/day</span>
+                  <span>Safe Capacity: {forecastBundle.safeCapacity.toLocaleString()}</span>
                 </p>
               </div>
 
               <p className="text-xs sm:text-sm text-[#1A2621]/80 max-w-2xl font-medium pt-1">
                 {language === 'hi'
-                  ? 'आगामी 7 दिनों के अनुमानित भीड़ घनत्व और धरोहर संरक्षण प्रभाव के आधार पर अपनी यात्रा की योजना बनाएं।'
-                  : 'Plan your visit around predicted visitor density, optimal lighting windows, and real-time heritage pressure telemetry.'}
+                  ? 'किसी भी भविष्य की तारीख के लिए एआई मॉडल द्वारा अनुमानित भीड़ घनत्व और धरोहर संरक्षण प्रभाव देखें।'
+                  : 'Explore AI crowd predictions for any future date with hourly simulation curves, safe capacity thresholds, and structural preservation telemetry.'}
               </p>
             </div>
 
@@ -152,14 +269,26 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
         </div>
 
         {/* =========================================================================
-            2. HORIZONTAL 7-DAY DATE SELECTOR
+            2. HORIZONTAL & CUSTOM DATE SELECTOR (Allows ANY future date)
            ========================================================================= */}
         <DateSelector
           days={forecastBundle.days}
           selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
+          onSelectDate={handleSelectDate}
           language={language}
         />
+
+        {/* Custom Date Loading Banner */}
+        {isLoadingDate && (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#0D3B2E] text-xs flex items-center justify-center space-x-2 animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin text-[#0D3B2E]" />
+            <span className="font-bold">
+              {language === 'hi'
+                ? `तारीख ${selectedDate} के लिए एआई भीड़ मॉडल से गणना की जा रही है...`
+                : `Querying AI crowd prediction engine for ${selectedDate}...`}
+            </span>
+          </div>
+        )}
 
         {/* =========================================================================
             3. DAILY SUMMARY METRICS CARDS (4 Tiles)
@@ -183,7 +312,7 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
         <HourlyCrowdChart
           hourlyData={activeDayForecast.hourlyForecast}
           isToday={activeDayForecast.isToday}
-          safeCapacity={monument.maxCapacity}
+          safeCapacity={forecastBundle.safeCapacity}
           language={language}
         />
 
@@ -201,7 +330,7 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
             <WeeklyTrendCard
               days={forecastBundle.days}
               selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
+              onSelectDate={handleSelectDate}
               bestDayThisWeek={forecastBundle.bestDayThisWeek}
               language={language}
             />
@@ -230,7 +359,7 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
                   {language === 'hi' ? 'धरोहर एआई की विशेष सिफारिश' : 'Recommended by Dharohar AI'}
                 </span>
                 <span className="text-[9px] bg-white/15 text-white px-2 py-0.5 rounded-full font-bold">
-                  {activeDayForecast.dayName}
+                  {activeDayForecast.dayName} ({activeDayForecast.date})
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-medium">
@@ -287,3 +416,4 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
     </div>
   );
 };
+

@@ -34,10 +34,8 @@ const getInitialView = (): 'home' | 'tourist' | 'authority' => {
 
 export function App() {
   const [activeView, setActiveView] = useState<'home' | 'tourist' | 'authority'>(getInitialView);
-  const [touristTab, setTouristTab] = useState<'discover' | 'itinerary' | 'scan' | 'ai-assistant'>('discover');
-  const [authorityTab, setAuthorityTab] = useState<'overview' | 'monitoring' | 'analytics' | 'conservation'>('overview');
-
-  const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  const [touristTab, setTouristTab] = useState<'discover' | 'itinerary' | 'scan' | 'ai-assistant' | 'saved'>('discover');
+  const [authorityTab, setAuthorityTab] = useState<'overview' | 'monitoring' | 'analytics'>('overview');  const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [selectedMonument, setSelectedMonument] = useState<Monument | null>(null);
   const [forecastMonument, setForecastMonument] = useState<Monument | null>(() => {
     if (typeof window !== 'undefined') {
@@ -318,4 +316,5 @@ export function App() {
     </div>
   );
 }
+
 export default App;

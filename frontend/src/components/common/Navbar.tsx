@@ -20,10 +20,10 @@ import {
 interface NavbarProps {
   activeView: 'home' | 'tourist' | 'authority';
   onViewChange: (view: 'home' | 'tourist' | 'authority') => void;
-  touristTab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant';
-  onTouristTabChange: (tab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant') => void;
-  authorityTab: 'overview' | 'monitoring' | 'analytics' | 'conservation';
-  onAuthorityTabChange: (tab: 'overview' | 'monitoring' | 'analytics' | 'conservation') => void;
+  touristTab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant' | 'saved';
+  onTouristTabChange: (tab: 'discover' | 'itinerary' | 'scan' | 'ai-assistant' | 'saved') => void;
+  authorityTab: 'overview' | 'monitoring' | 'analytics';
+  onAuthorityTabChange: (tab: 'overview' | 'monitoring' | 'analytics') => void;
   language: 'en' | 'hi';
   onLanguageChange: (lang: 'en' | 'hi') => void;
 }
@@ -272,18 +272,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <BarChart3 className={`w-4 h-4 ${authorityTab === 'analytics' ? 'text-white' : 'text-[#805AD5]'}`} />
                 <span>Analytics</span>
-              </button>
-
-              <button
-                onClick={() => onAuthorityTabChange('conservation')}
-                className={`flex items-center space-x-1.5 lg:space-x-2 px-3.5 lg:px-5 py-2 lg:py-2.5 rounded-full text-xs lg:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                  authorityTab === 'conservation'
-                    ? 'bg-[#0F2B48] text-white shadow-sm'
-                    : 'text-[#1A365D] hover:bg-[#1A365D]/8'
-                }`}
-              >
-                <ShieldCheck className={`w-4 h-4 ${authorityTab === 'conservation' ? 'text-white' : 'text-[#38A169]'}`} />
-                <span>Conservation</span>
               </button>
             </nav>
           )}
@@ -632,21 +620,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center space-x-2.5">
                       <BarChart3 className="w-4 h-4 text-[#805AD5]" />
                       <span>Risk Matrix & Analytics</span>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-                  </button>
-
-                  <button
-                    onClick={() => { onAuthorityTabChange('conservation'); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      authorityTab === 'conservation' 
-                        ? 'bg-[#0F2B48] text-white shadow-sm' 
-                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <ShieldCheck className="w-4 h-4 text-[#38A169]" />
-                      <span>Conservation & Inspector</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>

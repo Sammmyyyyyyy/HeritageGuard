@@ -111,6 +111,11 @@ export interface DamageScanResult {
   status: 'Pending Review' | 'Verified' | 'Action Dispatched' | 'Resolved';
   submittedBy?: string;
   locationDetails?: string;
+  priority?: 'Low' | 'Medium' | 'High' | 'Critical';
+  severity?: 'Low' | 'Medium' | 'High' | 'Critical';
+  reportId?: string;
+  reportType?: string;
+  summary?: string;
 }
 
 export interface AuthorityKPIs {

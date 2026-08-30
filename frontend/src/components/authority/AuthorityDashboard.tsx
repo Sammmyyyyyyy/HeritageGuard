@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   AlertTriangle, 
@@ -28,6 +28,7 @@ import {
   GIS_MONUMENT_PINS
 } from '../../data/authorityMetricsData';
 import { AlertItem } from '../../types/heritage';
+import { fetchLiveAuthorityMetrics, LiveAuthorityMetrics } from '../../api/authority';
 
 interface AuthorityDashboardProps {
   language: 'en' | 'hi';
@@ -47,11 +48,28 @@ export const AuthorityDashboard: React.FC<AuthorityDashboardProps> = ({
   const [trendTimeframe, setTrendTimeframe] = useState<'Day' | 'Week' | 'Month'>('Day');
   const [selectedMapFilter, setSelectedMapFilter] = useState<'all' | 'high' | 'moderate' | 'low'>('all');
   const [selectedPin, setSelectedPin] = useState<typeof GIS_MONUMENT_PINS[0] | null>(GIS_MONUMENT_PINS[0]);
+  const [liveMetrics, setLiveMetrics] = useState<LiveAuthorityMetrics | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchLiveAuthorityMetrics()
+      .then((metrics) => {
+        if (isMounted) setLiveMetrics(metrics);
+      })
+      .catch((err) => console.error('Failed to load authority dashboard live metrics:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredPins = GIS_MONUMENT_PINS.filter((pin) => {
     if (selectedMapFilter === 'all') return true;
     return pin.risk === selectedMapFilter;
   });
+
+  const totalSitesCount = liveMetrics?.totalSites ?? 20;
+  const highRiskCount = liveMetrics?.highRiskSites ?? 0;
+  const overcrowdedCount = liveMetrics?.overcrowdedSites ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -91,10 +109,10 @@ export const AuthorityDashboard: React.FC<AuthorityDashboardProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-[#0D3B2E]/10 shadow-sm relative overflow-hidden flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
             <p className="text-xs font-bold text-[#1A2621]/60 uppercase tracking-wider">Total Monitored Sites</p>
-            <p className="text-3xl font-bold text-[#0A1128] font-mono-stat">{AUTHORITY_KPIS.totalSites.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-[#0A1128] font-mono-stat">{totalSitesCount.toLocaleString()}</p>
             <p className="text-[11px] text-emerald-700 font-semibold flex items-center space-x-1">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>12 added this month</span>
+              <span>20 Live Monitored</span>
             </p>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
@@ -106,10 +124,10 @@ export const AuthorityDashboard: React.FC<AuthorityDashboardProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-red-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:shadow-md transition-all bg-gradient-to-br from-white to-red-50/30">
           <div className="space-y-1">
             <p className="text-xs font-bold text-red-700 uppercase tracking-wider">High-Risk Sites</p>
-            <p className="text-3xl font-bold text-red-600 font-mono-stat">{AUTHORITY_KPIS.highRiskSites}</p>
+            <p className="text-3xl font-bold text-red-600 font-mono-stat">{highRiskCount}</p>
             <p className="text-[11px] text-red-600 font-semibold flex items-center space-x-1">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>15% from last month</span>
+              <span>Pressure &gt; 65</span>
             </p>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center">
@@ -121,10 +139,10 @@ export const AuthorityDashboard: React.FC<AuthorityDashboardProps> = ({
         <div className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-sm relative overflow-hidden flex items-center justify-between group hover:shadow-md transition-all bg-gradient-to-br from-white to-amber-50/30">
           <div className="space-y-1">
             <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Overcrowded Sites</p>
-            <p className="text-3xl font-bold text-amber-600 font-mono-stat">{AUTHORITY_KPIS.overcrowdedSites}</p>
+            <p className="text-3xl font-bold text-amber-600 font-mono-stat">{overcrowdedCount}</p>
             <p className="text-[11px] text-amber-700 font-semibold flex items-center space-x-1">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>8% from last month</span>
+              <span>Capacity limit active</span>
             </p>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
@@ -139,7 +157,7 @@ export const AuthorityDashboard: React.FC<AuthorityDashboardProps> = ({
             <p className="text-3xl font-bold text-[#0D3B2E] font-mono-stat">{alerts.length}</p>
             <p className="text-[11px] text-emerald-700 font-semibold flex items-center space-x-1">
               <ArrowDownRight className="w-3.5 h-3.5" />
-              <span>10% from last month</span>
+              <span>Real-time stream</span>
             </p>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#0D3B2E] flex items-center justify-center">

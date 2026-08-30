@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   FileSpreadsheet,
-  ShieldAlert,
-  Eye,
   RefreshCw,
+  AlertTriangle,
+  Shield,
+  Activity
 } from 'lucide-react';
 
 import {
@@ -12,675 +13,492 @@ import {
   getPressure,
   getCrowd,
   BackendSite,
+  PressureResponse
 } from '../../api/sites';
 
+import {
+  resolveImageUrl,
+  calculateConditionStatus,
+  calculateCrowdLevel,
+  getCurrentHourPredictedVisitors,
+  fetchAllSitesTelemetry
+} from '../../api/authority';
+
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
+import { CrowdPredictionResponse } from '../../api/crowd';
 
 interface ConditionMatrixProps {
   language: 'en' | 'hi';
-  onInspectSite: (siteId: string) => void;
+  sites?: BackendSite[];
+  pressureMap?: Record<string, PressureResponse>;
+  crowdMap?: Record<string, CrowdPredictionResponse>;
+  loading?: boolean;
+  onInspectSite?: (siteId: string) => void;
   onThrottleFootfall: (monumentName: string) => void;
+  onDispatchTeam?: (monumentName: string, actionType: string) => void;
 }
 
-type Telemetry = {
-  pressure: any | null;
-  crowd: any | null;
-};
-
-const normalize = (value: unknown) =>
-  String(value ?? '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-
-const IMAGE_KEY_BY_NAME: Record<string, string> = {
-  redfort: 'DEL001',
-  qutubminar: 'DEL002',
-  indiagate: 'DEL003',
-  humayunstomb: 'DEL004',
-  lotustemple: 'DEL005',
-
-  amerfort: 'JAI001',
-  hawamahal: 'JAI002',
-  citypalace: 'JAI003',
-  jantarmantar: 'JAI004',
-  alberthallmuseum: 'JAI005',
-
-  gatewayofindia: 'BOM001',
-  elephantacaves: 'BOM002',
-  chhatrapatishivajimaharajterminus: 'BOM003',
-  hajialidargah: 'BOM004',
-  siddhivinayaktemple: 'BOM005',
-
-  trivenisangam: 'PRA001',
-  allahabadfort: 'PRA002',
-  khusrobagh: 'PRA003',
-  anandbhavan: 'PRA004',
-  chandrashekharazadpark: 'PRA005',
-};
-
-const getImageForSite = (site: BackendSite) => {
-  return (
-    MONUMENT_FALLBACKS[site.site_id] ??
-    MONUMENT_FALLBACKS[IMAGE_KEY_BY_NAME[normalize(site.name)]] ??
-    ''
-  );
-};
-
-const getPressureScore = (pressure: any): number | null => {
-  if (!pressure) return null;
-
-  const candidates = [
-    pressure.score,
-    pressure.pressure_score,
-    pressure.heritage_pressure_score,
-    pressure.hps,
-    pressure.value,
-  ];
-
-  for (const value of candidates) {
-    const number = Number(value);
-    if (Number.isFinite(number)) {
-      return Math.round(Math.max(0, Math.min(100, number)));
-    }
-  }
-
-  return null;
-};
-
-const getCrowdLabel = (crowd: any): string | null => {
-  if (!crowd) return null;
-
-  const candidates = [
-    crowd.expected_crowd,
-    crowd.expectedCrowd,
-    crowd.crowd_level,
-    crowd.crowdLevel,
-    crowd.level,
-    crowd.risk,
-  ];
-
-  const value = candidates.find(
-    (item) => item !== undefined && item !== null && String(item).trim() !== ''
-  );
-
-  return value ? String(value) : null;
-};
-
-const getCrowdCount = (crowd: any): number | null => {
-  if (!crowd) return null;
-
-  const candidates = [
-    crowd.live_footfall,
-    crowd.liveFootfall,
-    crowd.current_footfall,
-    crowd.currentFootfall,
-    crowd.visitor_count,
-    crowd.visitorCount,
-    crowd.count,
-  ];
-
-  for (const value of candidates) {
-    const number = Number(value);
-    if (Number.isFinite(number)) return number;
-  }
-
-  return null;
-};
-
-const getCapacity = (crowd: any): number | null => {
-  if (!crowd) return null;
-
-  const candidates = [
-    crowd.max_capacity,
-    crowd.maxCapacity,
-    crowd.capacity,
-  ];
-
-  for (const value of candidates) {
-    const number = Number(value);
-    if (Number.isFinite(number) && number > 0) return number;
-  }
-
-  return null;
-};
-
-const getCondition = (pressure: any, crowd: any): string => {
-  const explicit =
-    pressure?.condition_status ??
-    pressure?.conditionStatus ??
-    pressure?.status;
-
-  if (explicit) return String(explicit);
-
-  const score = getPressureScore(pressure);
-
-  if (score !== null) {
-    if (score >= 75) return 'High Risk';
-    if (score >= 50) return 'Moderate';
-    return 'Good';
-  }
-
-  const crowdLabel = getCrowdLabel(crowd);
-
-  if (crowdLabel) {
-    const value = crowdLabel.toLowerCase();
-    if (value.includes('high')) return 'High Crowd';
-    if (value.includes('moderate') || value.includes('medium')) {
-      return 'Moderate Crowd';
-    }
-  }
-
-  return 'Unavailable';
-};
-
-const riskClass = (score: number | null) => {
-  if (score === null) {
-    return 'bg-slate-100 text-slate-600 border border-slate-200';
-  }
-
-  if (score >= 75) {
-    return 'bg-red-100 text-red-800 border border-red-300';
-  }
-
-  if (score >= 50) {
-    return 'bg-amber-100 text-amber-800 border border-amber-300';
-  }
-
-  return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
-};
+interface SiteTelemetryRow {
+  site: BackendSite;
+  pressure: PressureResponse | null;
+  crowd: CrowdPredictionResponse | null;
+  condition: 'CRITICAL' | 'SEVERE' | 'MODERATE' | 'STABLE';
+  crowdLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'PEAK';
+  liveVisitors: number;
+}
 
 export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
-  onInspectSite,
+  language,
+  sites: propSites,
+  pressureMap: propPressureMap,
+  crowdMap: propCrowdMap,
+  loading: propLoading,
   onThrottleFootfall,
+  onDispatchTeam
 }) => {
-  const [sites, setSites] = useState<BackendSite[]>([]);
-  const [telemetry, setTelemetry] = useState<Record<string, Telemetry>>({});
-  const [loadingSites, setLoadingSites] = useState(true);
-  const [loadingTelemetry, setLoadingTelemetry] = useState(false);
+  const [sites, setSites] = useState<BackendSite[]>(propSites || []);
+  const [pressureMap, setPressureMap] = useState<Record<string, PressureResponse>>(propPressureMap || {});
+  const [crowdMap, setCrowdMap] = useState<Record<string, CrowdPredictionResponse>>(propCrowdMap || {});
+  const [loading, setLoading] = useState<boolean>(propLoading !== undefined ? propLoading : !propSites?.length);
   const [error, setError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedState, setSelectedState] = useState('All');
-  const [sortBy, setSortBy] = useState<'pressure' | 'crowd'>('pressure');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [cityFilter, setCityFilter] = useState<string>('ALL');
+  const [conditionFilter, setConditionFilter] = useState<string>('ALL');
 
-  const loadAnalytics = async () => {
+  // Sync state when props change
+  useEffect(() => {
+    if (propSites && propSites.length > 0) {
+      setSites(propSites);
+    }
+    if (propPressureMap) {
+      setPressureMap(propPressureMap);
+    }
+    if (propCrowdMap) {
+      setCrowdMap(propCrowdMap);
+    }
+    if (propLoading !== undefined) {
+      setLoading(propLoading);
+    }
+  }, [propSites, propPressureMap, propCrowdMap, propLoading]);
+
+  const loadData = async (forceRefresh = false) => {
     try {
-      setLoadingSites(true);
+      setLoading(true);
       setError(null);
 
-      const backendSites = await getSites();
-
-      console.log('ANALYTICS - BACKEND SITES:', backendSites);
-
-      setSites(backendSites);
-      setLoadingSites(false);
-
-      setLoadingTelemetry(true);
-
-      const results = await Promise.all(
-        backendSites.map(async (site) => {
-          try {
-            const [pressure, crowd] = await Promise.all([
-              getPressure(site.site_id),
-              getCrowd(site.site_id),
-            ]);
-
-            console.log(
-              `ANALYTICS - ${site.site_id} PRESSURE:`,
-              pressure
-            );
-
-            console.log(
-              `ANALYTICS - ${site.site_id} CROWD:`,
-              crowd
-            );
-
-            return [
-              site.site_id,
-              { pressure, crowd },
-            ] as const;
-          } catch (siteError) {
-            console.error(
-              `ANALYTICS - TELEMETRY FAILED FOR ${site.site_id}:`,
-              siteError
-            );
-
-            return [
-              site.site_id,
-              { pressure: null, crowd: null },
-            ] as const;
-          }
-        })
-      );
-
-      setTelemetry(Object.fromEntries(results));
+      const res = await fetchAllSitesTelemetry(undefined, forceRefresh);
+      setSites(res.sites);
+      setPressureMap(res.pressureMap);
+      setCrowdMap(res.crowdMap);
     } catch (err: any) {
-      console.error('ANALYTICS - LOAD FAILED:', err);
-      setError(err?.message || 'Unable to load analytics data.');
-      setSites([]);
-      setTelemetry({});
+      console.error('Failed to load condition matrix data:', err);
+      setError('Unable to load site condition telemetry from backend.');
     } finally {
-      setLoadingSites(false);
-      setLoadingTelemetry(false);
+      setLoading(false);
     }
   };
 
+  // Only run standalone load if no props were passed in
   useEffect(() => {
-    loadAnalytics();
+    if (!propSites || propSites.length === 0) {
+      loadData();
+    }
   }, []);
 
-  const filteredSites = useMemo(() => {
-    const filtered = sites.filter((site) => {
-      const q = searchTerm.trim().toLowerCase();
+  const tableData: SiteTelemetryRow[] = useMemo(() => {
+    return sites.map((site) => {
+      const pressure = pressureMap[site.site_id] || null;
+      const crowd = crowdMap[site.site_id] || null;
+      const condition = calculateConditionStatus(pressure);
+      const crowdLevel = calculateCrowdLevel(crowd);
+      const liveVisitors = getCurrentHourPredictedVisitors(crowd);
 
+      return {
+        site,
+        pressure,
+        crowd,
+        condition,
+        crowdLevel,
+        liveVisitors
+      };
+    });
+  }, [sites, pressureMap, crowdMap]);
+
+  const filteredData = useMemo(() => {
+    return tableData.filter((row) => {
+      const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        site.name.toLowerCase().includes(q) ||
-        site.city.toLowerCase().includes(q) ||
-        site.state.toLowerCase().includes(q) ||
-        site.site_id.toLowerCase().includes(q);
+        row.site.name.toLowerCase().includes(q) ||
+        row.site.city.toLowerCase().includes(q) ||
+        row.site.site_id.toLowerCase().includes(q);
 
-      const matchesState =
-        selectedState === 'All' || site.state === selectedState;
+      const matchesCity =
+        cityFilter === 'ALL' ||
+        row.site.city.toUpperCase() === cityFilter.toUpperCase();
 
-      return matchesSearch && matchesState;
+      const matchesCondition =
+        conditionFilter === 'ALL' || row.condition === conditionFilter;
+
+      return matchesSearch && matchesCity && matchesCondition;
     });
-
-    return filtered.sort((a, b) => {
-      const aTelemetry = telemetry[a.site_id];
-      const bTelemetry = telemetry[b.site_id];
-
-      if (sortBy === 'pressure') {
-        return (
-          (getPressureScore(bTelemetry?.pressure) ?? -1) -
-          (getPressureScore(aTelemetry?.pressure) ?? -1)
-        );
-      }
-
-      return (
-        (getCrowdCount(bTelemetry?.crowd) ?? -1) -
-        (getCrowdCount(aTelemetry?.crowd) ?? -1)
-      );
-    });
-  }, [sites, telemetry, searchTerm, selectedState, sortBy]);
+  }, [tableData, searchQuery, cityFilter, conditionFilter]);
 
   const handleExportCSV = () => {
-    const rows = filteredSites.map((site) => {
-      const data = telemetry[site.site_id];
-      const pressure = getPressureScore(data?.pressure);
-      const crowd = getCrowdLabel(data?.crowd);
-      const footfall = getCrowdCount(data?.crowd);
+    const headers = [
+      'Site ID',
+      'Name',
+      'City',
+      'Condition Status',
+      'Pressure Score',
+      'Crowd Level',
+      'Current Hour Visitors',
+      'Safe Capacity'
+    ];
 
-      return [
-        site.site_id,
-        `"${site.name.replace(/"/g, '""')}"`,
-        `"${site.city.replace(/"/g, '""')}"`,
-        `"${site.state.replace(/"/g, '""')}"`,
-        pressure ?? '',
-        `"${crowd ?? ''}"`,
-        footfall ?? '',
-      ].join(',');
-    });
+    const rows = filteredData.map((d) => [
+      d.site.site_id,
+      `"${d.site.name}"`,
+      `"${d.site.city}"`,
+      d.condition,
+      d.pressure ? d.pressure.pressure_score : 'N/A',
+      d.crowdLevel,
+      d.liveVisitors,
+      d.crowd ? d.crowd.safe_capacity : 'N/A'
+    ]);
 
-    const csv = [
-      'Site ID,Monument,City,State,Heritage Pressure,Crowd Level,Live Footfall',
-      ...rows,
-    ].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
 
-    const blob = new Blob([csv], {
-      type: 'text/csv;charset=utf-8;',
-    });
-
-    const url = URL.createObjectURL(blob);
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
-
-    link.href = url;
-    link.download = 'HeritageGuard_Analytics.csv';
-
+    link.setAttribute('href', encodedUri);
+    link.setAttribute(
+      'download',
+      `heritage_condition_matrix_${new Date().toISOString().split('T')[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
 
-    URL.revokeObjectURL(url);
+  const getConditionBadgeStyle = (status: 'CRITICAL' | 'SEVERE' | 'MODERATE' | 'STABLE') => {
+    switch (status) {
+      case 'CRITICAL':
+        return 'bg-red-100 text-red-800 border-red-300 ring-red-200';
+      case 'SEVERE':
+        return 'bg-amber-100 text-amber-900 border-amber-300 ring-amber-200';
+      case 'MODERATE':
+        return 'bg-yellow-100 text-yellow-900 border-yellow-300 ring-yellow-200';
+      case 'STABLE':
+      default:
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300 ring-emerald-200';
+    }
+  };
+
+  const getCrowdBadgeStyle = (level: 'LOW' | 'MODERATE' | 'HIGH' | 'PEAK') => {
+    switch (level) {
+      case 'PEAK':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'HIGH':
+        return 'bg-rose-100 text-rose-800 border-rose-300';
+      case 'MODERATE':
+        return 'bg-[#FFFBEB] text-[#92400E] border-amber-300';
+      case 'LOW':
+      default:
+        return 'bg-blue-50 text-blue-800 border-blue-200';
+    }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
-              Monument Condition & Heritage Pressure Matrix
-            </h1>
+          <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-900 text-[10px] font-bold tracking-wider uppercase mb-1 border border-purple-200">
+            <Activity className="w-3 h-3 text-purple-600" />
+            <span>ASI TELEMETRY MATRIX</span>
           </div>
-
-          <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Live analytics from the configured HeritageGuard backend sites.
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
+            Structural Condition & Footfall Analytics
+          </h1>
+          <p className="text-xs text-slate-600 mt-0.5">
+            Real-time backend risk scoring, structural deterioration status, and crowd pressure metrics across all 20 registered monuments.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center space-x-3 shrink-0">
           <button
-            onClick={loadAnalytics}
-            disabled={loadingSites || loadingTelemetry}
-            className="px-3 py-2.5 bg-white hover:bg-slate-50 disabled:opacity-50 text-[#0F3D3E] border border-slate-200 font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer"
+            onClick={() => loadData(true)}
+            disabled={loading}
+            className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
+            <span>Refresh</span>
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="px-4 py-2.5 bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs rounded-xl flex items-center space-x-2 cursor-pointer"
+            disabled={loading || filteredData.length === 0}
+            className="px-4 py-2 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white text-xs font-bold flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
-            <FileSpreadsheet className="w-4 h-4 text-[#D4AF37]" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#D4AF37]" />
             <span>Export CSV</span>
           </button>
         </div>
       </div>
 
-      {/* FILTER BAR */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-
+      {/* Filter Controls */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search monument, city or site ID..."
-            className="w-full pl-9 pr-3 py-2.5 bg-[#F4F6F9] border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-[#0F3D3E]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search monument or city..."
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F3D3E]/30"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-
-          <select
-            value={selectedState}
-            onChange={(e) => setSelectedState(e.target.value)}
-            className="bg-[#F4F6F9] border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none cursor-pointer"
-          >
-            <option value="All">All States</option>
-
-            {Array.from(
-              new Set(sites.map((site) => site.state))
-            ).map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {/* City Filter */}
+          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+            <span className="text-[10px] font-bold uppercase text-slate-500 px-2">City:</span>
+            {['ALL', 'DELHI', 'JAIPUR', 'MUMBAI', 'PRAYAGRAJ'].map((city) => (
+              <button
+                key={city}
+                onClick={() => setCityFilter(city)}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  cityFilter === city
+                    ? 'bg-[#0F3D3E] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                {city}
+              </button>
             ))}
-          </select>
+          </div>
 
-          <select
-            value={sortBy}
-            onChange={(e) =>
-              setSortBy(
-                e.target.value as 'pressure' | 'crowd'
-              )
-            }
-            className="bg-[#F4F6F9] border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 outline-none cursor-pointer"
-          >
-            <option value="pressure">
-              Heritage Pressure
-            </option>
-            <option value="crowd">
-              Live Crowd
-            </option>
-          </select>
+          {/* Condition Filter */}
+          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+            <span className="text-[10px] font-bold uppercase text-slate-500 px-2">Condition:</span>
+            {['ALL', 'CRITICAL', 'SEVERE', 'MODERATE', 'STABLE'].map((cond) => (
+              <button
+                key={cond}
+                onClick={() => setConditionFilter(cond)}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  conditionFilter === cond
+                    ? 'bg-[#0F3D3E] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-black'
+                }`}
+              >
+                {cond}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* ERROR */}
+      {/* Error state */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-xs">
-          {error}
+        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={() => loadData(true)}
+            className="px-3 py-1 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 transition-all cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
       )}
 
-      {/* LOADING */}
-      {loadingSites && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">
-          Loading backend sites...
-        </div>
-      )}
+      {/* Main Content Table / Cards */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
+                <th className="py-3.5 px-4">Monument</th>
+                <th className="py-3.5 px-4">Location</th>
+                <th className="py-3.5 px-4">Condition Status</th>
+                <th className="py-3.5 px-4">Heritage Pressure</th>
+                <th className="py-3.5 px-4">Crowd Density</th>
+                <th className="py-3.5 px-4">Current Footfall</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
 
-      {/* TABLE */}
-      {!loadingSites && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-
-            <table className="w-full text-left text-xs">
-
-              <thead className="bg-[#0F3D3E] text-white uppercase text-[10px] tracking-wider font-semibold">
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {loading ? (
+                /* SKELETON LOADERS */
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <tr key={`skeleton-${idx}`} className="animate-pulse">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-slate-200 rounded-xl shrink-0" />
+                        <div className="space-y-1.5">
+                          <div className="w-28 h-3.5 bg-slate-200 rounded" />
+                          <div className="w-16 h-2.5 bg-slate-200 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="w-20 h-3 bg-slate-200 rounded" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="w-20 h-6 bg-slate-200 rounded-full" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="w-16 h-3 bg-slate-200 rounded" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="w-16 h-5 bg-slate-200 rounded-full" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="w-20 h-3 bg-slate-200 rounded" />
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        <div className="w-16 h-7 bg-slate-200 rounded-lg" />
+                        <div className="w-20 h-7 bg-slate-200 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredData.length === 0 ? (
+                /* EMPTY STATE */
                 <tr>
-                  <th className="px-5 py-3.5">Monument</th>
-                  <th className="px-4 py-3.5">State / Era</th>
-                  <th className="px-4 py-3.5 text-center">
-                    Heritage Pressure
-                  </th>
-                  <th className="px-4 py-3.5 text-center">
-                    Crowd Level
-                  </th>
-                  <th className="px-4 py-3.5 text-center">
-                    Live Footfall
-                  </th>
-                  <th className="px-4 py-3.5">
-                    Condition
-                  </th>
-                  <th className="px-5 py-3.5 text-right">
-                    Action
-                  </th>
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <Shield className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                    <p className="font-semibold text-slate-600">No data available matching your criteria</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Try resetting search query or city filters.</p>
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-100">
-
-                {filteredSites.map((site) => {
-                  const data = telemetry[site.site_id];
-
-                  const pressureScore =
-                    getPressureScore(data?.pressure);
-
-                  const crowdLabel =
-                    getCrowdLabel(data?.crowd);
-
-                  const footfall =
-                    getCrowdCount(data?.crowd);
-
-                  const capacity =
-                    getCapacity(data?.crowd);
-
-                  const footfallPct =
-                    footfall !== null &&
-                    capacity !== null &&
-                    capacity > 0
-                      ? Math.round(
-                          (footfall / capacity) * 100
-                        )
-                      : null;
-
-                  const condition =
-                    getCondition(
-                      data?.pressure,
-                      data?.crowd
-                    );
-
-                  const isOvercrowded =
-                    footfallPct !== null &&
-                    footfallPct > 100;
-
-                  const imageSrc =
-                    getImageForSite(site);
+              ) : (
+                /* REAL DATA ROWS */
+                filteredData.map((row) => {
+                  const resolvedImg = resolveImageUrl(row.site.image_url, row.site.site_id);
 
                   return (
                     <tr
-                      key={site.site_id}
-                      className="hover:bg-slate-50 transition-colors"
+                      key={row.site.site_id}
+                      className="hover:bg-slate-50/80 transition-colors"
                     >
-
-                      {/* MONUMENT */}
-                      <td className="px-5 py-4">
+                      {/* Monument */}
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center space-x-3">
-
-                          <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
-                            {imageSrc ? (
-                              <img
-                                src={imageSrc}
-                                alt={site.name}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                <ShieldAlert className="w-5 h-5" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="font-bold text-[#0F3D3E] text-xs sm:text-sm font-serif-heritage leading-snug">
-                              {site.name}
-                            </p>
-
-                            <p className="text-[10px] text-gray-500">
-                              {site.city}
-                            </p>
-
-                            <p className="text-[9px] text-slate-400 font-mono">
-                              {site.site_id}
+                          <img
+                            src={resolvedImg}
+                            alt={row.site.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                MONUMENT_FALLBACKS[row.site.site_id] ||
+                                '/images/heritage-placeholder.jpg';
+                            }}
+                            className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0 bg-slate-100"
+                          />
+                          <div>
+                            <p className="font-bold text-slate-900 text-xs sm:text-sm">
+                              {row.site.name}
                             </p>
                           </div>
-
                         </div>
                       </td>
 
-                      {/* STATE */}
-                      <td className="px-4 py-4">
-                        <span className="font-semibold text-slate-800">
-                          {site.state}
-                        </span>
+                      {/* Location */}
+                      <td className="py-3.5 px-4">
+                        <p className="font-semibold text-slate-800">{row.site.city}</p>
+                        <p className="text-[10px] text-slate-500">{row.site.state}</p>
+                      </td>
 
-                        <p className="text-[10px] text-gray-500">
-                          {site.name}
+                      {/* Condition Status */}
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${getConditionBadgeStyle(
+                            row.condition
+                          )}`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                          <span>{row.condition}</span>
+                        </span>
+                      </td>
+
+                      {/* Heritage Pressure */}
+                      <td className="py-3.5 px-4 font-mono font-bold">
+                        {row.pressure ? (
+                          <span
+                            className={
+                              row.pressure.pressure_score >= 70
+                                ? 'text-red-600'
+                                : row.pressure.pressure_score >= 50
+                                ? 'text-amber-600'
+                                : 'text-emerald-700'
+                            }
+                          >
+                            {row.pressure.pressure_score.toFixed(1)} / 100
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-normal italic">Unable to load</span>
+                        )}
+                      </td>
+
+                      {/* Crowd Density */}
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border ${getCrowdBadgeStyle(
+                            row.crowdLevel
+                          )}`}
+                        >
+                          {row.crowdLevel}
+                        </span>
+                      </td>
+
+                      {/* Current Footfall */}
+                      <td className="py-3.5 px-4 font-mono">
+                        <p className="font-bold text-slate-900">
+                          {row.liveVisitors.toLocaleString()} <span className="text-[10px] font-normal text-slate-400">visitors</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          Cap: {row.crowd?.safe_capacity ? row.crowd.safe_capacity.toLocaleString() : 'N/A'}
                         </p>
                       </td>
 
-                      {/* PRESSURE */}
-                      <td className="px-4 py-4 text-center">
-
-                        {loadingTelemetry &&
-                        !data ? (
-                          <span className="text-[10px] text-slate-400">
-                            Loading...
-                          </span>
-                        ) : (
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full font-mono font-bold text-xs ${riskClass(
-                              pressureScore
-                            )}`}
-                          >
-                            {pressureScore !== null
-                              ? `${pressureScore}/100`
-                              : 'Unavailable'}
-                          </span>
-                        )}
-
-                      </td>
-
-                      {/* CROWD */}
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-
-                          <span className="font-semibold text-slate-800">
-                            {crowdLabel ?? 'Unavailable'}
-                          </span>
-
-                          {footfallPct !== null && (
-                            <span
-                              className={`text-[10px] font-mono ${
-                                isOvercrowded
-                                  ? 'text-red-600'
-                                  : 'text-slate-400'
-                              }`}
-                            >
-                              {footfallPct}% capacity
-                            </span>
-                          )}
-
-                        </div>
-                      </td>
-
-                      {/* FOOTFALL */}
-                      <td className="px-4 py-4 text-center">
-                        <span className="font-mono font-bold text-slate-900">
-                          {footfall !== null
-                            ? footfall.toLocaleString()
-                            : '—'}
-                        </span>
-                      </td>
-
-                      {/* CONDITION */}
-                      <td className="px-4 py-4">
-
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {condition}
-                        </span>
-
-                      </td>
-
-                      {/* ACTION */}
-                      <td className="px-5 py-4 text-right">
-
-                        <div className="flex items-center justify-end gap-1.5">
-
+                      {/* Actions (Responsive wrap, Dispatch never hidden) */}
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
-                            onClick={() =>
-                              onInspectSite(site.site_id)
-                            }
-                            className="px-2.5 py-1 bg-[#0F3D3E] text-white hover:bg-[#0A2627] rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                            onClick={() => onThrottleFootfall(row.site.name)}
+                            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
                           >
-                            <Eye className="w-3 h-3" />
-                            Inspect
+                            Divert Flow
                           </button>
 
-                          {isOvercrowded && (
+                          {onDispatchTeam && (
                             <button
-                              onClick={() =>
-                                onThrottleFootfall(
-                                  site.name
-                                )
-                              }
-                              className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                              onClick={() => onDispatchTeam(row.site.name, 'Field Structural Inspection')}
+                              className="px-3 py-1.5 rounded-lg bg-[#0F3D3E] hover:bg-[#0A2627] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
                             >
-                              Cap Entry
+                              Dispatch
                             </button>
                           )}
-
                         </div>
-
                       </td>
-
                     </tr>
                   );
-                })}
-
-              </tbody>
-            </table>
-          </div>
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {!loadingSites && filteredSites.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">
-          No backend site matches your search.
-        </div>
-      )}
+      </div>
     </div>
   );
 };
-
-export default ConditionMatrix;

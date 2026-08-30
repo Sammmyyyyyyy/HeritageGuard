@@ -1,27 +1,32 @@
-import React, { useState } from 'react';
-import { 
-  X, 
-  MapPin, 
-  Star, 
-  Clock, 
-  Volume2, 
-  VolumeX, 
-  Play, 
-  Pause, 
-  TrendingUp, 
-  ShieldAlert, 
-  Sparkles, 
-  Compass, 
-  ArrowRight, 
+import React, { useState, useEffect } from 'react';
+import {
+  X,
+  MapPin,
+  Star,
+  Clock,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  TrendingUp,
+  ShieldAlert,
+  Sparkles,
+  Compass,
+  ArrowRight,
   Info,
   Calendar,
   IndianRupee,
   Share2,
   Bookmark,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { Monument } from '../../types/heritage';
+import { getCrowd, CrowdPredictionResponse, HourlyPrediction } from '../../api/crowd';
+import { getPressure, PressureResponse } from '../../api/pressure';
+import { getTodayDateString, formatTime12, formatTimeRange } from '../../data/crowdForecastData';
 
 interface MonumentDetailModalProps {
   monument: Monument | null;
@@ -44,7 +49,105 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // Live Backend Telemetry State
+  const [liveCrowd, setLiveCrowd] = useState<CrowdPredictionResponse | null>(null);
+  const [livePressure, setLivePressure] = useState<PressureResponse | null>(null);
+  const [isLoadingTelemetry, setIsLoadingTelemetry] = useState<boolean>(true);
+  const [telemetryError, setTelemetryError] = useState<string | null>(null);
+
+  // Fetch live crowd and pressure from backend whenever monument changes
+  useEffect(() => {
+    if (!monument) return;
+
+    let isMounted = true;
+    setIsLoadingTelemetry(true);
+    setTelemetryError(null);
+
+    const todayStr = getTodayDateString();
+
+    Promise.all([
+      getCrowd(monument.id, todayStr),
+      getPressure(monument.id).catch(() => null)
+    ])
+      .then(([crowdData, pressureData]) => {
+        if (!isMounted) return;
+        setLiveCrowd(crowdData);
+        setLivePressure(pressureData);
+        setIsLoadingTelemetry(false);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Failed to load telemetry for modal:', err);
+        setTelemetryError('Live crowd telemetry currently unavailable from server.');
+        setIsLoadingTelemetry(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [monument?.id]);
+
   if (!monument) return null;
+
+  // Single-source calculations derived from the authoritative backend response
+  const effectivePressureScore = livePressure
+    ? Math.round(livePressure.pressure_score)
+    : monument.heritagePressureScore;
+
+  const effectiveSafeCapacity = liveCrowd?.safe_capacity || monument.maxCapacity || 15000;
+
+  // Current local hour in IST/browser timezone
+  const currentHour = new Date().getHours();
+
+  // Current-Hour Footfall prediction (matches current local hour)
+  const currentHourSlot = liveCrowd?.predictions?.find((p) => {
+    const h = parseInt(p.time.split(':')[0], 10);
+    return h === currentHour;
+  }) || (liveCrowd?.predictions && liveCrowd.predictions.length > 0 ? liveCrowd.predictions[0] : null);
+
+  const currentHourFootfall = currentHourSlot
+    ? currentHourSlot.expected_visitors
+    : liveCrowd?.daily_expected_total ?? monument.liveFootfall;
+
+  // Crowd Level badge derived from current-hour capacity ratio (<50% LOW, 50-75% MODERATE, 75-100% HIGH, >=100% PEAK)
+  let effectiveCrowdLevel: 'Low' | 'Moderate' | 'High' | 'Peak' = 'Low';
+  if (liveCrowd) {
+    const capacityRatio = effectiveSafeCapacity > 0 ? currentHourFootfall / effectiveSafeCapacity : 0;
+    if (capacityRatio >= 1.0) effectiveCrowdLevel = 'Peak';
+    else if (capacityRatio >= 0.75) effectiveCrowdLevel = 'High';
+    else if (capacityRatio >= 0.50) effectiveCrowdLevel = 'Moderate';
+    else effectiveCrowdLevel = 'Low';
+  }
+
+  // Operating Hours from backend
+  const effectiveOperatingHours = liveCrowd?.operating_hours
+    ? `${formatTimeRange(liveCrowd.operating_hours).start} – ${formatTimeRange(liveCrowd.operating_hours).end}`
+    : monument.openingHours;
+
+  // AI Recommended Visiting Window from backend best_time
+  const effectiveBestWindow = liveCrowd?.best_time
+    ? formatTimeRange(liveCrowd.best_time)
+    : monument.bestVisitingWindow;
+
+  // Best Upcoming Slot: strictly filters out passed hours based on current local time
+  const upcomingSlots = (liveCrowd?.predictions || []).filter((p) => {
+    const h = parseInt(p.time.split(':')[0], 10);
+    return h >= currentHour;
+  });
+
+  let bestUpcomingSlotStr = '';
+  if (upcomingSlots.length > 0) {
+    const sorted = [...upcomingSlots].sort((a, b) => a.crowd_percent - b.crowd_percent);
+    const bestSlot = sorted[0];
+    const slotH = parseInt(bestSlot.time.split(':')[0], 10);
+    const nextH = slotH + 1;
+    bestUpcomingSlotStr = `${formatTime12(bestSlot.time)} – ${formatTime12(`${String(nextH).padStart(2, '0')}:00`)}`;
+  } else if (liveCrowd?.operating_hours) {
+    const openH = liveCrowd.operating_hours.split('-')[0];
+    bestUpcomingSlotStr = `Gates closed for today • Tomorrow at ${formatTime12(openH)}`;
+  } else {
+    bestUpcomingSlotStr = `${effectiveBestWindow.start} – ${effectiveBestWindow.end}`;
+  }
 
   const handleShare = () => {
     navigator.clipboard?.writeText(window.location.href);
@@ -56,7 +159,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
     if (!isPlayingAudio) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const textToSpeak = language === 'hi' 
+        const textToSpeak = language === 'hi'
           ? `${monument.hindiName}। ${monument.hindiDescription} ${monument.historicalSignificance}`
           : `${monument.name}. ${monument.description} ${monument.historicalSignificance}`;
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -77,9 +180,9 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 animate-fadeIn">
-      
+
       <div className="relative bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl border border-[#0D3B2E]/20 overflow-hidden my-4 sm:my-8 max-h-[92vh] flex flex-col">
-        
+
         {/* Modal Header Bar */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#0D3B2E]/10 flex items-center justify-between">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 pr-2">
@@ -118,18 +221,21 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
         {/* Scrollable Content Body */}
         <div className="overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8 flex-1">
-          
+
           {/* Main Visual Carousel / Gallery Section */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* Primary Large Image */}
             <div className="lg:col-span-8 relative h-72 sm:h-96 rounded-2xl overflow-hidden bg-slate-900 border border-[#0D3B2E]/10">
               <img
-                src={monument.gallery[activeImageIndex] || monument.imageUrl}
+                src={monument.gallery[activeImageIndex] || monument.imageUrl || '/images/heritage-placeholder.jpg'}
                 alt={monument.name}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/images/heritage-placeholder.jpg';
+                }}
                 className="w-full h-full object-cover transition-all duration-300"
               />
-              
+
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
 
               {/* Status Badges Overlay */}
@@ -160,7 +266,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                       {isPlayingAudio && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />}
                     </p>
                     <p className="text-[11px] text-white/70">
-                      {isPlayingAudio 
+                      {isPlayingAudio
                         ? (language === 'hi' ? 'ऑडियो चल रहा है...' : 'Narrating historical records...')
                         : (language === 'hi' ? 'इतिहास सुनने के लिए प्ले दबाएं' : 'Click to listen to AI voice tour')}
                     </p>
@@ -180,10 +286,10 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
             {/* Right Column: Quick Stats & Booking Card */}
             <div className="lg:col-span-4 flex flex-col justify-between space-y-4">
-              
+
               {/* Rating & Heritage Pressure Gauge */}
               <div className="bg-[#F8F6F0] p-5 rounded-2xl border border-[#0D3B2E]/10 space-y-4">
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-[#1A2621]/60 font-semibold uppercase">Rating & Footfall</p>
@@ -202,37 +308,50 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Heritage Pressure Meter */}
+                {/* Heritage Pressure Meter (Live Backend Source) */}
                 <div>
                   <div className="flex items-center justify-between text-xs font-semibold mb-1">
                     <span className="text-[#0D3B2E] flex items-center space-x-1">
                       <ShieldAlert className="w-3.5 h-3.5 text-[#C85A32]" />
                       <span>Heritage Pressure Score (HPS)</span>
                     </span>
-                    <span className="font-mono font-bold text-red-700">{monument.heritagePressureScore}/100</span>
+                    {isLoadingTelemetry ? (
+                      <span className="inline-block w-12 h-4 bg-gray-200 animate-pulse rounded" />
+                    ) : (
+                      <span className="font-mono font-bold text-red-700">
+                        {effectivePressureScore}/100
+                      </span>
+                    )}
                   </div>
                   <div className="w-full h-2.5 rounded-full bg-gray-200 overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        monument.heritagePressureScore > 75
-                          ? 'bg-gradient-to-r from-amber-500 to-red-600'
-                          : monument.heritagePressureScore > 50
-                          ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
-                          : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${monument.heritagePressureScore}%` }}
-                    />
+                    {isLoadingTelemetry ? (
+                      <div className="h-full bg-gray-300 animate-pulse w-1/2 rounded-full" />
+                    ) : (
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${effectivePressureScore > 75
+                            ? 'bg-gradient-to-r from-amber-500 to-red-600'
+                            : effectivePressureScore > 50
+                              ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
+                              : 'bg-emerald-500'
+                          }`}
+                        style={{ width: `${effectivePressureScore}%` }}
+                      />
+                    )}
                   </div>
                   <p className="text-[10px] text-[#1A2621]/60 mt-1 leading-tight">
-                    Composite score of visitor density, environmental weathering, and marble/stone micro-fracture rate.
+                    Live structural pressure assessment from backend AI (calibrated on footfall load, weathering, and material wear).
                   </p>
                 </div>
 
-                {/* Timings & Entry Ticket Fee */}
+                {/* Timings & Entry Ticket Fee (Live Backend Source) */}
                 <div className="pt-3 border-t border-[#0D3B2E]/10 grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-gray-500 block text-[10px] uppercase font-semibold">Opening Hours</span>
-                    <span className="font-medium text-[#0D3B2E]">{monument.openingHours}</span>
+                    {isLoadingTelemetry ? (
+                      <span className="inline-block w-24 h-4 bg-gray-200 animate-pulse rounded mt-0.5" />
+                    ) : (
+                      <span className="font-medium text-[#0D3B2E]">{effectiveOperatingHours}</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-gray-500 block text-[10px] uppercase font-semibold">Entry Ticket</span>
@@ -242,17 +361,23 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
               </div>
 
-              {/* Best Visiting Window AI Box */}
+              {/* Best Visiting Window AI Box (Live Backend Model best_time) */}
               <div className="bg-gradient-to-br from-[#0D3B2E] to-[#165342] text-white p-4 rounded-2xl shadow-md border border-[#D4AF37]/30">
                 <div className="flex items-center space-x-2 text-[#D4AF37] text-xs font-bold uppercase tracking-wider mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>AI Recommended Visiting Window</span>
                 </div>
-                <p className="text-lg font-bold font-mono text-white mb-1">
-                  {monument.bestVisitingWindow.start} – {monument.bestVisitingWindow.end}
-                </p>
+                {isLoadingTelemetry ? (
+                  <div className="h-7 w-40 bg-white/20 animate-pulse rounded my-1" />
+                ) : (
+                  <p className="text-lg font-bold font-mono text-white mb-1">
+                    {effectiveBestWindow.start} – {effectiveBestWindow.end}
+                  </p>
+                )}
                 <p className="text-xs text-white/80 leading-relaxed">
-                  {language === 'hi' ? monument.bestVisitingWindow.hindiReason : monument.bestVisitingWindow.reason}
+                  {language === 'hi'
+                    ? `${effectiveBestWindow.start} से ${effectiveBestWindow.end} के दौरान न्यूनतम भीड़ और सुखद तापमान रहता है।`
+                    : `Optimal visiting window calculated by AI crowd model to ensure shortest checkpoint queues and lowest vibration load.`}
                 </p>
               </div>
 
@@ -262,7 +387,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
           {/* Today's Crowd Prediction Preview (Compact preview with View Crowd Forecast CTA) */}
           <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#0D3B2E]/12 shadow-sm space-y-4">
-            
+
             {/* Header & Meta */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#0D3B2E]/10 gap-3">
               <div>
@@ -271,15 +396,20 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                     <TrendingUp className="w-4 h-4 text-[#C85A32]" />
                     <span>{language === 'hi' ? 'आज का भीड़ पूर्वानुमान' : "Today's Crowd Prediction"}</span>
                   </h3>
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                    monument.crowdLevel === 'Low'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : monument.crowdLevel === 'Moderate'
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {monument.crowdLevel}
-                  </span>
+                  {isLoadingTelemetry ? (
+                    <span className="w-16 h-4 bg-gray-200 animate-pulse rounded" />
+                  ) : (
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${effectiveCrowdLevel === 'Low'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : effectiveCrowdLevel === 'Moderate'
+                          ? 'bg-amber-100 text-amber-800'
+                          : effectiveCrowdLevel === 'High'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-red-100 text-red-800'
+                      }`}>
+                      {effectiveCrowdLevel}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-[#1A2621]/65 mt-0.5 font-medium">
                   {language === 'hi' ? 'दिन भर में अनुमानित आगंतुक घनत्व' : 'Predicted visitor density throughout the day'}
@@ -290,12 +420,24 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
               <div className="flex items-center space-x-3 text-xs">
                 <div className="text-right">
                   <span className="text-[10px] text-gray-500 block font-semibold uppercase">Real-time Footfall</span>
-                  <span className="font-bold text-[#0D3B2E] font-mono-stat">{monument.liveFootfall.toLocaleString()} visitors</span>
+                  <span className="font-bold text-[#0D3B2E] font-mono-stat">
+                    {isLoadingTelemetry ? (
+                      <span className="inline-block w-16 h-4 bg-gray-200 animate-pulse rounded" />
+                    ) : (
+                      `${currentHourFootfall.toLocaleString()} visitors`
+                    )}
+                  </span>
                 </div>
                 <div className="h-7 w-[1px] bg-gray-200" />
                 <div className="text-right">
                   <span className="text-[10px] text-gray-500 block font-semibold uppercase">Safe Capacity</span>
-                  <span className="font-bold text-gray-700 font-mono-stat">{monument.maxCapacity.toLocaleString()}</span>
+                  <span className="font-bold text-gray-700 font-mono-stat">
+                    {isLoadingTelemetry ? (
+                      <span className="inline-block w-16 h-4 bg-gray-200 animate-pulse rounded" />
+                    ) : (
+                      effectiveSafeCapacity.toLocaleString()
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
@@ -308,7 +450,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                   <span className="text-gray-600 font-medium">Best Upcoming Slot:</span>
                 </div>
                 <span className="font-bold text-[#0D3B2E] font-mono-stat">
-                  {monument.bestVisitingWindow.start} – {monument.bestVisitingWindow.end}
+                  {bestUpcomingSlotStr}
                 </span>
               </div>
 
@@ -331,33 +473,59 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Hourly Footfall Bars Preview */}
+            {/* Hourly Footfall Bars Preview (Directly from backend predictions) */}
             <div className="pt-2">
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {monument.hourlyFootfall.map((hf, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className="w-full bg-[#F8F6F0] h-20 rounded-lg flex flex-col justify-end p-1 relative overflow-hidden border border-[#0D3B2E]/10">
-                      <div
-                        className={`w-full rounded-md transition-all ${
-                          hf.isPeak 
-                            ? 'bg-gradient-to-t from-red-600 to-red-400' 
-                            : hf.pressurePercentage > 50
-                            ? 'bg-gradient-to-t from-amber-500 to-amber-400'
-                            : 'bg-gradient-to-t from-emerald-600 to-emerald-400'
-                        }`}
-                        style={{ height: `${hf.pressurePercentage}%` }}
-                      />
-                      {hf.isPeak && (
-                        <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-red-700 bg-red-100 px-1 rounded">
-                          Peak
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-mono text-[#1A2621]/70 mt-1 font-semibold">{hf.hour}</span>
-                    <span className="text-[10px] text-gray-500">{hf.count}</span>
+              {isLoadingTelemetry ? (
+                <div className="flex items-center justify-center py-8 space-x-2 text-xs text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#0D3B2E]" />
+                  <span>Loading live hourly predictions from AI engine...</span>
+                </div>
+              ) : liveCrowd?.predictions && liveCrowd.predictions.length > 0 ? (
+                <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#0D3B2E]/20 scrollbar-track-gray-100 rounded-xl px-1">
+                  <div className="flex items-end gap-2.5 min-w-full">
+                    {liveCrowd.predictions.map((p: HourlyPrediction, i: number) => {
+                      const slotHour = parseInt(p.time.split(':')[0], 10);
+                      const isNow = currentHour === slotHour;
+                      const isPeak = p.crowd_percent > 75;
+
+                      return (
+                        <div key={i} className="flex-1 min-w-[58px] max-w-[85px] flex flex-col items-center shrink-0">
+                          <div className={`w-full bg-[#F8F6F0] h-20 rounded-lg flex flex-col justify-end p-1 relative overflow-hidden border ${isNow ? 'border-[#0D3B2E] ring-2 ring-[#0D3B2E]/30' : 'border-[#0D3B2E]/10'}`}>
+                            <div
+                              className={`w-full rounded-md transition-all ${isPeak
+                                  ? 'bg-gradient-to-t from-red-600 to-red-400'
+                                  : p.crowd_percent > 45
+                                    ? 'bg-gradient-to-t from-amber-500 to-amber-400'
+                                    : 'bg-gradient-to-t from-emerald-600 to-emerald-400'
+                                }`}
+                              style={{ height: `${Math.max(15, Math.min(100, p.crowd_percent))}%` }}
+                            />
+                            {isNow ? (
+                              <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[7px] font-black text-[#08281E] bg-[#D4AF37] px-1 rounded uppercase tracking-wider whitespace-nowrap">
+                                Now
+                              </span>
+                            ) : isPeak ? (
+                              <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[7.5px] font-bold text-red-700 bg-red-100 px-1 rounded whitespace-nowrap">
+                                Peak
+                              </span>
+                            ) : null}
+                          </div>
+                          <span className={`text-[10px] font-mono-stat mt-1 font-semibold whitespace-nowrap ${isNow ? 'text-[#0D3B2E] font-black' : 'text-[#1A2621]/70'}`}>
+                            {p.time}
+                          </span>
+                          <span className="text-[9.5px] text-gray-500 font-mono whitespace-nowrap">
+                            {p.expected_visitors.toLocaleString()}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="py-4 text-center text-xs text-gray-500">
+                  {telemetryError || 'Hourly predictions unavailable'}
+                </div>
+              )}
             </div>
 
             {/* Primary Action Button: View Crowd Forecast */}
@@ -365,7 +533,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
               <p className="text-[11px] text-gray-500 font-medium">
                 {language === 'hi'
                   ? '7-दिनों का विस्तृत घंटेवार पूर्वानुमान व हेरिटेज प्रेशर रिपोर्ट देखें।'
-                  : 'Explore 7-day predicted footfall, hourly simulation curves & heritage preservation impact.'}
+                  : 'Explore multi-day predicted footfall, hourly simulation curves & heritage preservation impact.'}
               </p>
 
               <button
@@ -376,7 +544,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                 }}
                 className="w-full sm:w-auto px-5 py-2.5 bg-[#0D3B2E] hover:bg-[#08281E] text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95 cursor-pointer shrink-0"
               >
-                <span>{language === 'hi' ? '7-दिवसीय भीड़ पूर्वानुमान देखें' : 'View Crowd Forecast'}</span>
+                <span>{language === 'hi' ? 'भीड़ पूर्वानुमान देखें' : 'View Crowd Forecast'}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37]" />
               </button>
             </div>
@@ -385,7 +553,7 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
           {/* Historical Significance & Architectural Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             <div className="bg-[#F8F6F0] p-5 rounded-2xl border border-[#0D3B2E]/10">
               <h3 className="text-base font-bold text-[#0D3B2E] font-serif-heritage mb-3 flex items-center space-x-2">
                 <Info className="w-4 h-4 text-[#C85A32]" />

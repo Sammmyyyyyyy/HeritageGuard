@@ -79,7 +79,7 @@ export const RECENT_ALERTS: AlertItem[] = [];
    - real pressure/crowd values come from backend
    ========================================================= */
 
-export const GIS_MONUMENT_PINS: Array<{
+export interface GisMonumentPin {
   id: string;
   site_id: string;
   name: string;
@@ -92,7 +92,9 @@ export const GIS_MONUMENT_PINS: Array<{
   risk: 'low' | 'moderate' | 'high';
   riskScore: number;
   footfall: number;
-}> = [
+}
+
+export const GIS_MONUMENT_PINS: GisMonumentPin[] = [
   /* ------------------------- DELHI ------------------------- */
 
   {
@@ -105,7 +107,7 @@ export const GIS_MONUMENT_PINS: Array<{
     lng: 77.2410,
     mapTop: '16%',
     mapLeft: '28%',
-    risk: 'low' as const,
+    risk: 'low',
     riskScore: 0,
     footfall: 0,
   },

@@ -5,13 +5,18 @@ export interface BackendSite {
   state: string;
   latitude: number;
   longitude: number;
-  description: string;
-  historical_significance: string;
-  id: string;
-  created_at: string;
+  description?: string | null;
+  historical_significance?: string | null;
+  id?: string;
+  created_at?: string;
+  image_url?: string | null;
+  imageUrl?: string | null;
+  image?: string | null;
+  category?: string | null;
+  architectural_style?: string | null;
+  time_period?: string | null;
+  is_unesco?: boolean | null;
 }
-
-
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -25,6 +30,16 @@ export async function getSites(): Promise<BackendSite[]> {
 
   if (!response.ok) {
     throw new Error(`Failed to fetch sites: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getSite(siteId: string): Promise<BackendSite> {
+  const response = await fetch(`${API_BASE_URL}/api/sites/${encodeURIComponent(siteId)}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch site ${siteId}: ${response.status}`);
   }
 
   return response.json();
@@ -138,55 +153,6 @@ export async function createItinerary(
   }
 
   return response.json();
-
-
-}
-
-export interface PressureFactors {
-  visitor_pressure: number;
-  physical_vulnerability: number;
-  recent_deterioration: number;
-}
-
-export interface PressureResponse {
-  site_id: string;
-  pressure_score: number;
-  risk: string;
-  factors: PressureFactors;
-}
-
-export async function getPressure(
-  siteId: string
-): Promise<PressureResponse> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/pressure/${siteId}`
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to fetch heritage pressure: ${response.status} ${errorText}`
-    );
-  }
-
-  return response.json();
-}
-
-export async function getCrowd(
-  siteId: string
-): Promise<any> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/crowd/${siteId}`
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Failed to fetch crowd data: ${response.status} ${errorText}`
-    );
-  }
-
-  return response.json();
 }
 
 export interface CreateReportPayload {
@@ -197,13 +163,15 @@ export interface CreateReportPayload {
   severity?: string;
   report_type?: string;
   image_url?: string;
+  pressure?: any;
+  crowd?: any;
 }
 
 export async function createReport(
   payload: CreateReportPayload
 ) {
   const response = await fetch(
-    'http://127.0.0.1:8000/api/reports',
+    `${API_BASE_URL}/api/reports`,
     {
       method: 'POST',
       headers: {
@@ -224,3 +192,9 @@ export async function createReport(
 
   return response.json();
 }
+
+// Re-export Pressure & Crowd types and helpers for single source of truth
+export type { PressureFactors, PressureResponse } from './pressure';
+export { getPressure } from './pressure';
+export type { CrowdPredictionResponse, HourlyPrediction } from './crowd';
+export { getCrowd } from './crowd';

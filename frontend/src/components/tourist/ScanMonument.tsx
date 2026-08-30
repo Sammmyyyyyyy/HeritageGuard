@@ -309,6 +309,16 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         0
     );
 
+    const priorityRaw = String(result?.priority ?? result?.report?.severity ?? 'medium').toLowerCase();
+    const priorityMap: Record<string, 'Low' | 'Medium' | 'High' | 'Critical'> = {
+      low: 'Low',
+      medium: 'Medium',
+      high: 'High',
+      critical: 'Critical'
+    };
+
+    const severityRaw = String(result?.report?.severity ?? result?.severity ?? 'medium').toLowerCase();
+
     return {
       id: `backend-scan-${Date.now()}`,
 
@@ -318,7 +328,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         getSiteName(siteId),
 
       scannedAt:
-        new Date().toISOString(),
+        result?.report?.created_at || new Date().toISOString(),
 
       imageUrl:
         result?.image_url ||
@@ -327,10 +337,22 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
       overallDamageScore: Math.max(
         0,
-        Math.min(100, score)
+        Math.min(100, Math.round(score))
       ),
 
       detections,
+
+      priority: priorityMap[priorityRaw] || 'Medium',
+
+      severity: priorityMap[severityRaw] || 'Medium',
+
+      reportId: result?.report?.id || `REP-${Date.now().toString().slice(-6)}`,
+
+      reportType: result?.report?.report_type
+        ? String(result.report.report_type).replace(/_/g, ' ').toUpperCase()
+        : 'AI STRUCTURAL AUDIT',
+
+      summary: result?.report?.summary || 'AI detected structural anomaly on monument surface.',
 
       source:
         'Citizen Camera Scan',
@@ -769,13 +791,6 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
             <label className="text-xs font-bold text-[#0D3B2E] uppercase tracking-wider">
               Select Monument to Scan
             </label>
-
-            {selectedSiteId && (
-              <span className="text-[10px] font-mono font-bold text-[#C85A32]">
-                {selectedSiteId}
-              </span>
-            )}
-
           </div>
 
           <select
@@ -789,13 +804,12 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
               sitesLoading ||
               isScanning
             }
-            className="w-full px-4 py-3 rounded-xl border border-[#0D3B2E]/20 bg-[#F8F6F0] text-sm text-[#0D3B2E] font-medium outline-none focus:ring-2 focus:ring-[#D4AF37] disabled:opacity-60"
+            className="w-full px-4 py-3 rounded-xl border border-[#0D3B2E]/20 bg-[#F8F6F0] text-sm text-[#0D3B2E] font-medium outline-none focus:ring-2 focus:ring-[#D4AF37] disabled:opacity-60 cursor-pointer"
           >
-
             <option value="">
               {sitesLoading
                 ? 'Loading monuments...'
-                : 'Choose a monument'}
+                : 'Choose a monument to scan...'}
             </option>
 
             {backendSites.map(
@@ -806,13 +820,18 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                     site.site_id
                   }
                 >
-                  {site.name} (
-                  {site.site_id})
+                  {site.name}
                 </option>
               )
             )}
-
           </select>
+
+          {!selectedSiteId && !sitesLoading && (
+            <div className="mt-2 text-xs font-semibold text-amber-700 flex items-center space-x-1">
+              <Info className="w-3.5 h-3.5 shrink-0" />
+              <span>Select a monument to begin analysis.</span>
+            </div>
+          )}
 
           {!sitesLoading &&
             backendSites.length ===
@@ -834,79 +853,6 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
           )}
 
         </div>
-
-      </div>
-
-      {/* =====================================================
-          PRESET TEST CASE BAR
-          ===================================================== */}
-
-      <div className="flex items-center space-x-2 mb-6 overflow-x-auto pb-2 px-1 max-w-full no-scrollbar">
-
-        <span className="text-xs font-semibold text-[#0D3B2E] whitespace-nowrap shrink-0">
-          {language === 'hi'
-            ? 'परीक्षण हेतु नमूना चुनें:'
-            : 'Test with Preset Scans:'}
-        </span>
-
-        {PRESET_DAMAGE_SCANS.map(
-          (scan, idx) => (
-            <button
-              key={scan.id}
-              onClick={() => {
-
-                setCustomImage(
-                  null
-                );
-
-                setSelectedFile(
-                  null
-                );
-
-                setBackendScan(
-                  null
-                );
-
-                setAnalysisError(
-                  null
-                );
-
-                setSelectedScanIndex(
-                  idx
-                );
-
-                setHasScanned(
-                  false
-                );
-
-                setSelectedDetection(
-                  null
-                );
-
-                setIsSubmitted(
-                  false
-                );
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap border cursor-pointer shrink-0 ${
-                !customImage &&
-                selectedScanIndex ===
-                  idx
-                  ? 'bg-[#0D3B2E] text-white border-[#0D3B2E] shadow-sm'
-                  : 'bg-white text-[#1A2621] border-[#0D3B2E]/15 hover:bg-[#F8F6F0]'
-              }`}
-            >
-              {scan.monumentName.split(
-                '('
-              )[0]}
-            </button>
-          )
-        )}
-
-        {customImage && (
-          <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#D4AF37] text-[#08281E] shadow-sm whitespace-nowrap shrink-0">
-            Custom Uploaded Photo
-          </span>
-        )}
 
       </div>
 
@@ -1240,7 +1186,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                   handleCapture
                 }
                 disabled={
-                  isScanning
+                  isScanning || !selectedSiteId
                 }
                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white p-1 shadow-2xl transition-transform active:scale-95 flex items-center justify-center hover:ring-4 hover:ring-[#D4AF37]/50 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Capture & Run AI Model"
@@ -1389,154 +1335,159 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         <div className="order-3 lg:order-3 lg:col-span-3 space-y-4 w-full">
 
           {hasScanned ? (
-
             <div className="bg-white p-5 rounded-2xl border-2 border-[#0D3B2E] shadow-xl space-y-4 animate-fadeIn">
-
-              <div className="flex items-center justify-between pb-3 border-b border-[#0D3B2E]/10">
-
-                <div>
-
-                  <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    AI Auto-Identified
-                  </span>
-
-                  <h3 className="text-sm font-bold text-[#0D3B2E] mt-1">
+              {/* Result Card Header */}
+              <div className="flex flex-col pb-3 border-b border-[#0D3B2E]/10 gap-1.5">
+                <div className="flex items-baseline justify-between mt-1">
+                  <h3 className="text-base font-bold text-[#0D3B2E] font-serif-heritage">
                     {activeScan.monumentName}
                   </h3>
-
                 </div>
 
+                <p className="text-[11px] text-[#1A2621]/60 font-mono">
+                  {new Date(activeScan.scannedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(activeScan.scannedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </p>
               </div>
 
-              {/* Damage Score */}
-
+              {/* Damage Score Meter */}
               <div>
-
                 <div className="flex items-center justify-between text-xs font-semibold mb-1">
-
-                  <span>
-                    Surface Damage Index
+                  <span className="text-[#0D3B2E] font-bold">Surface Damage Index</span>
+                  <span className="font-mono font-bold text-red-600 text-sm">
+                    {activeScan.overallDamageScore} / 100
                   </span>
-
-                  <span className="font-mono font-bold text-red-600">
-                    {
-                      activeScan.overallDamageScore
-                    }
-                    /100
-                  </span>
-
                 </div>
-
-                <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
-
+                <div className="w-full h-2.5 rounded-full bg-gray-200 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-red-600 rounded-full"
-                    style={{
-                      width: `${activeScan.overallDamageScore}%`
-                    }}
+                    className="h-full bg-gradient-to-r from-amber-500 to-red-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.max(5, activeScan.overallDamageScore)}%` }}
                   />
-
                 </div>
-
               </div>
 
-              {/* Selected detection */}
-
-              {selectedDetection && (
-
-                <div className="bg-[#F8F6F0] p-3 rounded-xl border border-[#0D3B2E]/15 text-xs space-y-2">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="font-bold text-[#0D3B2E] flex items-center space-x-1">
-
-                      <span>
-                        {
-                          damageColorMap[
-                            selectedDetection
-                              .type
-                          ]?.icon
-                        }
-                      </span>
-
-                      <span className="capitalize">
-                        {
-                          selectedDetection.title
-                        }
-                      </span>
-
-                    </span>
-
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-800">
-                      {
-                        selectedDetection.severity
-                      }{' '}
-                      Severity
-                    </span>
-
-                  </div>
-
-                  <p className="text-[11px] text-[#1A2621]/80 leading-tight">
-                    {
-                      selectedDetection.description
-                    }
-                  </p>
-
-                  <div className="pt-2 border-t border-[#0D3B2E]/10 text-[10px] text-[#0D3B2E] font-medium">
-
-                    <span className="font-bold">
-                      Remediation:
-                    </span>{' '}
-
-                    {
-                      selectedDetection.recommendedAction
-                    }
-
-                  </div>
-
+              {/* Priority & Severity Badges */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-[#F8F6F0] p-2.5 rounded-xl border border-[#0D3B2E]/10">
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold block">Priority</span>
+                  <span className={`font-bold uppercase tracking-wider text-xs ${
+                    activeScan.priority === 'High' || activeScan.priority === 'Critical'
+                      ? 'text-red-700'
+                      : activeScan.priority === 'Medium'
+                      ? 'text-amber-700'
+                      : 'text-emerald-700'
+                  }`}>
+                    {activeScan.priority || 'MEDIUM'}
+                  </span>
                 </div>
+                <div className="bg-[#F8F6F0] p-2.5 rounded-xl border border-[#0D3B2E]/10">
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold block">Severity</span>
+                  <span className={`font-bold uppercase tracking-wider text-xs ${
+                    activeScan.severity === 'High' || activeScan.severity === 'Critical'
+                      ? 'text-red-700'
+                      : activeScan.severity === 'Medium'
+                      ? 'text-amber-700'
+                      : 'text-emerald-700'
+                  }`}>
+                    {activeScan.severity || 'MEDIUM'}
+                  </span>
+                </div>
+              </div>
 
-              )}
+              {/* Detected Issues List (Deduplicated by title) */}
+              {(() => {
+                const uniqueDetections = activeScan.detections.filter(
+                  (det, index, self) =>
+                    index ===
+                    self.findIndex(
+                      (d) => (d.title || d.type) === (det.title || det.type)
+                    )
+                );
 
-              {/* Submit */}
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#0D3B2E]">
+                      <span>Detected Issues ({uniqueDetections.length})</span>
+                      <span className="text-[10px] text-gray-500 font-normal">Click to highlight</span>
+                    </div>
 
+                    {uniqueDetections.length > 0 ? (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {uniqueDetections.map((det, idx) => {
+                          const isSelected = selectedDetection?.id === det.id;
+                          const confPct = Math.round(det.confidence * 100);
+
+                          return (
+                            <div
+                              key={det.id || idx}
+                              onClick={() => setSelectedDetection(det)}
+                              className={`p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-amber-50/80 border-[#C85A32] shadow-xs'
+                                  : 'bg-[#F8F6F0] border-[#0D3B2E]/10 hover:border-[#0D3B2E]/30'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-[#0D3B2E] flex items-center space-x-1 capitalize">
+                                  <span>{damageColorMap[det.type]?.icon || '⚡'}</span>
+                                  <span>{det.title || det.type}</span>
+                                </span>
+                                <div className="flex items-center space-x-1.5">
+                                  <span className="text-[10px] font-mono font-bold text-[#0D3B2E] bg-white px-1.5 py-0.5 rounded border border-gray-200">
+                                    {confPct}% conf
+                                  </span>
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                    det.severity === 'Critical' || det.severity === 'High'
+                                      ? 'bg-red-100 text-red-800'
+                                      : det.severity === 'Medium'
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : 'bg-emerald-100 text-emerald-800'
+                                  }`}>
+                                    {det.severity}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <p className="text-[11px] text-[#1A2621]/80 leading-tight">
+                                {det.description}
+                              </p>
+
+                              {det.recommendedAction && (
+                                <div className="mt-1.5 pt-1.5 border-t border-[#0D3B2E]/10 text-[10px] text-[#0D3B2E]">
+                                  <span className="font-bold">Action:</span> {det.recommendedAction}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>No structural damage detected on inspected masonry surface.</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Submit Report Button */}
               <div>
-
                 {isSubmitted ? (
-
-                  <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-300 text-xs font-bold text-center flex items-center justify-center space-x-1.5">
-
+                  <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-300 text-xs font-bold text-center flex items-center justify-center space-x-1.5 animate-fadeIn">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-
-                    <span>
-                      Report Logged to Authority Dashboard!
-                    </span>
-
+                    <span>Report Logged to Authority Dashboard!</span>
                   </div>
-
                 ) : (
-
                   <button
-                    onClick={
-                      handleSubmitReport
-                    }
-                    className="w-full py-3 bg-[#0D3B2E] hover:bg-[#08281E] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5"
+                    onClick={handleSubmitReport}
+                    className="w-full py-3 bg-[#0D3B2E] hover:bg-[#08281E] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-98"
                   >
-
                     <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
-
-                    <span>
-                      Submit Citizen Damage Report
-                    </span>
-
+                    <span>Submit Citizen Damage Report</span>
                   </button>
-
                 )}
-
               </div>
-
             </div>
-
           ) : (
 
             <div className="bg-white p-5 rounded-2xl border border-[#0D3B2E]/10 shadow-sm space-y-3">
