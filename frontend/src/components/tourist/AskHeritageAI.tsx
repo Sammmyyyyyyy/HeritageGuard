@@ -49,15 +49,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
       sender: 'ai',
       text: "Namaste! I am your AI Heritage Guide, grounded in Archaeological Survey of India (ASI) records and UNESCO historical dossiers. Ask me anything about India's monuments, conservation techniques, architecture, or hidden histories!",
       hindiText: "नमस्ते! मैं आपका एआई धरोहर गाइड हूँ, जो भारतीय पुरातत्व सर्वेक्षण (ASI) और यूनेस्को के ऐतिहासिक अभिलेखों से सीधे जुड़ा है। भारत के स्मारकों, वास्तुकला या संरक्षण तकनीकों के बारे में मुझसे कोई भी प्रश्न पूछें!",
-      timestamp: 'Just now',
-      suggestedFollowUps: [
-        'What is the best time to visit Red Fort today?',
-        'Is Hawa Mahal crowded this evening?',
-        'Tell me about the history of Qutub Minar.',
-        'Which is better for a peaceful visit, Amer Fort or City Palace?',
-        'What should I see at Elephanta Caves?',
-        'Tell me about Triveni Sangam.'
-      ]
+      timestamp: 'Just now'
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -208,8 +200,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
             text: matched.answerEn,
             hindiText: matched.answerHi,
             timestamp: 'Just now',
-            sources: matched.sources,
-            suggestedFollowUps: matched.followUps
+            sources: matched.sources
           }
         : {
             id: 'ai-' + Date.now(),
@@ -362,21 +353,6 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
                     )}
                   </div>
                 </div>
-
-                {/* Follow-up Prompts Pills */}
-                {isAI && msg.suggestedFollowUps && (
-                  <div className="mt-1.5 flex flex-wrap gap-1.5 max-w-[92%] sm:max-w-[85%]">
-                    {msg.suggestedFollowUps.map((prompt, pIdx) => (
-                      <button
-                        key={pIdx}
-                        onClick={() => handleSend(prompt)}
-                        className="text-[11px] bg-white hover:bg-[#F8F6F0] text-[#0D3B2E] px-2.5 py-1 rounded-full border border-[#0D3B2E]/20 shadow-2xs transition-colors text-left cursor-pointer break-words"
-                      >
-                        ✦ {prompt}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}

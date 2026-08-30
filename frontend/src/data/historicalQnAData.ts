@@ -5,7 +5,6 @@ export interface QnAPair {
   answerEn: string;
   answerHi: string;
   sources: Array<{ title: string; archive: string; confidence: number }>;
-  followUps: string[];
 }
 
 export const HISTORICAL_KNOWLEDGE_BASE: QnAPair[] = [
@@ -18,11 +17,6 @@ export const HISTORICAL_KNOWLEDGE_BASE: QnAPair[] = [
     sources: [
       { title: 'ASI Scientific Monograph: Conservation of Taj Marble (Vol. 42)', archive: 'Archaeological Survey of India Archives, New Delhi', confidence: 0.98 },
       { title: 'UNESCO State of Conservation Report: Taj Mahal & Agra Fort', archive: 'UNESCO World Heritage Centre Dossier #252', confidence: 0.96 }
-    ],
-    followUps: [
-      'What are the best hours to visit Taj Mahal to avoid crowds?',
-      'Tell me about the Charbagh eco-viewpoint at Mehtab Bagh',
-      'How does the acoustic reverberation inside the Taj dome work?'
     ]
   },
   {
@@ -34,11 +28,6 @@ export const HISTORICAL_KNOWLEDGE_BASE: QnAPair[] = [
     sources: [
       { title: 'Acoustic Resonance in Vijayanagara Lithic Pillars', archive: 'Epigraphia Carnatica & ASI Southern Circle Reports', confidence: 0.97 },
       { title: 'Architectural Genius of the Vijayanagara Dynasty', archive: 'INTACH Heritage Studies Series', confidence: 0.94 }
-    ],
-    followUps: [
-      'Why is tapping the pillars currently restricted for tourists?',
-      'Tell me about the Stone Chariot in Hampi',
-      'What alternative sites near Hampi can I explore?'
     ]
   },
   {
@@ -50,10 +39,6 @@ export const HISTORICAL_KNOWLEDGE_BASE: QnAPair[] = [
     sources: [
       { title: 'Astronomical Principles of the Sun Temple of Konarak', archive: 'National Institute of Science & Heritage Archeo-Astronomy', confidence: 0.99 },
       { title: 'Kalinga Temple Architecture & Geometry', archive: 'Odisha State Archaeology Monograph', confidence: 0.95 }
-    ],
-    followUps: [
-      'What damage is ocean salt causing to Konark stones?',
-      'Which lesser-known Sun temples can I visit in Odisha?'
     ]
   },
   {
@@ -65,10 +50,6 @@ export const HISTORICAL_KNOWLEDGE_BASE: QnAPair[] = [
     sources: [
       { title: 'The Cave Paintings of Ajanta: Technical & Mineralogical Analysis', archive: 'ASI Chemistry Branch Technical Bulletins', confidence: 0.96 },
       { title: 'UNESCO Conservation Dossier: Ajanta Caves', archive: 'UNESCO World Heritage Collection', confidence: 0.97 }
-    ],
-    followUps: [
-      'What are the preservation limits on humidity in Ajanta caves?',
-      'How does Pitalkhora caves compare to Ajanta?'
     ]
   }
 ];

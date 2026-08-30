@@ -14,8 +14,11 @@ import {
   ChevronDown, 
   User, 
   ArrowRight,
-  Check
+  Check,
+  Heart
 } from 'lucide-react';
+
+import { useSavedMonuments } from '../../hooks/useSavedMonuments';
 
 interface NavbarProps {
   activeView: 'home' | 'tourist' | 'authority';
@@ -61,6 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   language,
   onLanguageChange
 }) => {
+  const { savedCount } = useSavedMonuments();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -432,10 +436,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
 
                     <div className="text-xs text-gray-600 space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <span>Saved Monuments</span>
-                        <span className="font-semibold text-gray-900">4</span>
-                      </div>
+                      <button
+                        onClick={() => {
+                          if (activeView !== 'tourist') {
+                            onViewChange('tourist');
+                          }
+                          onTouristTabChange('saved');
+                          setIsProfileOpen(false);
+                        }}
+                        className="w-full flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-rose-50 text-gray-700 hover:text-rose-900 transition-colors cursor-pointer text-left font-medium group"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                          <span>Saved Monuments</span>
+                        </div>
+                        <span className="font-bold text-rose-700 font-mono bg-rose-100 px-2 py-0.5 rounded-md text-[11px]">
+                          {savedCount}
+                        </span>
+                      </button>
                       <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                         <span>Submitted Scans</span>
                         <span className="font-semibold text-emerald-600">2 Verified</span>
@@ -565,6 +583,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center space-x-2.5">
                       <Bot className="w-4 h-4" />
                       <span>Ask Heritage AI</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+
+                  <button
+                    onClick={() => { onTouristTabChange('saved'); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      touristTab === 'saved' 
+                        ? 'bg-[#0D3B2E] text-white shadow-sm' 
+                        : 'text-gray-700 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span>Saved Monuments ({savedCount})</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
