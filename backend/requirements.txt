@@ -16,4 +16,19 @@ pytest==8.4.1
 pytest-asyncio==1.1.0
 
 supabase
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+langchain
+langchain-openai
+langchain-huggingface
+langchain-chroma
+chromadb
+sentence-transformers
+pypdf
+pandas
 numpy
+scikit-learn
+joblib
+requests
