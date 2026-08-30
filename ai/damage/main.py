@@ -20,7 +20,7 @@ from ultralytics import YOLO
 ENV_PATH = (
     Path(__file__).resolve().parents[2]
     / "backend"
-    / ".env"
+    / ".env.example"
 )
 
 load_dotenv(ENV_PATH)
