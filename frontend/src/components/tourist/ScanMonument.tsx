@@ -40,6 +40,8 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
   const [cameraState, setCameraState] = useState<'requesting' | 'granted' | 'denied' | 'error' | 'unsupported'>('requesting');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const scanCancelledRef = useRef<boolean>(false);
 
   const requestCameraPermission = async () => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -70,7 +72,6 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
       streamRef.current = stream;
       setCameraState('granted');
-
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
@@ -86,6 +87,15 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
   };
 
   const handleRestartScan = async () => {
+    // 1. Immediately abort any ongoing backend inference / AI analysis
+    scanCancelledRef.current = true;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    // 2. Immediately stop scanning animation & reset all scan states
+    setIsScanning(false);
     setHasScanned(false);
     setSelectedDetection(null);
     setIsSubmitted(false);
@@ -94,7 +104,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
     setCustomImage(null);
     setAnalysisError(null);
 
-    // Re-verify stream or restart camera
+    // 3. Re-verify stream or restart camera feed
     const isStreamAlive =
       streamRef.current &&
       streamRef.current.active &&
@@ -515,6 +525,13 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
       return;
     }
 
+    scanCancelledRef.current = false;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     /*
      * Uploaded image OR Live Camera Capture => REAL backend AI analysis.
      */
@@ -525,23 +542,21 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         console.log(
           'SCAN - ANALYZING:',
           {
-            siteId:
-              selectedSite.site_id,
-            siteName:
-              selectedSite.name,
-            fileName:
-              selectedFile.name,
-            fileType:
-              selectedFile.type
+            siteId: selectedSite.site_id,
+            siteName: selectedSite.name,
+            fileName: selectedFile.name,
+            fileType: selectedFile.type
           }
         );
 
-        const result =
-          await analyzeDamage(
-            selectedSite.site_id,
-            selectedFile,
-            ''
-          );
+        const result = await analyzeDamage(
+          selectedSite.site_id,
+          selectedFile,
+          '',
+          controller.signal
+        );
+
+        if (scanCancelledRef.current) return;
 
         console.log(
           'SCAN - BACKEND DAMAGE RESULT:',
@@ -550,16 +565,13 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
         if (
           result?.site_id &&
-          result.site_id !==
-            selectedSite.site_id
+          result.site_id !== selectedSite.site_id
         ) {
           console.warn(
             'SCAN - SITE ID MISMATCH:',
             {
-              selectedSite:
-                selectedSite.site_id,
-              backendSite:
-                result.site_id
+              selectedSite: selectedSite.site_id,
+              backendSite: result.site_id
             }
           );
 
@@ -575,20 +587,20 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
           return;
         }
 
-        const scan =
-          buildBackendScan(result);
+        const scan = buildBackendScan(result);
 
         setBackendScan(scan);
         setHasScanned(true);
 
-        if (
-          scan.detections.length > 0
-        ) {
-          setSelectedDetection(
-            scan.detections[0]
-          );
+        if (scan.detections.length > 0) {
+          setSelectedDetection(scan.detections[0]);
         }
       } catch (error: any) {
+        if (error?.name === 'AbortError' || scanCancelledRef.current) {
+          console.log('SCAN - INFERENCE CANCELLED BY USER');
+          return;
+        }
+
         console.error(
           'SCAN - DAMAGE ANALYSIS FAILED:',
           error
@@ -602,7 +614,9 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         setHasScanned(false);
         setBackendScan(null);
       } finally {
-        setIsScanning(false);
+        if (!scanCancelledRef.current) {
+          setIsScanning(false);
+        }
       }
 
       return;
@@ -625,11 +639,13 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
           canvas.toBlob(async (blob) => {
             if (blob) {
+              if (scanCancelledRef.current) return;
               const livePhotoFile = new File([blob], `live-scan-${Date.now()}.jpg`, { type: 'image/jpeg' });
               setSelectedFile(livePhotoFile);
               setIsScanning(true);
               try {
-                const result = await analyzeDamage(selectedSite.site_id, livePhotoFile, '');
+                const result = await analyzeDamage(selectedSite.site_id, livePhotoFile, '', controller.signal);
+                if (scanCancelledRef.current) return;
                 const scan = buildBackendScan(result);
                 setBackendScan(scan);
                 setHasScanned(true);
@@ -637,12 +653,18 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                   setSelectedDetection(scan.detections[0]);
                 }
               } catch (error: any) {
+                if (error?.name === 'AbortError' || scanCancelledRef.current) {
+                  console.log('SCAN - INFERENCE CANCELLED BY USER');
+                  return;
+                }
                 console.error('SCAN - LIVE DAMAGE ANALYSIS FAILED:', error);
                 setAnalysisError(error?.message || (language === 'hi' ? 'क्षति विश्लेषण विफल रहा। कृपया पुनः प्रयास करें।' : 'Damage analysis failed. Please try again.'));
                 setHasScanned(false);
                 setBackendScan(null);
               } finally {
-                setIsScanning(false);
+                if (!scanCancelledRef.current) {
+                  setIsScanning(false);
+                }
               }
             }
           }, 'image/jpeg', 0.9);
@@ -766,31 +788,31 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
     }
   > = {
     crack: {
-      bg: 'bg-red-500/20',
+      bg: 'bg-transparent',
       text: 'text-red-300',
       border: 'border-red-500',
       icon: '⚡'
     },
     erosion: {
-      bg: 'bg-amber-500/20',
+      bg: 'bg-transparent',
       text: 'text-amber-300',
       border: 'border-amber-500',
       icon: '🌾'
     },
     discoloration: {
-      bg: 'bg-yellow-500/20',
+      bg: 'bg-transparent',
       text: 'text-yellow-300',
       border: 'border-yellow-500',
       icon: '🎨'
     },
     vegetation: {
-      bg: 'bg-emerald-500/20',
+      bg: 'bg-transparent',
       text: 'text-emerald-300',
       border: 'border-emerald-500',
       icon: '🌿'
     },
     moisture: {
-      bg: 'bg-blue-500/20',
+      bg: 'bg-transparent',
       text: 'text-blue-300',
       border: 'border-blue-500',
       icon: '💧'

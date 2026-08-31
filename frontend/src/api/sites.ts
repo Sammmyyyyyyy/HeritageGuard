@@ -59,7 +59,8 @@ export interface DamageAnalysisResponse {
 export async function analyzeDamage(
   siteId: string,
   file: File,
-  notes?: string
+  notes?: string,
+  signal?: AbortSignal
 ): Promise<DamageAnalysisResponse> {
   const formData = new FormData();
   formData.append('file', file);
@@ -71,6 +72,7 @@ export async function analyzeDamage(
   const response = await fetch(url, {
     method: 'POST',
     body: formData,
+    signal,
   });
 
   if (!response.ok) {
