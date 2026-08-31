@@ -25,12 +25,9 @@ def startup_event():
     """Auto-ingests documents if vector database is not present."""
     db_dir = "./chroma_db"
     if not os.path.exists(db_dir) or not os.listdir(db_dir):
-        print("⚡ [Startup] Vector database not found. Ingesting multi-city PDF guides...")
-        try:
-            ai_interface.run_pdf_ingestion()
-            print("✅ [Startup] Indexing complete!")
-        except Exception as e:
-            print(f"⚠️ [Startup] Ingestion skipped/failed: {e}")
+        raise RuntimeError(
+            "ChromaDB not found. Please deploy the pre-built chroma_db directory."
+        )
 
 # 3. Payload schemas (Structured for clean Swagger UI documentation)
 class Coordinates(BaseModel):
