@@ -18,8 +18,7 @@ export interface BackendSite {
   is_unesco?: boolean | null;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://heritageguard-1.onrender.com/';
+const API_BASE_URL ='https://heritageguard-1.onrender.com';
 
 // ======================================================
 // SITES
