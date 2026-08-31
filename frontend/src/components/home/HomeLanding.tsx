@@ -315,35 +315,47 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
           
           <div className="space-y-0.5 pt-2 sm:pt-0">
             <p className="text-xl sm:text-2xl font-bold text-[#0D3B2E] font-mono-stat tracking-tight">10,000+</p>
-            <p className="text-[11px] text-gray-500 font-medium">Active IoT Sensors</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              {language === 'hi' ? 'सक्रिय आईओटी सेंसर' : 'Active IoT Sensors'}
+            </p>
           </div>
 
           <div className="space-y-0.5 pt-2 sm:pt-0">
             <p className="text-xl sm:text-2xl font-bold text-[#C85A32] font-mono-stat tracking-tight">2M+</p>
-            <p className="text-[11px] text-gray-500 font-medium">Sustainable Travelers</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              {language === 'hi' ? 'सस्टेनेबल यात्री' : 'Sustainable Travelers'}
+            </p>
           </div>
 
           <div className="space-y-0.5 pt-2 sm:pt-0">
             <p className="text-xl sm:text-2xl font-bold text-[#0D3B2E] font-mono-stat tracking-tight">500+</p>
-            <p className="text-[11px] text-gray-500 font-medium">Protected Monuments</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              {language === 'hi' ? 'संरक्षित स्मारक' : 'Protected Monuments'}
+            </p>
           </div>
 
           <div className="space-y-0.5 pt-2 sm:pt-0">
             <p className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono-stat tracking-tight">95%</p>
-            <p className="text-[11px] text-gray-500 font-medium">Crowd Forecast Accuracy</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              {language === 'hi' ? 'भीड़ पूर्वानुमान सटीकता' : 'Crowd Forecast Accuracy'}
+            </p>
           </div>
 
           <div className="space-y-0.5 pt-2 sm:pt-0">
             <p className="text-xl sm:text-2xl font-bold text-[#D4AF37] font-mono-stat tracking-tight">12+</p>
-            <p className="text-[11px] text-gray-500 font-medium">Regional Languages</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              {language === 'hi' ? 'क्षेत्रीय भाषाएं' : 'Regional Languages'}
+            </p>
           </div>
 
           <div className="space-y-0.5 pt-2 sm:pt-0 col-span-2 sm:col-span-1 flex flex-col items-center justify-center">
             <span className="text-emerald-700 font-semibold text-xs flex items-center space-x-1">
               <span>🌱</span>
-              <span>Sustainable Tourism</span>
+              <span>{language === 'hi' ? 'सतत पर्यटन' : 'Sustainable Tourism'}</span>
             </span>
-            <p className="text-[10px] text-gray-400 font-normal mt-0.5">Heritage Preservation</p>
+            <p className="text-[10px] text-gray-400 font-normal mt-0.5">
+              {language === 'hi' ? 'धरोहर संरक्षण' : 'Heritage Preservation'}
+            </p>
           </div>
 
         </div>
@@ -358,7 +370,7 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
           <div className="flex items-center justify-center space-x-3 text-center">
             <span className="text-[#D4AF37]">✦</span>
             <h3 className="text-sm sm:text-base font-bold text-[#0D3B2E] font-serif-heritage uppercase tracking-wider">
-              Powered by Advanced AI
+              {language === 'hi' ? 'उन्नत एआई द्वारा संचालित' : 'Powered by Advanced AI'}
             </h3>
             <span className="text-[#D4AF37]">✦</span>
           </div>
@@ -373,9 +385,13 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
                   82<span className="text-[9px] text-gray-400">/100</span>
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">AI Damage Detection</h4>
+                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">
+                    {language === 'hi' ? 'एआई क्षति पहचान' : 'AI Damage Detection'}
+                  </h4>
                   <p className="text-[10px] text-gray-500 leading-tight">
-                    Detect cracks, erosion, moisture and discoloration automatically.
+                    {language === 'hi'
+                      ? 'दरारें, क्षरण, नमी और मलिनकिरण का स्वचालित पता लगाएं।'
+                      : 'Detect cracks, erosion, moisture and discoloration automatically.'}
                   </p>
                 </div>
               </div>
@@ -389,9 +405,13 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
                   📚
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">Historical RAG</h4>
+                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">
+                    {language === 'hi' ? 'ऐतिहासिक आरएजी' : 'Historical RAG'}
+                  </h4>
                   <p className="text-[10px] text-gray-500 leading-tight">
-                    Accurate source-backed answers from trusted ASI documents.
+                    {language === 'hi'
+                      ? 'एएसआई दस्तावेजों पर आधारित सटीक प्रामाणिक उत्तर।'
+                      : 'Accurate source-backed answers from trusted ASI documents.'}
                   </p>
                 </div>
               </div>
@@ -405,9 +425,13 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
                   👥
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">Crowd Prediction</h4>
+                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">
+                    {language === 'hi' ? 'भीड़ पूर्वानुमान' : 'Crowd Prediction'}
+                  </h4>
                   <p className="text-[10px] text-gray-500 leading-tight">
-                    Forecast visitor density by time, date, and season with high accuracy.
+                    {language === 'hi'
+                      ? 'समय, तिथि और मौसम के अनुसार उच्च सटीकता से भीड़ का पूर्वानुमान।'
+                      : 'Forecast visitor density by time, date, and season with high accuracy.'}
                   </p>
                 </div>
               </div>
@@ -421,9 +445,13 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
                   🗺️
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">Smart Itinerary</h4>
+                  <h4 className="text-xs font-bold text-[#0D3B2E] font-serif-heritage">
+                    {language === 'hi' ? 'स्मार्ट यात्रा योजना' : 'Smart Itinerary'}
+                  </h4>
                   <p className="text-[10px] text-gray-500 leading-tight">
-                    Personalized routes that balance tourist experience & conservation.
+                    {language === 'hi'
+                      ? 'पर्यटन अनुभव और धरोहर संरक्षण को संतुलित करने वाले व्यक्तिगत मार्ग।'
+                      : 'Personalized routes that balance tourist experience & conservation.'}
                   </p>
                 </div>
               </div>
@@ -449,7 +477,7 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
               <button
                 onClick={() => setShowVideoModal(false)}
                 className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md hover:bg-white text-[#0A1128] flex items-center justify-center transition-all cursor-pointer shadow-xl group-hover:scale-110"
-                title="Play Vision Video"
+                title={language === 'hi' ? 'विजन वीडियो देखें' : 'Play Vision Video'}
               >
                 <Play className="w-5 h-5 fill-current ml-0.5" />
               </button>
@@ -459,10 +487,14 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
           <div className="space-y-3">
             <div>
               <h4 className="text-sm sm:text-base font-bold text-white font-serif-heritage">
-                Uniting Heritage Conservation and Intelligent Tourism.
+                {language === 'hi'
+                  ? 'धरोहर संरक्षण और बुद्धिमत्तापूर्ण पर्यटन का संगम।'
+                  : 'Uniting Heritage Conservation and Intelligent Tourism.'}
               </h4>
               <p className="text-[11px] text-white/70 mt-1">
-                Together, let's protect our past and inspire the future.
+                {language === 'hi'
+                  ? 'आइए मिलकर अपने अतीत की रक्षा करें और भविष्य को प्रेरित करें।'
+                  : "Together, let's protect our past and inspire the future."}
               </p>
             </div>
 
@@ -470,7 +502,7 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
               onClick={() => onNavigateToTourist()}
               className="px-4 py-2 rounded-xl bg-white text-[#0A1128] hover:bg-gray-100 text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer"
             >
-              <span>Explore Our Vision</span>
+              <span>{language === 'hi' ? 'हमारा विजन देखें' : 'Explore Our Vision'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -483,16 +515,18 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
       <section className="bg-[#0C1527] text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6">
-          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider w-full sm:w-auto text-center sm:text-left">Trusted by</span>
+          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider w-full sm:w-auto text-center sm:text-left">
+            {language === 'hi' ? 'विश्वासपात्र सहयोगी' : 'Trusted by'}
+          </span>
           
           <div className="flex items-center space-x-2">
             <Building2 className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-xs font-bold">Ministry of Tourism</span>
+            <span className="text-xs font-bold">{language === 'hi' ? 'पर्यटन मंत्रालय' : 'Ministry of Tourism'}</span>
           </div>
 
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-xs font-bold">Archaeological Survey of India</span>
+            <span className="text-xs font-bold">{language === 'hi' ? 'भारतीय पुरातत्व सर्वेक्षण' : 'Archaeological Survey of India'}</span>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -502,22 +536,22 @@ export const HomeLanding: React.FC<HomeLandingProps> = ({
 
           <div className="flex items-center space-x-2">
             <Globe2 className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-xs font-bold">UNESCO</span>
+            <span className="text-xs font-bold">{language === 'hi' ? 'यूनेस्को' : 'UNESCO'}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-center space-x-6 text-center border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
           <div>
             <p className="text-base font-bold font-mono text-[#D4AF37]">7,200+</p>
-            <p className="text-[9px] text-white/60">Monuments</p>
+            <p className="text-[9px] text-white/60">{language === 'hi' ? 'स्मारक' : 'Monuments'}</p>
           </div>
           <div>
             <p className="text-base font-bold font-mono text-white">28</p>
-            <p className="text-[9px] text-white/60">States</p>
+            <p className="text-[9px] text-white/60">{language === 'hi' ? 'राज्य' : 'States'}</p>
           </div>
           <div>
             <p className="text-base font-bold font-mono text-[#10B981]">100%</p>
-            <p className="text-[9px] text-white/60">Protected</p>
+            <p className="text-[9px] text-white/60">{language === 'hi' ? 'संरक्षित' : 'Protected'}</p>
           </div>
         </div>
 

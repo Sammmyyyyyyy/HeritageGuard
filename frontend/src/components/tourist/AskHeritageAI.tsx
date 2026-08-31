@@ -165,7 +165,8 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
 
       const response: any = await queryHeritageRAG({
         site_id: siteIdToUse,
-        question: query
+        question: query,
+        language: language === 'hi' ? 'Hindi' : 'English'
       });
 
       console.log('RAG - BACKEND RESPONSE:', response);
@@ -175,7 +176,9 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
         response?.response ??
         response?.text ??
         response?.message ??
-        'The heritage knowledge service returned no answer.';
+        (language === 'hi'
+          ? 'धरोहर ज्ञान सेवा ने कोई उत्तर नहीं लौटाया।'
+          : 'The heritage knowledge service returned no answer.');
 
       const hindiAnswer =
         response?.hindi_answer ??
@@ -186,8 +189,8 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
       const backendSources = Array.isArray(response?.sources)
         ? response.sources
             .map((source: any) => ({
-              title: source.title || source.name || 'ASI Heritage Archives',
-              archive: source.archive || source.source || source.url || 'UNESCO Records',
+              title: source.title || source.name || (language === 'hi' ? 'भारतीय पुरातत्व सर्वेक्षण (ASI) अभिलेख' : 'ASI Heritage Archives'),
+              archive: source.archive || source.source || source.url || (language === 'hi' ? 'यूनेस्को धरोहर डॉसियर' : 'UNESCO Records'),
               confidence: Number(source.confidence ?? source.score ?? 0.95)
             }))
             .filter((source: any) => Number.isFinite(source.confidence))
@@ -197,8 +200,8 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
         id: 'ai-' + Date.now(),
         sender: 'ai',
         text: String(answer),
-        hindiText: hindiAnswer ? String(hindiAnswer) : undefined,
-        timestamp: 'Just now',
+        hindiText: hindiAnswer ? String(hindiAnswer) : (language === 'hi' ? String(answer) : undefined),
+        timestamp: language === 'hi' ? 'अभी' : 'Just now',
         sources: backendSources.length > 0 ? backendSources : undefined,
         suggestedFollowUps: undefined
       };
@@ -208,15 +211,17 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
       console.error('RAG - BACKEND QUERY FAILED:', error);
 
       setRagError(
-        error?.message || 'Unable to connect to the Heritage AI service.'
+        error?.message || (language === 'hi' ? 'धरोहर एआई सेवा से कनेक्ट करने में असमर्थ।' : 'Unable to connect to the Heritage AI service.')
       );
 
       const unavailableMessage: ChatMessage = {
         id: 'ai-' + Date.now(),
         sender: 'ai',
-        text: '⚠️ Heritage AI is currently unavailable.\nThe RAG service is not connected.',
-        hindiText: '⚠️ Heritage AI is currently unavailable.\nThe RAG service is not connected.',
-        timestamp: 'Just now'
+        text: language === 'hi'
+          ? '⚠️ धरोहर एआई वर्तमान में उपलब्ध नहीं है।\nआरएजी सेवा कनेक्टेड नहीं है।'
+          : '⚠️ Heritage AI is currently unavailable.\nThe RAG service is not connected.',
+        hindiText: '⚠️ धरोहर एआई वर्तमान में उपलब्ध नहीं है।\nआरएजी सेवा कनेक्टेड नहीं है।',
+        timestamp: language === 'hi' ? 'अभी' : 'Just now'
       };
 
       setMessages((prev) => [...prev, unavailableMessage]);
@@ -253,10 +258,18 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
       <div className="text-center mb-5">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#0D3B2E]/10 text-[#0D3B2E] text-xs font-bold mb-1.5">
           <Sparkles className="w-3.5 h-3.5 text-[#C85A32]" />
-          <span>RAG-Grounded Multilingual Intelligence • 20 Sites</span>
+          <span>
+            {language === 'hi'
+              ? 'आरएजी-आधारित बहुभाषी एआई • 20 प्रमुख स्मारक'
+              : 'RAG-Grounded Multilingual Intelligence • 20 Sites'}
+          </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#0D3B2E] font-serif-heritage">
-          Ask <span className="text-[#C85A32]">Heritage AI</span>
+          {language === 'hi' ? (
+            <>धरोहर <span className="text-[#C85A32]">एआई सहायक</span> से पूछें</>
+          ) : (
+            <>Ask <span className="text-[#C85A32]">Heritage AI</span></>
+          )}
         </h1>
         <p className="text-xs text-[#1A2621]/70 max-w-lg mx-auto mt-0.5">
           {language === 'hi'
@@ -275,10 +288,14 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               <Bot className="w-4 h-4 text-[#D4AF37]" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-xs sm:text-sm font-bold truncate">DhoroharDhirsti AI Assistant</h3>
+              <h3 className="text-xs sm:text-sm font-bold truncate">
+                {language === 'hi' ? 'धरोहर दृष्टि एआई सहायक' : 'DhoroharDhirsti AI Assistant'}
+              </h3>
               <p className="text-[10px] text-white/70 flex items-center space-x-1 truncate">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-                <span className="truncate">Active • Connected to ASI 20 Sites Base</span>
+                <span className="truncate">
+                  {language === 'hi' ? 'सक्रिय • 20 एएसआई स्मारकों से कनेक्टेड' : 'Active • Connected to ASI 20 Sites Base'}
+                </span>
               </p>
             </div>
           </div>
@@ -288,9 +305,11 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               value={selectedSiteId}
               onChange={(e) => setSelectedSiteId(e.target.value)}
               className="bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium border border-white/20 rounded-lg px-2 py-1 outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate"
-              title="Select Heritage Site"
+              title={language === 'hi' ? 'स्मारक चुनें' : 'Select Heritage Site'}
             >
-              <option value="all" className="bg-[#0D3B2E] text-white">All 20 Sites (Auto-Detect)</option>
+              <option value="all" className="bg-[#0D3B2E] text-white">
+                {language === 'hi' ? 'सभी 20 स्मारक (स्वतः पहचान)' : 'All 20 Sites (Auto-Detect)'}
+              </option>
               {backendSites.map((site) => (
                 <option key={site.site_id} value={site.site_id} className="bg-[#0D3B2E] text-white">
                   {site.name} ({site.site_id})
@@ -304,7 +323,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
                 if ('speechSynthesis' in window) window.speechSynthesis.cancel();
               }}
               className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors cursor-pointer shrink-0"
-              title="Reset Chat"
+              title={language === 'hi' ? 'बातचीत रीसेट करें' : 'Reset Chat'}
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -341,17 +360,17 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
                       <button
                         onClick={() => handleSpeak(msg)}
                         className="flex items-center space-x-1 text-[#0D3B2E] hover:text-[#C85A32] font-semibold transition-colors cursor-pointer ml-2"
-                        title="Read aloud"
+                        title={language === 'hi' ? 'ऑडियो सुनें' : 'Read aloud'}
                       >
                         {activeSpeechId === msg.id ? (
                           <>
                             <VolumeX className="w-3.5 h-3.5 text-red-500" />
-                            <span>Stop Audio</span>
+                            <span>{language === 'hi' ? 'ऑडियो रोकें' : 'Stop Audio'}</span>
                           </>
                         ) : (
                           <>
                             <Volume2 className="w-3.5 h-3.5 text-[#C85A32]" />
-                            <span>Listen</span>
+                            <span>{language === 'hi' ? 'सुनें' : 'Listen'}</span>
                           </>
                         )}
                       </button>
@@ -363,9 +382,11 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
           })}
 
           {isTyping && (
-            <div className="flex items-center space-x-2 text-xs text-gray-500 bg-white p-2.5 rounded-2xl w-36 border border-[#0D3B2E]/10 shadow-sm animate-pulse">
+            <div className="flex items-center space-x-2 text-xs text-gray-500 bg-white p-2.5 rounded-2xl w-44 border border-[#0D3B2E]/10 shadow-sm animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0D3B2E] animate-ping shrink-0" />
-              <span className="truncate">Analyzing archives...</span>
+              <span className="truncate">
+                {language === 'hi' ? 'अभिलेख खोजे जा रहे हैं...' : 'Analyzing archives...'}
+              </span>
             </div>
           )}
         </div>
@@ -383,7 +404,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={language === 'hi' ? 'स्मारकों या इतिहास के बारे में पूछें...' : 'Ask about history, acoustics, mud-packs, or crowds...'}
+              placeholder={language === 'hi' ? 'स्मारकों के इतिहास, वास्तुकला या भीड़ के बारे में पूछें...' : 'Ask about history, acoustics, mud-packs, or crowds...'}
               className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0D3B2E]/30 focus:bg-white text-[#1A2621]"
             />
 
@@ -393,7 +414,7 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
               className="px-3.5 sm:px-4 py-2.5 bg-[#0D3B2E] hover:bg-[#08281E] disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-1 text-xs cursor-pointer shrink-0"
             >
               <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span className="hidden sm:inline">Send</span>
+              <span className="hidden sm:inline">{language === 'hi' ? 'भेजें' : 'Send'}</span>
             </button>
           </form>
         </div>

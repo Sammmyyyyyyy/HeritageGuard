@@ -23,7 +23,7 @@ import confetti from 'canvas-confetti';
 import { ITINERARY_CIRCUITS } from '../../data/itinerariesData';
 import { ItineraryPlan, ItineraryStop } from '../../types/heritage';
 import { createItinerary } from '../../api/sites';
-import { resolveImageUrl, convertBackendSiteToMonument } from '../../data/siteMapper';
+import { resolveImageUrl, convertBackendSiteToMonument, SITE_METADATA } from '../../data/siteMapper';
 
 interface ItineraryPlannerProps {
   language: 'en' | 'hi';
@@ -498,6 +498,27 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
     });
   }
 
+  const getInterestLabel = (interest: string) => {
+    if (language !== 'hi') return interest;
+    const map: Record<string, string> = {
+      'UNESCO Landmarks': 'यूनेस्को स्थल',
+      'Historical Epigraphs': 'ऐतिहासिक अभिलेख',
+      'Sunset & Photography': 'सूर्यास्त और फोटोग्राफी',
+      'Architectural Marvels': 'स्थापत्य चमत्कार',
+      'Sufi & Spiritual Trails': 'सूफी और आध्यात्मिक मार्ग',
+      'Royal Cuisine & Bazaars': 'शाही व्यंजन और बाज़ार',
+      'Eco Alternatives': 'इको-विकल्प'
+    };
+    return map[interest] || interest;
+  };
+
+  const getSiteDisplayName = (siteId: string, defaultName: string) => {
+    if (language === 'hi' && SITE_METADATA[siteId]?.hindiName) {
+      return SITE_METADATA[siteId].hindiName;
+    }
+    return defaultName;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-fadeIn">
       
@@ -505,14 +526,18 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
       <div className="text-center max-w-3xl mx-auto space-y-2">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#0D3B2E]/10 text-[#0D3B2E] text-xs font-bold">
           <Compass className="w-3.5 h-3.5 text-[#C85A32]" />
-          <span>AI-Powered Sustainable Travel Engine</span>
+          <span>{language === 'hi' ? 'एआई-संचालित संधारणीय यात्रा इंजन' : 'AI-Powered Sustainable Travel Engine'}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-[#0D3B2E] font-serif-heritage">
-          Personalized <span className="text-[#C85A32]">Itinerary Planner</span>
+          {language === 'hi' ? (
+            <>व्यक्तिगत <span className="text-[#C85A32]">यात्रा योजनाकार</span></>
+          ) : (
+            <>Personalized <span className="text-[#C85A32]">Itinerary Planner</span></>
+          )}
         </h1>
         <p className="text-xs sm:text-sm text-[#1A2621]/70 leading-relaxed">
           {language === 'hi'
-            ? 'अपनी यात्रा की जानकारी दें और हमारा एआई वास्तविक समय भीड़ और स्मारक संरक्षण के अनुसार एक सर्वोत्तम यात्रा कार्यक्रम तैयार करेगा।'
+            ? 'अपनी यात्रा की जानकारी दें और हमारा एआई वास्तविक समय भीड़ और स्मारक वहन क्षमता के अनुसार एक सर्वोत्तम यात्रा कार्यक्रम तैयार करेगा।'
             : 'Enter your starting site and trip preferences to generate a custom AI itinerary optimized for real-time crowd predictions and carrying capacity.'}
         </p>
 
@@ -527,7 +552,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span>✨ Create Custom Plan with AI</span>
+            <span>{language === 'hi' ? '✨ एआई से कस्टम योजना बनाएं' : '✨ Create Custom Plan with AI'}</span>
           </button>
 
           <button
@@ -539,7 +564,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-[#C85A32]" />
-            <span>🏛️ Curated Eco-Circuits</span>
+            <span>{language === 'hi' ? '🏛️ क्यूरेटेड इको-सर्किट' : '🏛️ Curated Eco-Circuits'}</span>
           </button>
         </div>
       </div>
@@ -555,15 +580,17 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               </div>
               <div>
                 <h3 className="text-base font-bold text-[#0D3B2E] font-serif-heritage">
-                  Custom Travel Parameters
+                  {language === 'hi' ? 'कस्टम यात्रा पैरामीटर' : 'Custom Travel Parameters'}
                 </h3>
                 <p className="text-[11px] text-gray-500">
-                  Select your starting heritage location, target destination, and travel preferences.
+                  {language === 'hi'
+                    ? 'अपना प्रारंभिक धरोहर स्थल, गंतव्य व यात्रा प्राथमिकताएं चुनें।'
+                    : 'Select your starting heritage location, target destination, and travel preferences.'}
                 </p>
               </div>
             </div>
             <span className="text-[10px] font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full self-start sm:self-auto">
-              ● Live Backend & Crowd Engine Ready
+              {language === 'hi' ? '● लाइव बैकएंड और क्राउड इंजन तैयार' : '● Live Backend & Crowd Engine Ready'}
             </span>
           </div>
 
@@ -573,7 +600,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                 <Navigation className="w-3.5 h-3.5 text-[#0D3B2E]" />
-                <span>STARTING LOCATION</span>
+                <span>{language === 'hi' ? 'प्रारंभिक स्थल' : 'STARTING LOCATION'}</span>
               </label>
               <select
                 value={startingSiteId}
@@ -582,12 +609,12 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               >
                 {destinationOptions.map((opt) => (
                   <option key={`start-${opt.site_id}`} value={opt.site_id}>
-                    {opt.name} — {opt.city} ({opt.site_id})
+                    {getSiteDisplayName(opt.site_id, opt.name)} — {opt.city} ({opt.site_id})
                   </option>
                 ))}
               </select>
               <p className="text-[10px] text-[#1A2621]/60">
-                Selected Coordinates: {destinationOptions.find(s => s.site_id === startingSiteId)?.latitude}, {destinationOptions.find(s => s.site_id === startingSiteId)?.longitude}
+                {language === 'hi' ? 'चयनित निर्देशांक:' : 'Selected Coordinates:'} {destinationOptions.find(s => s.site_id === startingSiteId)?.latitude}, {destinationOptions.find(s => s.site_id === startingSiteId)?.longitude}
               </p>
             </div>
 
@@ -595,7 +622,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                 <MapPin className="w-3.5 h-3.5 text-[#C85A32]" />
-                <span>DESTINATION / HERITAGE CIRCUIT</span>
+                <span>{language === 'hi' ? 'गंतव्य / धरोहर सर्किट' : 'DESTINATION / HERITAGE CIRCUIT'}</span>
               </label>
               <select
                 value={destinationSiteId}
@@ -604,12 +631,12 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               >
                 {destinationOptions.map((opt) => (
                   <option key={`dest-${opt.site_id}`} value={opt.site_id}>
-                    {opt.name} — {opt.city} ({opt.site_id})
+                    {getSiteDisplayName(opt.site_id, opt.name)} — {opt.city} ({opt.site_id})
                   </option>
                 ))}
               </select>
               <p className="text-[10px] text-[#1A2621]/60">
-                Target Site ID: {destinationSiteId}
+                {language === 'hi' ? 'गंतव्य साइट आईडी:' : 'Target Site ID:'} {destinationSiteId}
               </p>
             </div>
 
@@ -620,7 +647,10 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-center space-x-2 animate-fadeIn">
               <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
               <span>
-                <strong>Invalid Selection:</strong> Starting location and destination must be different sites. Please choose a different destination or starting point.
+                <strong>{language === 'hi' ? 'अमान्य चयन:' : 'Invalid Selection:'}</strong>{' '}
+                {language === 'hi'
+                  ? 'प्रारंभिक स्थल और गंतव्य अलग-अलग होने चाहिए। कृपया भिन्न गंतव्य या प्रारंभिक बिंदु चुनें।'
+                  : 'Starting location and destination must be different sites. Please choose a different destination or starting point.'}
               </span>
             </div>
           )}
@@ -631,7 +661,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                 <Clock className="w-3.5 h-3.5 text-[#C85A32]" />
-                <span>Trip Duration</span>
+                <span>{language === 'hi' ? 'यात्रा की अवधि' : 'Trip Duration'}</span>
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {[1, 2, 3, 5].map((d) => (
@@ -645,7 +675,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                         : 'bg-[#F8F6F0] text-[#1A2621]/80 hover:bg-gray-200'
                     }`}
                   >
-                    {d} {d === 1 ? 'Day' : 'Days'}
+                    {d} {language === 'hi' ? 'दिन' : d === 1 ? 'Day' : 'Days'}
                   </button>
                 ))}
               </div>
@@ -656,7 +686,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                   <Calendar className="w-3.5 h-3.5 text-[#C85A32]" />
-                  <span>Start Date</span>
+                  <span>{language === 'hi' ? 'प्रारंभ तिथि' : 'Start Date'}</span>
                 </label>
                 <input
                   type="date"
@@ -669,16 +699,16 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                   <Clock className="w-3.5 h-3.5 text-[#C85A32]" />
-                  <span>Start Time</span>
+                  <span>{language === 'hi' ? 'प्रारंभ समय' : 'Start Time'}</span>
                 </label>
                 <select
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   className="w-full p-2.5 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs font-semibold text-[#1A2621] outline-none cursor-pointer"
                 >
-                  <option value="06:00 AM">06:00 AM (Early)</option>
-                  <option value="08:00 AM">08:00 AM (Morning)</option>
-                  <option value="10:00 AM">10:00 AM (Standard)</option>
+                  <option value="06:00 AM">{language === 'hi' ? '06:00 AM (प्रातःकाल)' : '06:00 AM (Early)'}</option>
+                  <option value="08:00 AM">{language === 'hi' ? '08:00 AM (सुबह)' : '08:00 AM (Morning)'}</option>
+                  <option value="10:00 AM">{language === 'hi' ? '10:00 AM (सामान्य)' : '10:00 AM (Standard)'}</option>
                 </select>
               </div>
             </div>
@@ -687,48 +717,56 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[#0D3B2E] flex items-center space-x-1">
                 <Users className="w-3.5 h-3.5 text-[#C85A32]" />
-                <span>Travel Party</span>
+                <span>{language === 'hi' ? 'यात्री समूह' : 'Travel Party'}</span>
               </label>
               <select
                 value={travelParty}
                 onChange={(e) => setTravelParty(e.target.value)}
                 className="w-full p-3 bg-[#F8F6F0] border border-[#0D3B2E]/15 rounded-xl text-xs font-semibold text-[#1A2621] outline-none cursor-pointer"
               >
-                <option value="Solo Traveler">Solo Traveler</option>
-                <option value="Couple">Couple / Duo</option>
-                <option value="Family / Friends">Family with Kids</option>
-                <option value="Heritage Enthusiasts Group">Heritage Enthusiasts Group</option>
-                <option value="Senior Citizens">Senior Citizens (Low-Pace)</option>
+                <option value="Solo Traveler">{language === 'hi' ? 'एकल यात्री (Solo Traveler)' : 'Solo Traveler'}</option>
+                <option value="Couple">{language === 'hi' ? 'युगल / साथी (Couple)' : 'Couple / Duo'}</option>
+                <option value="Family / Friends">{language === 'hi' ? 'परिवार व बच्चे (Family with Kids)' : 'Family with Kids'}</option>
+                <option value="Heritage Enthusiasts Group">{language === 'hi' ? 'धरोहर उत्साही समूह (Heritage Enthusiasts)' : 'Heritage Enthusiasts Group'}</option>
+                <option value="Senior Citizens">{language === 'hi' ? 'वरिष्ठ नागरिक (धीमी गति)' : 'Senior Citizens (Low-Pace)'}</option>
               </select>
             </div>
 
             {/* Travel Pace */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#0D3B2E]">Preferred Pace</label>
+              <label className="text-xs font-bold text-[#0D3B2E]">{language === 'hi' ? 'पसंदीदा गति' : 'Preferred Pace'}</label>
               <div className="grid grid-cols-3 gap-2">
-                {(['relaxed', 'moderate', 'fast'] as const).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setTravelPace(p)}
-                    className={`py-2 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer ${
-                      travelPace === p
-                        ? 'bg-[#0D3B2E] text-white shadow-xs'
-                        : 'bg-[#F8F6F0] text-[#1A2621]/80 hover:bg-gray-200'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                {(['relaxed', 'moderate', 'fast'] as const).map((p) => {
+                  const labelMap = {
+                    relaxed: language === 'hi' ? 'शांत / धीमी' : 'Relaxed',
+                    moderate: language === 'hi' ? 'मध्यम' : 'Moderate',
+                    fast: language === 'hi' ? 'तेज' : 'Fast'
+                  };
+
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setTravelPace(p)}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        travelPace === p
+                          ? 'bg-[#0D3B2E] text-white shadow-xs'
+                          : 'bg-[#F8F6F0] text-[#1A2621]/80 hover:bg-gray-200'
+                      }`}
+                    >
+                      {labelMap[p]}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Smart Optimization Toggles */}
             <div className="space-y-2.5 pt-1 md:col-span-2">
-              <label className="text-xs font-bold text-[#0D3B2E]">AI Optimization Rules</label>
+              <label className="text-xs font-bold text-[#0D3B2E]">{language === 'hi' ? 'एआई अनुकूलन नियम' : 'AI Optimization Rules'}</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-center justify-between p-3 bg-[#F8F6F0] rounded-xl text-xs">
-                  <span className="font-semibold text-gray-700">Avoid Peak Footfall Hours</span>
+                  <span className="font-semibold text-gray-700">{language === 'hi' ? 'पीक फुटफॉल घंटों से बचें' : 'Avoid Peak Footfall Hours'}</span>
                   <input
                     type="checkbox"
                     checked={avoidPeakCrowds}
@@ -738,7 +776,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-[#F8F6F0] rounded-xl text-xs">
-                  <span className="font-semibold text-gray-700">Recommend Eco-Alternative Gems</span>
+                  <span className="font-semibold text-gray-700">{language === 'hi' ? 'इको-वैकल्पिक स्थलों की सिफारिश करें' : 'Recommend Eco-Alternative Gems'}</span>
                   <input
                     type="checkbox"
                     checked={includeEcoGems}
@@ -753,7 +791,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
           {/* Interests & Themes Chips */}
           <div className="space-y-2 pt-2">
-            <label className="text-xs font-bold text-[#0D3B2E]">Select Cultural Interests & Highlights</label>
+            <label className="text-xs font-bold text-[#0D3B2E]">{language === 'hi' ? 'सांस्कृतिक रुचियां और मुख्य आकर्षण चुनें' : 'Select Cultural Interests & Highlights'}</label>
             <div className="flex flex-wrap gap-2">
               {interestOptions.map((interest) => {
                 const isSelected = selectedInterests.includes(interest);
@@ -769,7 +807,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                     }`}
                   >
                     {isSelected ? '✓ ' : '+ '}
-                    {interest}
+                    {getInterestLabel(interest)}
                   </button>
                 );
               })}
@@ -778,7 +816,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
           {backendError && (
             <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl px-3 py-2 text-xs">
-              Backend warning: {backendError}
+              {backendError}
             </div>
           )}
 
@@ -792,12 +830,12 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               {isGenerating ? (
                 <>
                   <RefreshCw className="w-5 h-5 animate-spin text-[#D4AF37]" />
-                  <span>Synthesizing Live Backend Predictions & Distances...</span>
+                  <span>{language === 'hi' ? 'लाइव बैकएंड पूर्वानुमान और दूरियों का संश्लेषण जारी...' : 'Synthesizing Live Backend Predictions & Distances...'}</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 text-[#D4AF37]" />
-                  <span>Generate My Custom AI Itinerary →</span>
+                  <span>{language === 'hi' ? 'मेरी कस्टम एआई यात्रा योजना तैयार करें →' : 'Generate My Custom AI Itinerary →'}</span>
                 </>
               )}
             </button>
@@ -823,10 +861,10 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
                   selectedCircuitIndex === idx ? 'bg-[#D4AF37] text-[#08281E]' : 'bg-[#0D3B2E]/10 text-[#0D3B2E]'
                 }`}>
-                  {circuit.durationDays} Days Circuit
+                  {circuit.durationDays} {language === 'hi' ? 'दिन का सर्किट' : 'Days Circuit'}
                 </span>
                 <span className="text-xs font-mono font-bold">
-                  {circuit.sustainabilityScore}/100 Eco Score
+                  {circuit.sustainabilityScore}/100 {language === 'hi' ? 'इको स्कोर' : 'Eco Score'}
                 </span>
               </div>
               <h3 className={`text-base font-bold font-serif-heritage mb-1 ${
@@ -835,7 +873,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 {circuit.title}
               </h3>
               <p className={`text-xs ${selectedCircuitIndex === idx ? 'text-white/70' : 'text-[#1A2621]/60'}`}>
-                {circuit.region} • {circuit.stops.length} Heritage Stops
+                {circuit.region} • {circuit.stops.length} {language === 'hi' ? 'धरोहर पड़ाव' : 'Heritage Stops'}
               </p>
             </div>
           ))}
@@ -855,7 +893,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
                 <div>
                   <span className="text-xs font-bold text-[#C85A32] uppercase tracking-wider">
-                    {activePlan.durationDays} {activePlan.durationDays === 1 ? 'Day' : 'Days'} • {activePlan.region}
+                    {activePlan.durationDays} {language === 'hi' ? 'दिन' : activePlan.durationDays === 1 ? 'Day' : 'Days'} • {activePlan.region}
                   </span>
                   <h2 className="text-2xl font-bold text-[#0D3B2E] font-serif-heritage mt-0.5">
                     {activePlan.title}
@@ -867,20 +905,20 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
                 <div className="flex items-center space-x-2 shrink-0">
                   <span className="px-3.5 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-full font-mono text-xs font-bold">
-                    🌿 Eco Score: {activePlan.sustainabilityScore > 0 ? `${activePlan.sustainabilityScore} / 100` : 'N/A'}
+                    🌿 {language === 'hi' ? 'इको स्कोर:' : 'Eco Score:'} {activePlan.sustainabilityScore > 0 ? `${activePlan.sustainabilityScore} / 100` : 'N/A'}
                   </span>
                 </div>
               </div>
 
-              {/* Start & Destination Summary Pill (Requirement 10) */}
+              {/* Start & Destination Summary Pill */}
               {startingSiteInfo && destinationSiteInfo && (
                 <div className="p-3.5 bg-[#F8F6F0] rounded-2xl border border-[#0D3B2E]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="flex items-center space-x-2.5">
                     <div className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-bold font-mono text-[10px]">
-                      START
+                      {language === 'hi' ? 'प्रारंभ' : 'START'}
                     </div>
                     <div>
-                      <span className="font-bold text-[#0D3B2E]">{startingSiteInfo.name}</span>
+                      <span className="font-bold text-[#0D3B2E]">{getSiteDisplayName(startingSiteInfo.site_id, startingSiteInfo.name)}</span>
                       <span className="text-gray-500 text-[11px] ml-1">({startingSiteInfo.city} · {startingSiteInfo.site_id})</span>
                     </div>
                   </div>
@@ -893,10 +931,10 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
 
                   <div className="flex items-center space-x-2.5">
                     <div className="px-2 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold font-mono text-[10px]">
-                      DESTINATION
+                      {language === 'hi' ? 'गंतव्य' : 'DESTINATION'}
                     </div>
                     <div>
-                      <span className="font-bold text-[#0D3B2E]">{destinationSiteInfo.name}</span>
+                      <span className="font-bold text-[#0D3B2E]">{getSiteDisplayName(destinationSiteInfo.site_id, destinationSiteInfo.name)}</span>
                       <span className="text-gray-500 text-[11px] ml-1">({destinationSiteInfo.city} · {destinationSiteInfo.site_id})</span>
                     </div>
                   </div>
@@ -909,7 +947,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 <div className="p-3 bg-[#F8F6F0] rounded-2xl border border-gray-100">
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center space-x-1">
                     <Tag className="w-3 h-3 text-[#0D3B2E]" />
-                    <span>TOTAL STOPS</span>
+                    <span>{language === 'hi' ? 'कुल पड़ाव' : 'TOTAL STOPS'}</span>
                   </div>
                   <div className="text-lg font-bold text-[#0D3B2E] font-mono mt-0.5">
                     {activePlan.stops.length}
@@ -919,7 +957,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 <div className="p-3 bg-[#F8F6F0] rounded-2xl border border-gray-100">
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center space-x-1">
                     <Clock className="w-3 h-3 text-[#0D3B2E]" />
-                    <span>TOTAL VISIT TIME</span>
+                    <span>{language === 'hi' ? 'कुल भ्रमण समय' : 'TOTAL VISIT TIME'}</span>
                   </div>
                   <div className="text-lg font-bold text-[#0D3B2E] font-mono mt-0.5">
                     {formatDurationText(calculatedVisitMins)}
@@ -929,7 +967,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 <div className="p-3 bg-[#F8F6F0] rounded-2xl border border-gray-100">
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center space-x-1">
                     <Car className="w-3 h-3 text-[#C85A32]" />
-                    <span>TRAVEL TIME</span>
+                    <span>{language === 'hi' ? 'यात्रा समय' : 'TRAVEL TIME'}</span>
                   </div>
                   <div className="text-lg font-bold text-[#0D3B2E] font-mono mt-0.5">
                     {calculatedTravelMins > 0 ? formatDurationText(calculatedTravelMins) : '0 min'}
@@ -939,7 +977,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                 <div className="p-3 bg-[#F8F6F0] rounded-2xl border border-gray-100">
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide flex items-center space-x-1">
                     <MapPin className="w-3 h-3 text-[#C85A32]" />
-                    <span>CIRCUIT DISTANCE</span>
+                    <span>{language === 'hi' ? 'सर्किट दूरी' : 'CIRCUIT DISTANCE'}</span>
                   </div>
                   <div className="text-lg font-bold text-[#0D3B2E] font-mono mt-0.5">
                     {activePlan.totalDistanceKm > 0 ? `${activePlan.totalDistanceKm} km` : 'N/A'}
@@ -952,26 +990,26 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-xs text-emerald-950 space-y-1.5">
                 <div className="flex items-center space-x-2 font-bold text-emerald-900">
                   <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                  <span>AI Optimization Note</span>
+                  <span>{language === 'hi' ? 'एआई अनुकूलन नोट' : 'AI Optimization Note'}</span>
                 </div>
                 <p className="leading-relaxed font-medium">
-                  "{optimizationReason || 'Route sequenced using live ML crowd predictions and heritage carrying capacities.'}"
+                  "{optimizationReason || (language === 'hi' ? 'लाइव एमएल भीड़ पूर्वानुमान और धरोहर वहन क्षमता के आधार पर मार्ग अनुक्रमित किया गया।' : 'Route sequenced using live ML crowd predictions and heritage carrying capacities.')}"
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {activePlan.crowdAvoidancePercent > 0 ? (
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold text-[10px]">
-                      ✓ {activePlan.crowdAvoidancePercent}% Crowd Wait Reduction
+                      ✓ {activePlan.crowdAvoidancePercent}% {language === 'hi' ? 'भीड़ प्रतीक्षा में कमी' : 'Crowd Wait Reduction'}
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold text-[10px]">
-                      ✓ Optimized using live crowd models
+                      ✓ {language === 'hi' ? 'लाइव क्राउड मॉडल से अनुकूलित' : 'Optimized using live crowd models'}
                     </span>
                   )}
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold text-[10px]">
-                    ✓ Carrying Capacity Protected
+                    ✓ {language === 'hi' ? 'वहन क्षमता संरक्षित' : 'Carrying Capacity Protected'}
                   </span>
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold text-[10px]">
-                    ✓ Real-time Weather Adjusted
+                    ✓ {language === 'hi' ? 'मौसम अनुसार समायोजित' : 'Real-time Weather Adjusted'}
                   </span>
                 </div>
               </div>
@@ -984,18 +1022,18 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                     className="px-3 py-1.5 bg-[#F8F6F0] hover:bg-gray-200 text-[#0D3B2E] font-bold rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>Print / Save PDF</span>
+                    <span>{language === 'hi' ? 'प्रिंट / पीडीएफ सहेजें' : 'Print / Save PDF'}</span>
                   </button>
 
                   <button
                     onClick={() => {
                       navigator.clipboard?.writeText(window.location.href);
-                      alert('Itinerary route link copied to clipboard!');
+                      alert(language === 'hi' ? 'यात्रा कार्यक्रम लिंक क्लिपबोर्ड पर कॉपी हो गया!' : 'Itinerary route link copied to clipboard!');
                     }}
                     className="px-3 py-1.5 bg-[#F8F6F0] hover:bg-gray-200 text-[#0D3B2E] font-bold rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    <span>Share Route</span>
+                    <span>{language === 'hi' ? 'रूट साझा करें' : 'Share Route'}</span>
                   </button>
                 </div>
 
@@ -1005,7 +1043,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                     className="px-3 py-1.5 bg-[#0D3B2E] text-white font-bold rounded-xl flex items-center space-x-1.5 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Modify Parameters</span>
+                    <span>{language === 'hi' ? 'पैरामीटर बदलें' : 'Modify Parameters'}</span>
                   </button>
                 )}
               </div>
@@ -1024,14 +1062,14 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                     {/* Day Section Header */}
                     <div className="flex items-center space-x-3 pb-2 border-b border-[#0D3B2E]/15">
                       <div className="px-3 py-1 bg-[#0D3B2E] text-white font-bold text-xs rounded-xl font-mono shadow-xs">
-                        DAY {dayNum}
+                        {language === 'hi' ? `दिन ${dayNum}` : `DAY ${dayNum}`}
                       </div>
                       <div className="text-sm font-bold text-[#0D3B2E] font-serif-heritage flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-[#C85A32]" />
                         <span>{dayDateStr}</span>
                       </div>
                       <span className="text-xs text-gray-400 font-mono">
-                        ({dayStops.length} {dayStops.length === 1 ? 'stop' : 'stops'})
+                        ({dayStops.length} {language === 'hi' ? 'पड़ाव' : dayStops.length === 1 ? 'stop' : 'stops'})
                       </span>
                     </div>
 
@@ -1040,8 +1078,10 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                       {dayStops.map((stop: any, sIdx: number) => {
                         const isAlternative = stop.isAlternativeRecommended;
                         const departureTime = stop.departureTime || addMinutesToTime(stop.timeSlot, parseInt(stop.recommendedDuration) || 60);
-                        const travelTimeText = stop.travelTimeFromPrev || 'Start Point';
+                        const travelTimeText = stop.travelTimeFromPrev || (language === 'hi' ? 'प्रारंभिक बिंदु' : 'Start Point');
                         const distKm = stop.distanceFromPrevKm != null ? stop.distanceFromPrevKm : 0;
+                        const stopSiteId = stop.id || stop.site_id;
+                        const displayName = getSiteDisplayName(stopSiteId, stop.monumentName);
 
                         return (
                           <div key={stop.id || `stop-node-${sIdx}`} className="space-y-3">
@@ -1051,7 +1091,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                               <div className="relative pl-16 py-1 flex items-center space-x-2 text-[11px] font-mono font-bold text-[#0D3B2E]/80">
                                 <div className="absolute left-10 w-0.5 h-full bg-[#0D3B2E]/20 -translate-x-1/2"></div>
                                 <div className="px-2.5 py-1 bg-[#F8F6F0] border border-[#0D3B2E]/20 rounded-lg flex items-center space-x-1.5 shadow-2xs z-10">
-                                  <span>{travelTimeText} travel</span>
+                                  <span>{travelTimeText} {language === 'hi' ? 'यात्रा' : 'travel'}</span>
                                   <span>·</span>
                                   <span>{distKm > 0 ? `${distKm} km` : '0.0 km'}</span>
                                 </div>
@@ -1059,14 +1099,14 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                             ) : sIdx === 0 && dayNum === 1 ? (
                               <div className="relative pl-16 py-0.5 text-[11px] font-mono font-bold text-[#0D3B2E]/70 flex items-center space-x-1.5">
                                 <div className="px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-md text-emerald-900">
-                                  Starting Point: {startingSiteInfo?.name || 'Selected Starting Location'} ({startingSiteId})
+                                  {language === 'hi' ? 'प्रारंभिक बिंदु:' : 'Starting Point:'} {startingSiteInfo ? getSiteDisplayName(startingSiteInfo.site_id, startingSiteInfo.name) : 'Selected Starting Location'} ({startingSiteId})
                                 </div>
                               </div>
                             ) : null}
 
                             <div className="relative pl-16 group animate-fadeIn">
                               
-                              {/* Circle Node on Timeline (Positioned LEFT of the vertical line) */}
+                              {/* Circle Node on Timeline */}
                               <div className={`absolute left-3.5 top-5 w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-[10px] -translate-x-1/2 z-10 ${
                                 isAlternative
                                   ? 'bg-amber-400 border-amber-600 text-amber-950'
@@ -1090,15 +1130,15 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                                     <div className="flex flex-wrap items-center gap-2">
                                       <span className="px-2.5 py-1 bg-[#0D3B2E]/10 text-[#0D3B2E] rounded-xl text-xs font-bold font-mono flex items-center space-x-1">
                                         <Clock className="w-3 h-3 text-[#C85A32]" />
-                                        <span>Arrival: {stop.timeSlot}</span>
+                                        <span>{language === 'hi' ? 'आगमन:' : 'Arrival:'} {stop.timeSlot}</span>
                                       </span>
 
                                       <span className="px-2.5 py-1 bg-[#0D3B2E]/5 text-[#0D3B2E]/80 rounded-xl text-xs font-bold font-mono">
-                                        Departure: {departureTime}
+                                        {language === 'hi' ? 'प्रस्थान:' : 'Departure:'} {departureTime}
                                       </span>
 
                                       <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold font-mono">
-                                        ⏱️ {stop.recommendedDuration} visit
+                                        ⏱️ {stop.recommendedDuration} {language === 'hi' ? 'भ्रमण' : 'visit'}
                                       </span>
                                     </div>
 
@@ -1108,7 +1148,7 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                                         onClick={() => onSelectMonumentName?.(stop.monumentName)}
                                         className="text-xl font-bold text-[#0D3B2E] font-serif-heritage hover:text-[#C85A32] transition-colors cursor-pointer flex items-center space-x-2"
                                       >
-                                        <span>{stop.monumentName}</span>
+                                        <span>{displayName}</span>
                                       </h4>
 
                                       <p className="text-xs text-[#1A2621]/70 font-medium">
@@ -1126,7 +1166,9 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                                     {/* Rich Metadata Badges: Crowd Level, Pressure, Best Window */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                                       <div className="p-2.5 bg-[#F8F6F0] rounded-xl border border-gray-100 space-y-1">
-                                        <div className="text-[10px] font-bold text-gray-500 uppercase">Predicted Crowd & Pressure</div>
+                                        <div className="text-[10px] font-bold text-gray-500 uppercase">
+                                          {language === 'hi' ? 'अनुमानित भीड़ व दबाव' : 'Predicted Crowd & Pressure'}
+                                        </div>
                                         <div className="flex items-center space-x-2">
                                           <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                                             stop.expectedCrowd === 'Low'
@@ -1135,16 +1177,20 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                                               ? 'bg-rose-100 text-rose-800'
                                               : 'bg-amber-100 text-amber-800'
                                           }`}>
-                                            {stop.expectedCrowd || 'Moderate'} Crowd
+                                            {language === 'hi'
+                                              ? (stop.expectedCrowd === 'Low' ? 'कम भीड़' : stop.expectedCrowd === 'High' ? 'अत्यधिक भीड़' : 'मध्यम भीड़')
+                                              : `${stop.expectedCrowd || 'Moderate'} Crowd`}
                                           </span>
                                           <span className="text-xs font-mono font-bold text-[#0D3B2E]">
-                                            Pressure: {stop.pressureScore || 35} / 100
+                                            {language === 'hi' ? 'दबाव:' : 'Pressure:'} {stop.pressureScore || 35} / 100
                                           </span>
                                         </div>
                                       </div>
 
                                       <div className="p-2.5 bg-[#F8F6F0] rounded-xl border border-gray-100 space-y-1">
-                                        <div className="text-[10px] font-bold text-gray-500 uppercase">Recommended Visiting Window</div>
+                                        <div className="text-[10px] font-bold text-gray-500 uppercase">
+                                          {language === 'hi' ? 'अनुशंसित भ्रमण समय' : 'Recommended Visiting Window'}
+                                        </div>
                                         <div className="text-xs font-mono font-bold text-[#0D3B2E]">
                                           {stop.bestVisitingWindow || '08:00 AM – 10:30 AM'}
                                         </div>
@@ -1155,14 +1201,14 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
                                     {stop.whyThisStop && (
                                       <div className="text-[11px] text-[#0D3B2E]/90 bg-emerald-50/60 p-2 rounded-xl border border-emerald-100 flex items-center space-x-1.5">
                                         <Info className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                                        <span><strong>Why this stop:</strong> {stop.whyThisStop}</span>
+                                        <span><strong>{language === 'hi' ? 'यह पड़ाव क्यों:' : 'Why this stop:'}</strong> {stop.whyThisStop}</span>
                                       </div>
                                     )}
 
                                     {/* Tips */}
                                     {stop.tips && (
                                       <p className="text-xs text-[#1A2621]/80 bg-[#F8F6F0] p-2.5 rounded-xl border border-gray-100">
-                                        💡 <span className="font-semibold">AI Tip:</span> {stop.tips}
+                                        💡 <span className="font-semibold">{language === 'hi' ? 'एआई सुझाव:' : 'AI Tip:'}</span> {stop.tips}
                                       </p>
                                     )}
 
@@ -1213,30 +1259,34 @@ export const ItineraryPlanner: React.FC<ItineraryPlannerProps> = ({ language, on
               <div className="flex items-center space-x-2.5">
                 <ShieldCheck className="w-6 h-6 text-[#D4AF37]" />
                 <h3 className="text-base font-bold font-serif-heritage">
-                  Heritage Protection Pledge
+                  {language === 'hi' ? 'धरोहर संरक्षण संकल्प' : 'Heritage Protection Pledge'}
                 </h3>
               </div>
               <p className="text-xs text-white/80 leading-relaxed">
-                By following this AI-sequenced circuit, you directly contribute to minimizing footfall pressure spikes, preserving historic stonework, and supporting local artisan communities.
+                {language === 'hi'
+                  ? 'इस एआई-क्रमबद्ध सर्किट का पालन करके, आप फुटफॉल दबाव को कम करने, ऐतिहासिक पत्थरों के संरक्षण और स्थानीय कारीगर समुदायों का समर्थन करने में सीधे योगदान देते हैं।'
+                  : 'By following this AI-sequenced circuit, you directly contribute to minimizing footfall pressure spikes, preserving historic stonework, and supporting local artisan communities.'}
               </p>
               <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-white/70">
-                <span>Certified Sustainable</span>
-                <span className="text-[#D4AF37] font-bold">ASI Aligned</span>
+                <span>{language === 'hi' ? 'प्रमाणित संधारणीय' : 'Certified Sustainable'}</span>
+                <span className="text-[#D4AF37] font-bold">{language === 'hi' ? 'एएसआई के अनुरूप' : 'ASI Aligned'}</span>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-[#0D3B2E]/15 shadow-sm space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#0D3B2E]">
-                Need Help on the Ground?
+                {language === 'hi' ? 'सहायता की आवश्यकता है?' : 'Need Help on the Ground?'}
               </h4>
               <p className="text-xs text-[#1A2621]/70 leading-relaxed">
-                Access real-time audio guides, multilingual epigraph translations, and emergency assistance directly from any monument profile page.
+                {language === 'hi'
+                  ? 'किसी भी स्मारक प्रोफाइल पेज से सीधे वास्तविक समय ऑडियो गाइड, बहुभाषी शिलालेख अनुवाद और आपातकालीन सहायता प्राप्त करें।'
+                  : 'Access real-time audio guides, multilingual epigraph translations, and emergency assistance directly from any monument profile page.'}
               </p>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="w-full py-2.5 bg-[#F8F6F0] hover:bg-gray-200 text-[#0D3B2E] font-bold rounded-xl text-xs transition-colors cursor-pointer"
               >
-                Back to Top / Modify Search
+                {language === 'hi' ? 'शीर्ष पर जाएं / खोज संशोधित करें' : 'Back to Top / Modify Search'}
               </button>
             </div>
 

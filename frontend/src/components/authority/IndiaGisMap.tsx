@@ -16,8 +16,10 @@ import {
   calculateConditionStatus,
   getCurrentHourPredictedVisitors
 } from '../../api/authority';
+import { SITE_METADATA } from '../../data/siteMapper';
 
 interface IndiaGisMapProps {
+  language?: 'en' | 'hi';
   sites: BackendSite[];
   pressureMap: Record<string, PressureResponse>;
   crowdMap: Record<string, CrowdPredictionResponse>;
@@ -73,6 +75,7 @@ const CITY_COLORS: Record<string, { bg: string; text: string; border: string; gl
 };
 
 export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
+  language = 'en',
   sites,
   pressureMap,
   crowdMap,
@@ -84,6 +87,26 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
 }) => {
   // State for Two-Level Navigation: Level 1 ('ALL') vs Level 2 ('DELHI', 'JAIPUR', 'MUMBAI', 'PRAYAGRAJ')
   const [activeCity, setActiveCity] = useState<string>('ALL');
+
+  const getSiteDisplayName = (siteId: string, defaultName: string) => {
+    if (language === 'hi' && SITE_METADATA[siteId]?.hindiName) {
+      return SITE_METADATA[siteId].hindiName;
+    }
+    return defaultName;
+  };
+
+  const getCityDisplayName = (cityKey: string) => {
+    if (language === 'hi') {
+      switch (cityKey) {
+        case 'DELHI': return 'दिल्ली';
+        case 'JAIPUR': return 'जयपुर';
+        case 'MUMBAI': return 'मुंबई';
+        case 'PRAYAGRAJ': return 'प्रयागराज';
+        case 'ALL': return 'भारत मानचित्र';
+      }
+    }
+    return cityKey === 'ALL' ? 'India Map' : cityKey;
+  };
 
   // Group backend sites by city
   const cityGroups = useMemo(() => {
@@ -227,7 +250,7 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
               className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs flex items-center space-x-1.5 shadow-md border border-slate-700 transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-emerald-400" />
-              <span>Back to India Map</span>
+              <span>{language === 'hi' ? 'राष्ट्रीय मानचित्र पर वापस' : 'Back to India Map'}</span>
             </button>
           )}
 
@@ -235,14 +258,18 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
             <div className="flex items-center space-x-2">
               <Compass className="w-4 h-4 text-emerald-400" />
               <h2 className="text-sm font-bold text-white tracking-wider uppercase font-mono">
-                {isLevel1NationalMap ? 'National Heritage GIS Monitoring Map' : `${activeCity} HERITAGE MONITORING`}
+                {isLevel1NationalMap
+                  ? (language === 'hi' ? 'राष्ट्रीय धरोहर जीआईएस निगरानी मानचित्र' : 'National Heritage GIS Monitoring Map')
+                  : (language === 'hi' ? `${getCityDisplayName(activeCity)} धरोहर निगरानी` : `${activeCity} HERITAGE MONITORING`)}
               </h2>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isLevel1NationalMap ? 'bg-[#0F3D3E] text-emerald-300 border-emerald-500/30' : activePalette.badge}`}>
-                {isLevel1NationalMap ? 'Live GIS Network' : '5 Monitored Sites'}
+                {isLevel1NationalMap ? (language === 'hi' ? 'लाइव जीआईएस नेटवर्क' : 'Live GIS Network') : (language === 'hi' ? '5 मॉनिटर किए गए स्थल' : '5 Monitored Sites')}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              {isLevel1NationalMap ? 'Select a city node to zoom into its heritage monuments' : `Dedicated GIS view for ${activeCity} monuments`}
+              {isLevel1NationalMap
+                ? (language === 'hi' ? 'स्मारकों को देखने के लिए किसी शहर नोड का चयन करें' : 'Select a city node to zoom into its heritage monuments')
+                : (language === 'hi' ? `${getCityDisplayName(activeCity)} के स्मारकों का समर्पित जीआईएस दृश्य` : `Dedicated GIS view for ${activeCity} monuments`)}
             </p>
           </div>
         </div>
@@ -266,7 +293,7 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {isAll ? 'India Map' : city}
+                {getCityDisplayName(city)}
               </button>
             );
           })}
@@ -278,25 +305,25 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
         {/* MAP LEGEND OVERLAY (Bottom-Left) */}
         <div className="absolute bottom-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md p-3 rounded-xl border border-slate-800 shadow-xl space-y-1.5 text-[11px] font-mono text-slate-300">
           <div className="flex items-center justify-between font-bold text-white border-b border-slate-800 pb-1 mb-1">
-            <span>HERITAGE SITE STATUS</span>
-            <span className="text-[10px] text-slate-400">{legendCounts.total} Sites</span>
+            <span>{language === 'hi' ? 'धरोहर स्थल स्थिति' : 'HERITAGE SITE STATUS'}</span>
+            <span className="text-[10px] text-slate-400">{legendCounts.total} {language === 'hi' ? 'स्थल' : 'Sites'}</span>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             <span className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <span>Safe ({legendCounts.safe})</span>
+              <span>{language === 'hi' ? 'सुरक्षित' : 'Safe'} ({legendCounts.safe})</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span>Moderate ({legendCounts.moderate})</span>
+              <span>{language === 'hi' ? 'मध्यम' : 'Moderate'} ({legendCounts.moderate})</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[#E28743] shrink-0" />
-              <span>High ({legendCounts.high})</span>
+              <span>{language === 'hi' ? 'उच्च' : 'High'} ({legendCounts.high})</span>
             </span>
             <span className="flex items-center space-x-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shrink-0" />
-              <span>Critical ({legendCounts.critical})</span>
+              <span>{language === 'hi' ? 'गंभीर' : 'Critical'} ({legendCounts.critical})</span>
             </span>
           </div>
         </div>
@@ -306,7 +333,9 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs z-30">
             <div className="text-center text-slate-300 space-y-2">
               <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-mono">Loading heritage sites & GIS telemetry...</p>
+              <p className="text-xs font-mono">
+                {language === 'hi' ? 'धरोहर स्थल और जीआईएस टेलीमेट्री लोड हो रही है...' : 'Loading heritage sites & GIS telemetry...'}
+              </p>
             </div>
           </div>
         ) : error ? (
@@ -314,25 +343,30 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/85 backdrop-blur-xs z-30 p-6">
             <div className="text-center text-amber-200 max-w-sm space-y-3 p-6 bg-slate-950 rounded-2xl border border-amber-500/30">
               <AlertTriangle className="w-10 h-10 mx-auto text-amber-500" />
-              <p className="text-sm font-bold">Unable to load heritage monitoring data</p>
-              <p className="text-xs text-slate-400">Please check backend API connection and try again.</p>
+              <p className="text-sm font-bold">
+                {language === 'hi' ? 'धरोहर निगरानी डेटा लोड करने में असमर्थ' : 'Unable to load heritage monitoring data'}
+              </p>
+              <p className="text-xs text-slate-400">
+                {language === 'hi' ? 'कृपया बैकएंड एपीआई कनेक्शन जांचें और पुनः प्रयास करें।' : 'Please check backend API connection and try again.'}
+              </p>
               {onRetry && (
                 <button
                   onClick={onRetry}
                   className="px-4 py-2 bg-amber-600 text-white font-bold text-xs rounded-xl hover:bg-amber-700 transition-all cursor-pointer"
                 >
-                  Retry Loading
+                  {language === 'hi' ? 'पुनः प्रयास करें' : 'Retry Loading'}
                 </button>
               )}
             </div>
           </div>
         ) : isLevel1NationalMap ? (
           /* =========================================================
-             LEVEL 1: INDIA MAP → SHOW ONLY 4 CITY NODE MARKERS (Req 1 & 2)
+             LEVEL 1: INDIA MAP → SHOW ONLY 4 CITY NODE MARKERS
              ========================================================= */
           Object.entries(cityGroups).map(([cityKey, citySites]) => {
             const node = NATIONAL_CITY_NODES[cityKey] || NATIONAL_CITY_NODES.DELHI;
             const palette = CITY_COLORS[cityKey] || CITY_COLORS.DELHI;
+            const cityLabel = getCityDisplayName(cityKey);
 
             return (
               <button
@@ -347,13 +381,15 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
                   >
                     <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
                     <div className="text-left leading-none">
-                      <p className="font-extrabold text-sm tracking-wider">{cityKey}</p>
-                      <p className="text-[10px] text-white/80 mt-0.5">{citySites.length} Heritage Sites</p>
+                      <p className="font-extrabold text-sm tracking-wider">{cityLabel}</p>
+                      <p className="text-[10px] text-white/80 mt-0.5">
+                        {citySites.length} {language === 'hi' ? 'धरोहर स्थल' : 'Heritage Sites'}
+                      </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
                   </div>
                   <span className={`mt-1.5 text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded border shadow-lg ${palette.badge}`}>
-                    Click to Open {cityKey} Map
+                    {language === 'hi' ? `${cityLabel} मानचित्र खोलें` : `Click to Open ${cityKey} Map`}
                   </span>
                 </div>
               </button>
@@ -361,17 +397,18 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
           })
         ) : (
           /* =========================================================
-             LEVEL 2: CITY MAP VIEW → SHOW ONLY THAT CITY'S 5 MONUMENTS (Req 5 & 6)
-             Zero Overlapping Markers & Labels
+             LEVEL 2: CITY MAP VIEW → SHOW ONLY THAT CITY'S 5 MONUMENTS
              ========================================================= */
           <>
             {/* Center City Emblem */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-10 opacity-70">
               <Building2 className={`w-12 h-12 mx-auto mb-1 ${activePalette.text}`} />
               <p className="font-mono font-extrabold text-sm text-white tracking-widest uppercase">
-                {activeCity} GIS CENTER
+                {getCityDisplayName(activeCity)} {language === 'hi' ? 'जीआईएस केंद्र' : 'GIS CENTER'}
               </p>
-              <p className="text-[10px] text-slate-400 font-mono">5 Monitored Monuments</p>
+              <p className="text-[10px] text-slate-400 font-mono">
+                {language === 'hi' ? '5 मॉनिटर किए गए स्मारक' : '5 Monitored Monuments'}
+              </p>
             </div>
 
             {/* Render the 5 Monument Pins for this City */}
@@ -382,6 +419,7 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
               const crowd = crowdMap[site.site_id] || null;
               const condition = calculateConditionStatus(pressure);
               const liveVisitors = getCurrentHourPredictedVisitors(crowd);
+              const displayName = getSiteDisplayName(site.site_id, site.name);
 
               // Secondary Risk Indicator Dot
               let riskDotColor = 'bg-emerald-400';
@@ -403,7 +441,7 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
                   }`}
                 >
                   <div className="relative group flex items-center">
-                    {/* Monument Name Tag Pin (Req 9) */}
+                    {/* Monument Name Tag Pin */}
                     <div
                       className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center space-x-2 shadow-2xl border-2 border-white/40 backdrop-blur-md transition-all ${activePalette.bg} text-white ${activePalette.glow} ${
                         isSelected ? 'ring-4 ring-white shadow-2xl scale-105' : ''
@@ -411,28 +449,28 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
                     >
                       <span className={`w-2.5 h-2.5 rounded-full ${riskDotColor} shrink-0`} />
                       <span className="truncate max-w-[150px] font-sans text-xs font-bold">
-                        {site.name}
+                        {displayName}
                       </span>
                     </div>
 
-                    {/* HOVER TOOLTIP (Req 9 & 10) */}
+                    {/* HOVER TOOLTIP */}
                     <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2.5 hidden group-hover:block z-40 bg-slate-900 text-white text-[11px] p-3 rounded-xl border border-slate-700 shadow-2xl whitespace-nowrap">
-                      <p className="font-bold text-xs">{site.name}</p>
+                      <p className="font-bold text-xs">{displayName}</p>
                       <p className="text-slate-400 text-[10px]">{site.city}, {site.state}</p>
                       <p className="text-slate-300 mt-1">
-                        Heritage Pressure:{' '}
+                        {language === 'hi' ? 'धरोहर दबाव:' : 'Heritage Pressure:'}{' '}
                         <span className="font-bold font-mono text-red-400">
                           {pressure ? pressure.pressure_score.toFixed(1) : 'N/A'}
                         </span>
                       </p>
                       <p className="text-slate-300 font-mono text-[10px]">
-                        Live Visitors:{' '}
+                        {language === 'hi' ? 'लाइव पर्यटक:' : 'Live Visitors:'}{' '}
                         <span className="font-bold text-amber-400">
                           {liveVisitors.toLocaleString()}
                         </span>
                       </p>
                       <p className="text-slate-400 text-[10px]">
-                        Risk: <span className="font-bold text-emerald-400">{condition}</span>
+                        {language === 'hi' ? 'जोखिम:' : 'Risk:'} <span className="font-bold text-emerald-400">{condition}</span>
                       </p>
                     </div>
                   </div>
@@ -447,10 +485,10 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
       <div className="relative z-20 px-4 py-2 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
         <span>
           {isLevel1NationalMap
-            ? 'Level 1: National India Map (4 City Nodes)'
-            : `Level 2: ${activeCity} Heritage Map (5 Monitored Monuments)`}
+            ? (language === 'hi' ? 'स्तर 1: राष्ट्रीय भारत मानचित्र (4 शहर नोड्स)' : 'Level 1: National India Map (4 City Nodes)')
+            : (language === 'hi' ? `स्तर 2: ${getCityDisplayName(activeCity)} धरोहर मानचित्र (5 मॉनिटर किए गए स्मारक)` : `Level 2: ${activeCity} Heritage Map (5 Monitored Monuments)`)}
         </span>
-        <span className="text-emerald-400 font-bold">100% Backend Connected</span>
+        <span className="text-emerald-400 font-bold">{language === 'hi' ? '100% बैकएंड कनेक्टेड' : '100% Backend Connected'}</span>
       </div>
     </div>
   );

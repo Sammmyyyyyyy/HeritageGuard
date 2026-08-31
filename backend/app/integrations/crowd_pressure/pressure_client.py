@@ -32,23 +32,32 @@ class PressureClient:
             pass
 
         # Fallback to HTTP microservice request
-        try:
-            async with httpx.AsyncClient(timeout=2.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/pressure/calculate",
-                    json={
-                        "site_id": site_id,
-                        "predicted_visitors": predicted_visitors,
-                        "deterioration_score": observed_deterioration_override,
-                        "damage_score": custom_damage_score
-                    }
-                )
-                if response.status_code == 200:
-                    return response.json()
-                elif response.status_code == 400:
-                    detail = response.json().get("detail", "Validation error")
-                    raise ValueError(detail)
-        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RequestError):
-            pass
+        candidate_urls = [
+            f"{str(self.base_url).rstrip('/')}/pressure/calculate",
+            "https://heritageguard-4.onrender.com/pressure/calculate",
+            "http://127.0.0.1:8003/pressure/calculate",
+            "http://localhost:8003/pressure/calculate",
+        ]
+
+        payload = {
+            "site_id": site_id,
+            "predicted_visitors": predicted_visitors,
+            "deterioration_score": observed_deterioration_override,
+            "damage_score": custom_damage_score
+        }
+
+        for target_url in candidate_urls:
+            try:
+                async with httpx.AsyncClient(timeout=4.0) as client:
+                    response = await client.post(target_url, json=payload)
+                    if response.status_code == 200:
+                        return response.json()
+                    elif response.status_code == 400:
+                        detail = response.json().get("detail", "Validation error")
+                        raise ValueError(detail)
+            except ValueError:
+                raise
+            except Exception:
+                continue
 
         raise AIModelNotReady("Heritage pressure calculation failed")

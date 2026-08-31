@@ -29,6 +29,7 @@ import { CrowdPredictionResponse } from '../../api/crowd';
 import { ConditionMatrix } from './ConditionMatrix';
 import { IndiaGisMap } from './IndiaGisMap';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
+import { SITE_METADATA } from '../../data/siteMapper';
 
 interface AuthorityAppProps {
   language: 'en' | 'hi';
@@ -268,14 +269,33 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
     return Math.ceil(maxVal * 1.1);
   }, [chartData]);
 
+  const getSiteDisplayName = (siteId: string, defaultName: string) => {
+    if (language === 'hi' && SITE_METADATA[siteId]?.hindiName) {
+      return SITE_METADATA[siteId].hindiName;
+    }
+    return defaultName;
+  };
+
   // Peak Window Advisory text calculated dynamically from graph data
   const peakAdvisory = useMemo(() => {
-    if (chartData.length === 0) return 'Loading surge advisories...';
+    if (chartData.length === 0) {
+      return language === 'hi' ? 'दबाव परामर्श लोड हो रहा है...' : 'Loading surge advisories...';
+    }
 
     let maxItem = chartData[0];
     chartData.forEach((item) => {
       if (item.value > maxItem.value) maxItem = item;
     });
+
+    if (language === 'hi') {
+      if (timeframe === 'day') {
+        return `पीक विंडो: 11:00 – 14:00 | ${maxItem.label} के आसपास उच्चतम दैनिक पर्यटक घनत्व (${maxItem.value.toLocaleString()} पर्यटक) दर्ज। अनुशंसित कार्रवाई: आने वाले पर्यटकों का प्रवाह डायवर्ट करें / प्रवेश द्वार नियंत्रण सक्रिय करें।`;
+      } else if (timeframe === 'week') {
+        return `पीक विंडो: शनिवार – रविवार | ${maxItem.fullLabel} पर सर्वाधिक साप्ताहिक दबाव (${maxItem.value.toLocaleString()} पर्यटक)। अनुशंसित कार्रवाई: गेट निगरानी बढ़ाएं और फील्ड संरक्षण टीम प्रेषित करें।`;
+      } else {
+        return `पीक विंडो: ${maxItem.fullLabel} | ${maxItem.fullLabel} के दौरान उच्चतम मासिक वृद्धि (${maxItem.value.toLocaleString()} पर्यटक)। अनुशंसित कार्रवाई: प्रवेश कोटा सीमाएं और क्षेत्रीय इको-डायवर्जन लागू करें।`;
+      }
+    }
 
     if (timeframe === 'day') {
       return `PEAK WINDOW: 11:00 – 14:00 | Highest daily concentration detected around ${maxItem.label} (${maxItem.value.toLocaleString()} visitors). Recommended Action: Divert incoming visitor flow / activate entry gate controls.`;
@@ -284,7 +304,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
     } else {
       return `PEAK WINDOW: ${maxItem.fullLabel} | Highest monthly surge detected during ${maxItem.fullLabel} (${maxItem.value.toLocaleString()} visitors). Recommended Action: Implement entry quota caps and regional eco-diversion.`;
     }
-  }, [chartData, timeframe]);
+  }, [chartData, timeframe, language]);
 
   return (
     <div className="w-full bg-[#F4F6F9] text-[#1A202C] min-h-[calc(100vh-72px)]">
@@ -298,31 +318,41 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               <div>
                 <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1A365D] text-[10px] font-bold tracking-wider uppercase mb-1 border border-blue-200">
                   <Activity className="w-3 h-3 text-[#E28743]" />
-                  <span>ASI EXECUTIVE CONTROL HUB</span>
+                  <span>{language === 'hi' ? 'एएसआई कार्यकारी नियंत्रण केंद्र' : 'ASI EXECUTIVE CONTROL HUB'}</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
-                  Heritage Control Center
+                  {language === 'hi' ? 'धरोहर नियंत्रण केंद्र' : 'Heritage Control Center'}
                 </h1>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Real-time backend telemetry across 20 registered monuments, visitor density surge controls, and automated strain advisories.
+                  {language === 'hi'
+                    ? '20 पंजीकृत स्मारकों पर वास्तविक समय बैकएंड टेलीमेट्री, पर्यटक घनत्व नियंत्रण और स्वचालित तनाव परामर्श।'
+                    : 'Real-time backend telemetry across 20 registered monuments, visitor density surge controls, and automated strain advisories.'}
                 </p>
               </div>
 
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
-                  {(['day', 'week', 'month'] as const).map((tf) => (
-                    <button
-                      key={tf}
-                      onClick={() => setTimeframe(tf)}
-                      className={`px-3 py-1 text-xs font-bold rounded-lg capitalize transition-all cursor-pointer ${
-                        timeframe === tf
-                          ? 'bg-[#0F3D3E] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-black'
-                      }`}
-                    >
-                      {tf}
-                    </button>
-                  ))}
+                  {(['day', 'week', 'month'] as const).map((tf) => {
+                    const labelMap = {
+                      day: language === 'hi' ? 'दैनिक' : 'day',
+                      week: language === 'hi' ? 'साप्ताहिक' : 'week',
+                      month: language === 'hi' ? 'मासिक' : 'month'
+                    };
+
+                    return (
+                      <button
+                        key={tf}
+                        onClick={() => setTimeframe(tf)}
+                        className={`px-3 py-1 text-xs font-bold rounded-lg capitalize transition-all cursor-pointer ${
+                          timeframe === tf
+                            ? 'bg-[#0F3D3E] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-black'
+                        }`}
+                      >
+                        {labelMap[tf]}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
@@ -330,7 +360,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                   className="px-4 py-2 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white text-xs font-bold flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
                 >
                   <TrendingUp className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>Risk Analytics</span>
+                  <span>{language === 'hi' ? 'जोखिम विश्लेषण' : 'Risk Analytics'}</span>
                 </button>
               </div>
             </div>
@@ -341,10 +371,10 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Total Monitored Sites
+                    {language === 'hi' ? 'कुल मॉनिटर किए गए स्थल' : 'Total Monitored Sites'}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                    20 Sites Active
+                    {language === 'hi' ? '20 स्थल सक्रिय' : '20 Sites Active'}
                   </span>
                 </div>
                 <div className="my-3">
@@ -355,11 +385,13 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       {sites.length}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 mt-0.5">Across 4 Cultural Cities</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {language === 'hi' ? '4 सांस्कृतिक शहरों में' : 'Across 4 Cultural Cities'}
+                  </p>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-                  <span>Backend Synced</span>
-                  <span className="text-emerald-700 font-bold">100% Online</span>
+                  <span>{language === 'hi' ? 'बैकएंड सिंक' : 'Backend Synced'}</span>
+                  <span className="text-emerald-700 font-bold">{language === 'hi' ? '100% ऑनलाइन' : '100% Online'}</span>
                 </div>
               </div>
 
@@ -367,10 +399,10 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    High Risk / Strain Sites
+                    {language === 'hi' ? 'उच्च जोखिम / दबाव वाले स्थल' : 'High Risk / Strain Sites'}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-200">
-                    Action Required
+                    {language === 'hi' ? 'कार्रवाई आवश्यक' : 'Action Required'}
                   </span>
                 </div>
                 <div className="my-3">
@@ -381,11 +413,15 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       {highRiskSites.length}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 mt-0.5">Pressure Score ≥ 60/100</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {language === 'hi' ? 'दबाव स्कोर ≥ 60/100' : 'Pressure Score ≥ 60/100'}
+                  </p>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-                  <span>Priority Inspection</span>
-                  <span className="text-red-600 font-bold">{highRiskSites.length} Flagged</span>
+                  <span>{language === 'hi' ? 'प्राथमिकता निरीक्षण' : 'Priority Inspection'}</span>
+                  <span className="text-red-600 font-bold">
+                    {highRiskSites.length} {language === 'hi' ? 'चिह्नित' : 'Flagged'}
+                  </span>
                 </div>
               </div>
 
@@ -393,10 +429,10 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Overcrowded Sites
+                    {language === 'hi' ? 'अत्यधिक भीड़ वाले स्थल' : 'Overcrowded Sites'}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
-                    Density Alert
+                    {language === 'hi' ? 'घनत्व चेतावनी' : 'Density Alert'}
                   </span>
                 </div>
                 <div className="my-3">
@@ -407,11 +443,13 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       {overcrowdedDisplayCount}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 mt-0.5">Footfall &gt; 75% Capacity</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {language === 'hi' ? 'फुटफॉल > 75% क्षमता' : 'Footfall > 75% Capacity'}
+                  </p>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-                  <span>Gate Controls</span>
-                  <span className="text-amber-700 font-bold">Surge Active</span>
+                  <span>{language === 'hi' ? 'प्रवेश द्वार नियंत्रण' : 'Gate Controls'}</span>
+                  <span className="text-amber-700 font-bold">{language === 'hi' ? 'सर्ज सक्रिय' : 'Surge Active'}</span>
                 </div>
               </div>
 
@@ -419,10 +457,10 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Total Footfall
+                    {language === 'hi' ? 'कुल पर्यटक / फुटफॉल' : 'Total Footfall'}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 capitalize">
-                    {timeframe} Range
+                    {timeframe === 'day' ? (language === 'hi' ? 'दैनिक सीमा' : 'Day Range') : timeframe === 'week' ? (language === 'hi' ? 'साप्ताहिक सीमा' : 'Week Range') : (language === 'hi' ? 'मासिक सीमा' : 'Month Range')}
                   </span>
                 </div>
                 <div className="my-3">
@@ -433,11 +471,13 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       {footfallDisplay}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 mt-0.5">{footfallSubtitle}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {language === 'hi' ? '20 स्थलों पर कुल अनुमान' : footfallSubtitle}
+                  </p>
                 </div>
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-                  <span>Network Capacity</span>
-                  <span className="text-emerald-700 font-bold">Safe Limits</span>
+                  <span>{language === 'hi' ? 'नेटवर्क क्षमता' : 'Network Capacity'}</span>
+                  <span className="text-emerald-700 font-bold">{language === 'hi' ? 'सुरक्षित सीमा' : 'Safe Limits'}</span>
                 </div>
               </div>
             </div>
@@ -450,7 +490,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                   <div className="flex items-center space-x-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                     <h3 className="text-base font-bold text-[#0F3D3E] font-serif-heritage">
-                      High-Priority Heritage Strain Watchlist
+                      {language === 'hi' ? 'उच्च-प्राथमिकता धरोहर दबाव वॉचलिस्ट' : 'High-Priority Heritage Strain Watchlist'}
                     </h3>
                   </div>
 
@@ -458,7 +498,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                     onClick={() => handleNavigateTab('analytics')}
                     className="text-xs font-bold text-[#2B6CB0] hover:underline cursor-pointer flex items-center space-x-1"
                   >
-                    <span>Open Matrix</span>
+                    <span>{language === 'hi' ? 'ओपन मैट्रिक्स' : 'Open Matrix'}</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -483,12 +523,15 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                   ) : watchlist.length === 0 ? (
                     <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-100">
                       <Shield className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                      <p className="font-semibold text-slate-600 text-xs">No high-priority strain sites detected</p>
+                      <p className="font-semibold text-slate-600 text-xs">
+                        {language === 'hi' ? 'कोई उच्च-प्राथमिकता दबाव स्थल नहीं मिला' : 'No high-priority strain sites detected'}
+                      </p>
                     </div>
                   ) : (
                     watchlist.map(({ site, pressure, crowd }) => {
                       const pressureScore = pressure ? Math.round(pressure.pressure_score) : 0;
                       const riskLevel = pressure ? pressure.risk : 'MODERATE';
+                      const displayName = getSiteDisplayName(site.site_id, site.name);
 
                       return (
                         <div
@@ -498,18 +541,20 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <span className="font-bold text-xs sm:text-sm text-slate-900">
-                                {site.name}
+                                {displayName}
                               </span>
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800 font-mono">
-                                Pressure: {pressureScore}/100
+                                {language === 'hi' ? 'दबाव:' : 'Pressure:'} {pressureScore}/100
                               </span>
                             </div>
                             <p className="text-xs text-slate-500">
                               {site.city}, {site.state}
                               {' • '}
-                              <span className="text-red-600 font-medium">{riskLevel} RISK</span>
+                              <span className="text-red-600 font-medium">
+                                {riskLevel} {language === 'hi' ? 'जोखिम' : 'RISK'}
+                              </span>
                               {' • '}
-                              Exp. Visitors: {crowd?.daily_expected_total ? crowd.daily_expected_total.toLocaleString() : 'N/A'}
+                              {language === 'hi' ? 'अनुमानित पर्यटक:' : 'Exp. Visitors:'} {crowd?.daily_expected_total ? crowd.daily_expected_total.toLocaleString() : 'N/A'}
                             </p>
                           </div>
 
@@ -518,13 +563,13 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                               onClick={() => onThrottleFootfall(site.name)}
                               className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
-                              Divert Flow
+                              {language === 'hi' ? 'प्रवाह डायवर्ट करें' : 'Divert Flow'}
                             </button>
                             <button
                               onClick={() => onDispatchTeam(site.name, 'Structural Inspection')}
                               className="px-3 py-1.5 rounded-lg bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all"
                             >
-                              Dispatch
+                              {language === 'hi' ? 'टीम प्रेषित करें' : 'Dispatch'}
                             </button>
                           </div>
                         </div>
@@ -539,9 +584,11 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-base font-bold text-[#0F3D3E] font-serif-heritage">
-                      Aggregate Footfall Surge
+                      {language === 'hi' ? 'संचयी फुटफॉल वृद्धि' : 'Aggregate Footfall Surge'}
                     </h3>
-                    <p className="text-[10px] text-slate-400 capitalize">{timeframe} distribution across 20 sites</p>
+                    <p className="text-[10px] text-slate-400 capitalize">
+                      {language === 'hi' ? `20 स्थलों पर ${timeframe === 'day' ? 'दैनिक' : timeframe === 'week' ? 'साप्ताहिक' : 'मासिक'} वितरण` : `${timeframe} distribution across 20 sites`}
+                    </p>
                   </div>
                 </div>
 
@@ -555,7 +602,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                         <div key={item.label} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end cursor-pointer">
                           <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center bg-slate-900 text-white text-[10px] px-2.5 py-1.5 rounded-lg shadow-xl font-mono z-30 border border-slate-700 whitespace-nowrap pointer-events-none">
                             <span className="text-slate-300 font-semibold">{item.fullLabel}</span>
-                            <span className="font-bold text-amber-400">Visitors: {item.value.toLocaleString()}</span>
+                            <span className="font-bold text-amber-400">{language === 'hi' ? 'पर्यटक:' : 'Visitors:'} {item.value.toLocaleString()}</span>
                           </div>
 
                           <div
@@ -579,7 +626,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start space-x-2.5">
                   <AlertTriangle className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
                   <p className="leading-snug">
-                    <span className="font-bold">Peak Advisory:</span> {peakAdvisory}
+                    <span className="font-bold">{language === 'hi' ? 'पीक एडवाइजरी:' : 'Peak Advisory:'}</span> {peakAdvisory}
                   </p>
                 </div>
               </div>
@@ -595,23 +642,23 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
-                  National Heritage GIS Monitoring Map
+                  {language === 'hi' ? 'राष्ट्रीय धरोहर जीआईएस निगरानी मानचित्र' : 'National Heritage GIS Monitoring Map'}
                 </h1>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Real-time spatial overview of protected heritage sites
+                  {language === 'hi' ? 'संरक्षित धरोहर स्थलों का वास्तविक समय स्थानिक अवलोकन' : 'Real-time spatial overview of protected heritage sites'}
                 </p>
               </div>
 
               <div className="flex items-center space-x-3 text-xs font-mono font-bold text-[#0F3D3E]">
                 <span className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                  20 Sites Monitored
+                  {language === 'hi' ? '20 स्थल मॉनिटर' : '20 Sites Monitored'}
                 </span>
                 <span className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl shadow-2xs">
-                  4 Regions
+                  {language === 'hi' ? '4 क्षेत्र' : '4 Regions'}
                 </span>
                 <span className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl shadow-2xs flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live GIS Network</span>
+                  <span>{language === 'hi' ? 'लाइव जीआईएस नेटवर्क' : 'Live GIS Network'}</span>
                 </span>
               </div>
             </div>
@@ -620,6 +667,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
               {/* GIS MAP CANVAS */}
               <div className="lg:col-span-8 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <IndiaGisMap
+                  language={language}
                   sites={sites}
                   pressureMap={pressureMap}
                   crowdMap={crowdMap}
@@ -639,7 +687,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       {/* SITE HEADER & IMAGE */}
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Selected Monument
+                          {language === 'hi' ? 'चयनित स्मारक' : 'Selected Monument'}
                         </span>
                         <span
                           className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs ${
@@ -650,7 +698,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                               : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                           }`}
                         >
-                          Risk: {selectedPressure ? selectedPressure.risk.toUpperCase() : 'LOADING...'}
+                          {language === 'hi' ? 'जोखिम:' : 'Risk:'} {selectedPressure ? selectedPressure.risk.toUpperCase() : 'LOADING...'}
                         </span>
                       </div>
 
@@ -667,7 +715,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         <div className="absolute bottom-2 left-3 right-3 text-white">
-                          <p className="font-bold text-sm truncate">{selectedSite.name}</p>
+                          <p className="font-bold text-sm truncate">{getSiteDisplayName(selectedSite.site_id, selectedSite.name)}</p>
                           <p className="text-[10px] text-slate-200">{selectedSite.city}, {selectedSite.state}</p>
                         </div>
                       </div>
@@ -677,7 +725,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                     <div className="space-y-2 text-xs">
                       {/* Heritage Pressure Card */}
                       <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                        <span className="text-slate-600 font-medium">Heritage Pressure</span>
+                        <span className="text-slate-600 font-medium">{language === 'hi' ? 'धरोहर दबाव' : 'Heritage Pressure'}</span>
                         <span className="font-bold font-mono text-red-600">
                           {loading ? '...' : selectedPressure ? `${selectedPressure.pressure_score.toFixed(1)} / 100` : 'N/A'}
                         </span>
@@ -685,15 +733,15 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
 
                       {/* Live Visitor Count (Current Hour Prediction) */}
                       <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                        <span className="text-slate-600 font-medium">Current Hour Prediction</span>
+                        <span className="text-slate-600 font-medium">{language === 'hi' ? 'वर्तमान घंटे का पूर्वानुमान' : 'Current Hour Prediction'}</span>
                         <span className="font-bold font-mono text-slate-900">
-                          {loading ? '...' : `${selectedLiveVisitors.toLocaleString()} visitors`}
+                          {loading ? '...' : `${selectedLiveVisitors.toLocaleString()} ${language === 'hi' ? 'पर्यटक' : 'visitors'}`}
                         </span>
                       </div>
 
                       {/* Coordinates */}
                       <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                        <span className="text-slate-600 font-medium">Coordinates</span>
+                        <span className="text-slate-600 font-medium">{language === 'hi' ? 'निर्देशांक' : 'Coordinates'}</span>
                         <span className="font-bold text-slate-800 font-mono text-[11px]">
                           {selectedSite.latitude ? `${selectedSite.latitude.toFixed(4)}° N` : '28.6562° N'}, {selectedSite.longitude ? `${selectedSite.longitude.toFixed(4)}° E` : '77.2410° E'}
                         </span>
@@ -703,7 +751,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       <div className="pt-2 grid grid-cols-3 gap-2">
                         {/* Visitor Pressure */}
                         <div className="p-2.5 bg-blue-50/70 rounded-xl border border-blue-100 text-center">
-                          <p className="text-[9px] uppercase font-bold text-slate-500">Visitor Strain</p>
+                          <p className="text-[9px] uppercase font-bold text-slate-500">{language === 'hi' ? 'पर्यटक तनाव' : 'Visitor Strain'}</p>
                           <p className="text-sm font-bold font-mono text-[#0F3D3E] mt-0.5">
                             {selectedPressure?.factors ? `${selectedPressure.factors.visitor_pressure}` : '--'}
                           </p>
@@ -711,7 +759,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
 
                         {/* Physical Vulnerability */}
                         <div className="p-2.5 bg-amber-50/70 rounded-xl border border-amber-100 text-center">
-                          <p className="text-[9px] uppercase font-bold text-slate-500">Vulnerability</p>
+                          <p className="text-[9px] uppercase font-bold text-slate-500">{language === 'hi' ? 'संवेदनशीलता' : 'Vulnerability'}</p>
                           <p className="text-sm font-bold font-mono text-amber-900 mt-0.5">
                             {selectedPressure?.factors ? `${selectedPressure.factors.physical_vulnerability}` : '--'}
                           </p>
@@ -719,7 +767,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
 
                         {/* Recent Deterioration */}
                         <div className="p-2.5 bg-rose-50/70 rounded-xl border border-rose-100 text-center">
-                          <p className="text-[9px] uppercase font-bold text-slate-500">Deterioration</p>
+                          <p className="text-[9px] uppercase font-bold text-slate-500">{language === 'hi' ? 'क्षरण' : 'Deterioration'}</p>
                           <p className="text-sm font-bold font-mono text-rose-900 mt-0.5">
                             {selectedPressure?.factors ? `${selectedPressure.factors.recent_deterioration}` : '--'}
                           </p>
@@ -732,28 +780,30 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                         onClick={() => onThrottleFootfall(selectedSite.name)}
                         className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm cursor-pointer transition-all active:scale-95"
                       >
-                        Activate Footfall Diversion
+                        {language === 'hi' ? 'फुटफॉल डायवर्जन सक्रिय करें' : 'Activate Footfall Diversion'}
                       </button>
 
                       <button
                         onClick={() => handleNavigateTab('analytics')}
                         className="w-full py-2.5 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-sm cursor-pointer transition-all active:scale-95"
                       >
-                        View Structural Condition Matrix
+                        {language === 'hi' ? 'संरचनात्मक स्थिति मैट्रिक्स देखें' : 'View Structural Condition Matrix'}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-slate-400">
                     <MapIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-xs">Select any monument to inspect live telemetry.</p>
+                    <p className="text-xs">
+                      {language === 'hi' ? 'लाइव टेलीमेट्री देखने के लिए किसी स्मारक का चयन करें।' : 'Select any monument to inspect live telemetry.'}
+                    </p>
                   </div>
                 )}
 
                 {/* CITY GROUPED SITE LIST */}
                 <div className="pt-3 border-t border-slate-100 space-y-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    20 Sites Grouped by City
+                    {language === 'hi' ? 'शहर अनुसार 20 स्थल' : '20 Sites Grouped by City'}
                   </p>
                   <div className="max-h-48 overflow-y-auto pr-1 space-y-3">
                     {Object.entries(sitesByCity).map(([city, citySites]) => (
@@ -772,7 +822,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                                   : 'bg-slate-50 hover:bg-slate-100 text-slate-700'
                               }`}
                             >
-                              <span className="truncate">{s.name}</span>
+                              <span className="truncate">{getSiteDisplayName(s.site_id, s.name)}</span>
                             </button>
                           ))}
                         </div>

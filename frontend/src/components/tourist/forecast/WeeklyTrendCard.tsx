@@ -1,6 +1,7 @@
 import React from 'react';
 import { DailyCrowdForecast, MonumentCrowdForecast } from '../../../types/heritage';
 import { Calendar, Sparkles, Award, ArrowUpRight, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { getDayNameLabel, formatDateLocalized } from '../../../utils/translations';
 
 interface WeeklyTrendCardProps {
   days: DailyCrowdForecast[];
@@ -38,7 +39,7 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
           </div>
 
           <span className="text-[10px] font-bold text-[#0D3B2E] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            7 Days Overview
+            {language === 'hi' ? '7-दिवसीय अवलोकन' : '7 Days Overview'}
           </span>
         </div>
 
@@ -53,7 +54,7 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                 {language === 'hi' ? 'सप्ताह का सर्वोत्तम दिन:' : 'Best Day This Week:'}
               </span>
               <span className="text-xs font-bold text-emerald-800 bg-white px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
-                {bestDayThisWeek.dayName} ({bestDayThisWeek.formattedDate})
+                {getDayNameLabel(bestDayThisWeek.dayName, language)} ({formatDateLocalized(bestDayThisWeek.formattedDate, language)})
               </span>
             </div>
             <p className="text-[11px] text-emerald-800/80 mt-1 leading-snug font-medium">
@@ -67,6 +68,10 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
           {days.map((day) => {
             const isSelected = day.date === selectedDate;
             const isBest = day.date === bestDayThisWeek.date;
+            const dayDisplayName = day.isToday
+              ? (language === 'hi' ? 'आज' : 'Today')
+              : getDayNameLabel(day.dayName, language);
+            const localizedDateStr = formatDateLocalized(day.formattedDate, language);
 
             return (
               <button
@@ -88,10 +93,10 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                       : 'bg-red-500'
                   }`} />
                   <span className="font-bold">
-                    {day.isToday ? 'Today' : day.dayName}
+                    {dayDisplayName}
                   </span>
                   <span className={`text-[11px] ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
-                    ({day.formattedDate})
+                    ({localizedDateStr})
                   </span>
                 </div>
 
@@ -106,7 +111,7 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                 <div className="flex items-center space-x-2">
                   {isBest && !isSelected && (
                     <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded uppercase hidden sm:inline">
-                      BEST
+                      {language === 'hi' ? 'सर्वोत्तम' : 'BEST'}
                     </span>
                   )}
                   {day.comparisonWithToday.direction === 'down' ? (
@@ -127,7 +132,7 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
                     <span className={`text-[11px] font-medium ${
                       isSelected ? 'text-white/70' : 'text-gray-400'
                     }`}>
-                      Baseline
+                      {language === 'hi' ? 'आधारभूत' : 'Baseline'}
                     </span>
                   )}
                 </div>
@@ -138,7 +143,9 @@ export const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({
       </div>
 
       <p className="text-[10px] text-gray-400 text-center font-medium pt-2">
-        Click any row above to view full day breakdown
+        {language === 'hi'
+          ? 'पूरे दिन का विवरण देखने के लिए ऊपर किसी भी पंक्ति पर क्लिक करें'
+          : 'Click any row above to view full day breakdown'}
       </p>
 
     </div>

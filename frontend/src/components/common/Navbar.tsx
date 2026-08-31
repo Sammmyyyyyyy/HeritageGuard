@@ -149,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className={`font-serif-heritage text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-none ${
                 activeView === 'authority' ? 'text-[#0F2B48]' : 'text-[#0D3B2E]'
               }`}>
-                DHOROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DHIRSTI</span>
+                DHAROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DHRISTI</span>
               </span>
               <span className="text-[8px] sm:text-[9.5px] tracking-[0.22em] uppercase font-bold text-[#6B7280] mt-0.5 sm:mt-1">
                 HERITAGEGUARD AI
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="uiverse-star-btn cursor-pointer"
               >
                 <span>🧑</span>
-                <span>Tourist</span>
+                <span>{language === 'hi' ? 'पर्यटक' : 'Tourist'}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#181818] ml-0.5" />
                 <StarElements />
               </button>
@@ -179,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="uiverse-star-btn star-authority cursor-pointer"
               >
                 <span>🏛</span>
-                <span>Authority</span>
+                <span>{language === 'hi' ? 'प्राधिकरण' : 'Authority'}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#0F2B48] ml-0.5" />
                 <StarElements />
               </button>
@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Compass className={`w-4 h-4 ${touristTab === 'discover' ? 'text-white' : 'text-[#0D3B2E]'}`} />
-                <span>Discover</span>
+                <span>{language === 'hi' ? 'खोजें' : 'Discover'}</span>
               </button>
 
               <button
@@ -210,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Calendar className={`w-4 h-4 ${touristTab === 'itinerary' ? 'text-white' : 'text-[#0D3B2E]'}`} />
-                <span>Plan Journey</span>
+                <span>{language === 'hi' ? 'यात्रा योजना' : 'Plan Journey'}</span>
               </button>
 
               <button
@@ -222,7 +222,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Camera className={`w-4 h-4 ${touristTab === 'scan' ? 'text-white' : 'text-[#0D3B2E]'}`} />
-                <span>Scan</span>
+                <span>{language === 'hi' ? 'स्कैन' : 'Scan'}</span>
               </button>
 
               <button
@@ -234,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Bot className={`w-4 h-4 ${touristTab === 'ai-assistant' ? 'text-white' : 'text-[#0D3B2E]'}`} />
-                <span>Heritage AI</span>
+                <span>{language === 'hi' ? 'धरोहर एआई' : 'Heritage AI'}</span>
               </button>
             </nav>
           )}
@@ -251,7 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Activity className={`w-4 h-4 ${authorityTab === 'overview' ? 'text-[#E28743]' : 'text-[#E28743]'}`} />
-                <span>Overview</span>
+                <span>{language === 'hi' ? 'अवलोकन' : 'Overview'}</span>
               </button>
 
               <button
@@ -263,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Map className={`w-4 h-4 ${authorityTab === 'monitoring' ? 'text-white' : 'text-[#3182CE]'}`} />
-                <span>Monitoring</span>
+                <span>{language === 'hi' ? 'निगरानी' : 'Monitoring'}</span>
               </button>
 
               <button
@@ -275,7 +275,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <BarChart3 className={`w-4 h-4 ${authorityTab === 'analytics' ? 'text-white' : 'text-[#805AD5]'}`} />
-                <span>Analytics</span>
+                <span>{language === 'hi' ? 'एनालिटिक्स' : 'Analytics'}</span>
               </button>
             </nav>
           )}
@@ -294,7 +294,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   title="Switch Mode"
                 >
                   <span className="text-xs">🧑</span>
-                  <span>Tourist Mode</span>
+                  <span>{language === 'hi' ? 'पर्यटक मोड' : 'Tourist Mode'}</span>
                   <ChevronDown className="w-3.5 h-3.5 opacity-70 ml-0.5 shrink-0" />
                 </button>
 
@@ -302,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {isModeDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 z-50 animate-fadeIn">
                     <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-2 py-1">
-                      Switch Platform View
+                      {language === 'hi' ? 'प्लेटफ़ॉर्म व्यू बदलें' : 'Switch Platform View'}
                     </p>
                     <button
                       onClick={() => handleSwitchInterface('tourist')}
@@ -310,7 +310,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center space-x-2">
                         <span>🧑</span>
-                        <span>Tourist Interface</span>
+                        <span>{language === 'hi' ? 'पर्यटक इंटरफ़ेस' : 'Tourist Interface'}</span>
                       </div>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
                     </button>
@@ -320,7 +320,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center space-x-2">
                         <span>🏛</span>
-                        <span>Authority Center</span>
+                        <span>{language === 'hi' ? 'प्राधिकरण केंद्र' : 'Authority Center'}</span>
                       </div>
                     </button>
                     <div className="border-t border-gray-100 my-1" />
@@ -329,7 +329,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50 cursor-pointer font-medium"
                     >
                       <span>🏠</span>
-                      <span>Back to Home</span>
+                      <span>{language === 'hi' ? 'मुख्य पृष्ठ पर लौटें' : 'Back to Home'}</span>
                     </button>
                   </div>
                 )}
@@ -345,7 +345,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   title="Switch Mode"
                 >
                   <span className="text-xs">🏛</span>
-                  <span>Authority Portal</span>
+                  <span>{language === 'hi' ? 'प्राधिकरण पोर्टल' : 'Authority Portal'}</span>
                   <ChevronDown className="w-3.5 h-3.5 opacity-70 ml-0.5 shrink-0" />
                 </button>
 
@@ -353,7 +353,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {isModeDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 z-50 animate-fadeIn">
                     <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-2 py-1">
-                      Switch Platform View
+                      {language === 'hi' ? 'प्लेटफ़ॉर्म व्यू बदलें' : 'Switch Platform View'}
                     </p>
                     <button
                       onClick={() => handleSwitchInterface('authority')}
@@ -361,7 +361,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center space-x-2">
                         <span>🏛</span>
-                        <span>Authority Center</span>
+                        <span>{language === 'hi' ? 'प्राधिकरण केंद्र' : 'Authority Center'}</span>
                       </div>
                       <Check className="w-3.5 h-3.5 text-blue-600" />
                     </button>
@@ -371,7 +371,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center space-x-2">
                         <span>🧑</span>
-                        <span>Tourist Interface</span>
+                        <span>{language === 'hi' ? 'पर्यटक इंटरफ़ेस' : 'Tourist Interface'}</span>
                       </div>
                     </button>
                     <div className="border-t border-gray-100 my-1" />
@@ -380,7 +380,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-gray-600 hover:bg-gray-50 cursor-pointer font-medium"
                     >
                       <span>🏠</span>
-                      <span>Back to Home</span>
+                      <span>{language === 'hi' ? 'मुख्य पृष्ठ पर लौटें' : 'Back to Home'}</span>
                     </button>
                   </div>
                 )}
@@ -448,21 +448,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                       >
                         <div className="flex items-center space-x-2">
                           <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-                          <span>Saved Monuments</span>
+                          <span>{language === 'hi' ? 'सहेजे गए स्मारक' : 'Saved Monuments'}</span>
                         </div>
                         <span className="font-bold text-rose-700 font-mono bg-rose-100 px-2 py-0.5 rounded-md text-[11px]">
                           {savedCount}
                         </span>
                       </button>
                       <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <span>Submitted Scans</span>
-                        <span className="font-semibold text-emerald-600">2 Verified</span>
+                        <span>{language === 'hi' ? 'प्रस्तुत स्कैन' : 'Submitted Scans'}</span>
+                        <span className="font-semibold text-emerald-600">{language === 'hi' ? '2 सत्यापित' : '2 Verified'}</span>
                       </div>
                       <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <span>Platform Status</span>
+                        <span>{language === 'hi' ? 'प्लेटफ़ॉर्म स्थिति' : 'Platform Status'}</span>
                         <span className="inline-flex items-center space-x-1 text-[10px] font-semibold text-emerald-600">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span>Live Sync</span>
+                          <span>{language === 'hi' ? 'लाइव सिंक' : 'Live Sync'}</span>
                         </span>
                       </div>
                     </div>
@@ -505,16 +505,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 truncate">
-                      {activeView === 'authority' ? 'Ayush K. Maurya' : 'Heritage Explorer'}
+                      {activeView === 'authority' ? 'Ayush K. Maurya' : (language === 'hi' ? 'धरोहर अन्वेषक' : 'Heritage Explorer')}
                     </p>
                     <p className="text-[10px] text-gray-500 truncate">
-                      {activeView === 'authority' ? 'ASI Chief Conservator' : 'Level 2 Contributor • 2 Scans'}
+                      {activeView === 'authority' ? 'ASI Chief Conservator' : (language === 'hi' ? 'लेवल 2 नागरिक योगदानकर्ता' : 'Level 2 Contributor • 2 Scans')}
                     </p>
                   </div>
                 </div>
                 <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live</span>
+                  <span>{language === 'hi' ? 'सक्रिय' : 'Live'}</span>
                 </span>
               </div>
             )}
@@ -524,7 +524,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeView === 'tourist' && (
               <div className="space-y-1 pb-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#0D3B2E]/60 px-2 py-1">
-                  Tourist Features
+                  {language === 'hi' ? 'पर्यटक सुविधाएं' : 'Tourist Features'}
                 </p>
                 <div className="grid grid-cols-1 gap-1">
                   <button
@@ -537,7 +537,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Compass className="w-4 h-4" />
-                      <span>Discover Monuments</span>
+                      <span>{language === 'hi' ? 'स्मारक खोजें' : 'Discover Monuments'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -552,7 +552,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Calendar className="w-4 h-4" />
-                      <span>Plan Journey & Itinerary</span>
+                      <span>{language === 'hi' ? 'यात्रा योजना बनाएं' : 'Plan Journey & Itinerary'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -567,7 +567,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Camera className="w-4 h-4" />
-                      <span>AI Damage Scanner</span>
+                      <span>{language === 'hi' ? 'एआई क्षति स्कैनर' : 'AI Damage Scanner'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -582,7 +582,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Bot className="w-4 h-4" />
-                      <span>Ask Heritage AI</span>
+                      <span>{language === 'hi' ? 'धरोहर एआई से पूछें' : 'Ask Heritage AI'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -597,7 +597,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-                      <span>Saved Monuments ({savedCount})</span>
+                      <span>{language === 'hi' ? 'सहेजे गए स्मारक' : 'Saved Monuments'} ({savedCount})</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -609,7 +609,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeView === 'authority' && (
               <div className="space-y-1 pb-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#0F2B48]/60 px-2 py-1">
-                  Authority Control Center
+                  {language === 'hi' ? 'प्राधिकरण नियंत्रण केंद्र' : 'Authority Control Center'}
                 </p>
                 <div className="grid grid-cols-1 gap-1">
                   <button
@@ -622,7 +622,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Activity className="w-4 h-4 text-[#E28743]" />
-                      <span>Control Center Overview</span>
+                      <span>{language === 'hi' ? 'नियंत्रण केंद्र अवलोकन' : 'Control Center Overview'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -637,7 +637,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <Map className="w-4 h-4 text-[#3182CE]" />
-                      <span>Site Map & Monitoring</span>
+                      <span>{language === 'hi' ? 'मानचित्र व निगरानी' : 'Site Map & Monitoring'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -652,7 +652,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center space-x-2.5">
                       <BarChart3 className="w-4 h-4 text-[#805AD5]" />
-                      <span>Risk Matrix & Analytics</span>
+                      <span>{language === 'hi' ? 'जोखिम मैट्रिक्स व एनालिटिक्स' : 'Risk Matrix & Analytics'}</span>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -664,7 +664,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeView === 'home' && (
               <div className="space-y-2 pb-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-2 py-1">
-                  Explore Portals
+                  {language === 'hi' ? 'पोर्टल अन्वेषण' : 'Explore Portals'}
                 </p>
                 <div className="grid grid-cols-1 gap-2">
                   <button
@@ -674,8 +674,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center space-x-3">
                       <span className="text-xl">🧑</span>
                       <div>
-                        <p className="text-xs font-bold">Tourist Interface</p>
-                        <p className="text-[10px] text-gray-500">Discover monuments, scan & plan itineraries</p>
+                        <p className="text-xs font-bold">{language === 'hi' ? 'पर्यटक इंटरफ़ेस' : 'Tourist Interface'}</p>
+                        <p className="text-[10px] text-gray-500">{language === 'hi' ? 'स्मारक खोजें, स्कैन करें व यात्रा बनाएं' : 'Discover monuments, scan & plan itineraries'}</p>
                       </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-emerald-600" />
@@ -688,8 +688,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center space-x-3">
                       <span className="text-xl">🏛</span>
                       <div>
-                        <p className="text-xs font-bold">Authority Center</p>
-                        <p className="text-[10px] text-gray-500">Monitor structural health & live crowd pressure</p>
+                        <p className="text-xs font-bold">{language === 'hi' ? 'प्राधिकरण केंद्र' : 'Authority Center'}</p>
+                        <p className="text-[10px] text-gray-500">{language === 'hi' ? 'संरचनात्मक स्वास्थ्य व लाइव भीड़ निगरानी' : 'Monitor structural health & live crowd pressure'}</p>
                       </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-blue-600" />
@@ -701,7 +701,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* 3. Platform Interface Switcher */}
             <div className="pt-2 border-t border-gray-100 space-y-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-2">
-                Platform View
+                {language === 'hi' ? 'प्लेटफ़ॉर्म दृश्य' : 'Platform View'}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -713,7 +713,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   <span>🏠</span>
-                  <span>Home</span>
+                  <span>{language === 'hi' ? 'होम' : 'Home'}</span>
                 </button>
 
                 <button
@@ -725,7 +725,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   <span>🧑</span>
-                  <span>Tourist</span>
+                  <span>{language === 'hi' ? 'पर्यटक' : 'Tourist'}</span>
                 </button>
 
                 <button
@@ -737,7 +737,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   <span>🏛</span>
-                  <span>Authority</span>
+                  <span>{language === 'hi' ? 'प्राधिकरण' : 'Authority'}</span>
                 </button>
               </div>
             </div>

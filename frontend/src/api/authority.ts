@@ -41,8 +41,7 @@ export interface LiveAuthorityMetrics {
   totalFootfallToday: number;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { API_BASE_URL } from './config';
 
 export function resolveImageUrl(url?: string | null, siteId?: string): string {
   if (url && url.trim().length > 0) {

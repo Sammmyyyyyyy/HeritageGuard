@@ -307,7 +307,7 @@ export async function fetchSiteCrowdForecast(
   return {
     monumentId: monument.id,
     monumentName: monument.name,
-    hindiName: monument.hindiName,
+    hindiName: monument.hindiName || monument.name,
     city: monument.city,
     state: monument.state,
     imageUrl: monument.imageUrl,

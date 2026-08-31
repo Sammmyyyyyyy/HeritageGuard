@@ -9,7 +9,11 @@ from sklearn.ensemble import RandomForestRegressor
 import joblib
 
 def load_sites(file_path: str) -> list:
-    with open(file_path, "r", encoding="utf-8") as f:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    resolved = file_path if os.path.isabs(file_path) else os.path.join(base_dir, file_path)
+    if not os.path.exists(resolved) and os.path.exists(file_path):
+        resolved = file_path
+    with open(resolved, "r", encoding="utf-8") as f:
         return json.load(f)
 
 # ==========================================

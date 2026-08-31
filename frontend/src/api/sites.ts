@@ -18,7 +18,7 @@ export interface BackendSite {
   is_unesco?: boolean | null;
 }
 
-const API_BASE_URL ='https://heritageguard-1.onrender.com';
+import { API_BASE_URL } from './config';
 
 // ======================================================
 // SITES
@@ -91,6 +91,7 @@ export async function analyzeDamage(
 export interface RAGQuery {
   site_id: string;
   question: string;
+  language?: string;
 }
 
 export async function queryHeritageRAG(

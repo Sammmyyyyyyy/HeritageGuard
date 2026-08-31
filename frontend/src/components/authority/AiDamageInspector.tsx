@@ -7,9 +7,10 @@ import {
 } from 'lucide-react';
 
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
+import { SITE_METADATA } from '../../data/siteMapper';
 
 interface AiDamageInspectorProps {
-  language: 'en' | 'hi';
+  language?: 'en' | 'hi';
   onDispatchTeam: (monumentName: string, actionType: string) => void;
 }
 
@@ -195,10 +196,18 @@ const getSiteImage = (site: Site): string => {
    ========================================================= */
 
 export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
+  language = 'en',
   onDispatchTeam,
 }) => {
   const [selectedSiteId, setSelectedSiteId] = useState('DEL001');
   const [imageError, setImageError] = useState(false);
+
+  const getSiteDisplayName = (siteId: string, defaultName: string) => {
+    if (language === 'hi' && SITE_METADATA[siteId]?.hindiName) {
+      return SITE_METADATA[siteId].hindiName;
+    }
+    return defaultName;
+  };
 
   const selectedSite = useMemo(
     () =>
@@ -217,6 +226,8 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
     setImageError(false);
   };
 
+  const currentDisplayName = getSiteDisplayName(selectedSite.site_id, selectedSite.name);
+
   return (
     <div className="space-y-6">
 
@@ -225,16 +236,17 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
         <div>
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase tracking-wider">
-            Multi-Spectral Computer Vision
+            {language === 'hi' ? 'मल्टी-स्पेक्ट्रल कंप्यूटर विजन' : 'Multi-Spectral Computer Vision'}
           </div>
 
           <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-[#0F3D3E] font-serif-heritage">
-            AI Damage Inspector & Baseline Comparison
+            {language === 'hi' ? 'एआई क्षति विश्लेषक और आधारभूत तुलना' : 'AI Damage Inspector & Baseline Comparison'}
           </h2>
 
           <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Select any of the 20 configured heritage sites to review its
-            monument image and conservation state.
+            {language === 'hi'
+              ? 'स्मारक छवि और संरक्षण स्थिति की समीक्षा के लिए 20 कॉन्फ़िगर किए गए धरोहर स्थलों में से किसी का चयन करें।'
+              : 'Select any of the 20 configured heritage sites to review its monument image and conservation state.'}
           </p>
         </div>
 
@@ -242,7 +254,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
         <div className="flex items-center gap-3">
 
           <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
-            Select Monument:
+            {language === 'hi' ? 'स्मारक चुनें:' : 'Select Monument:'}
           </label>
 
           <select
@@ -252,7 +264,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
           >
             {SITES.map((site) => (
               <option key={site.site_id} value={site.site_id}>
-                {site.name} ({site.city})
+                {getSiteDisplayName(site.site_id, site.name)} ({site.city})
               </option>
             ))}
           </select>
@@ -277,7 +289,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                     src={imageUrl}
                     alt={selectedSite.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
+                    onError={() => {
                       console.error(
                         'AI DAMAGE IMAGE LOAD FAILED',
                         selectedSite.site_id,
@@ -292,7 +304,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1.5 rounded-full bg-[#0F3D3E]/90 text-white text-[10px] font-bold shadow-lg">
-                      Heritage Site Image
+                      {language === 'hi' ? 'धरोहर स्थल छवि' : 'Heritage Site Image'}
                     </span>
                   </div>
 
@@ -303,7 +315,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                       <div className="text-white">
 
                         <p className="text-lg font-bold">
-                          {selectedSite.name}
+                          {currentDisplayName}
                         </p>
 
                         <p className="text-xs text-white/80">
@@ -315,7 +327,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                       </div>
 
                       <div className="px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur text-[10px] font-semibold text-white">
-                        Local project image
+                        {language === 'hi' ? 'परियोजना छवि' : 'Local project image'}
                       </div>
 
                     </div>
@@ -329,15 +341,15 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                   <ImageIcon className="w-12 h-12 mb-3 opacity-70" />
 
                   <p className="font-semibold text-base">
-                    Image not available
+                    {language === 'hi' ? 'छवि उपलब्ध नहीं है' : 'Image not available'}
                   </p>
 
                   <p className="text-xs text-white/70 mt-2">
-                    {selectedSite.name} ({selectedSite.site_id})
+                    {currentDisplayName} ({selectedSite.site_id})
                   </p>
 
                   <p className="text-[10px] text-white/40 mt-1">
-                    Check the image filename inside src/assets.
+                    {language === 'hi' ? 'src/assets में फ़ाइल नाम जांचें।' : 'Check the image filename inside src/assets.'}
                   </p>
 
                 </div>
@@ -352,7 +364,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
 
                 <span>
-                  {selectedSite.name} selected
+                  {currentDisplayName} {language === 'hi' ? 'चयनित' : 'selected'}
                 </span>
 
               </div>
@@ -374,7 +386,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
               <AlertTriangle className="w-4 h-4 text-amber-600" />
 
               <h3 className="text-xs font-bold text-[#0F3D3E]">
-                AI Detection Layer
+                {language === 'hi' ? 'एआई डिटेक्शन लेयर' : 'AI Detection Layer'}
               </h3>
 
             </div>
@@ -382,15 +394,15 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             <div className="flex flex-wrap gap-2">
 
               <span className="px-3 py-1.5 rounded-lg bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold">
-                Micro-Crack Vectors
+                {language === 'hi' ? 'सूक्ष्म-दरार वेक्टर्स' : 'Micro-Crack Vectors'}
               </span>
 
               <span className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold">
-                Moisture Saturation
+                {language === 'hi' ? 'नमी संतृप्ति' : 'Moisture Saturation'}
               </span>
 
               <span className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
-                Surface / Salt Exfoliation
+                {language === 'hi' ? 'सतह / लवण क्षरण' : 'Surface / Salt Exfoliation'}
               </span>
 
             </div>
@@ -406,11 +418,11 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
           <div className="mb-4">
 
             <span className="inline-flex px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wider">
-              Telemetry Diagnostics
+              {language === 'hi' ? 'टेलीमेट्री निदान' : 'Telemetry Diagnostics'}
             </span>
 
             <h3 className="text-xl font-bold text-[#0F3D3E] mt-2 font-serif-heritage">
-              {selectedSite.name}
+              {currentDisplayName}
             </h3>
 
             <p className="text-xs text-slate-500">
@@ -424,7 +436,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             <div className="p-4 rounded-2xl bg-[#F8F6F0] border border-slate-200">
 
               <p className="text-[10px] text-slate-500 font-bold uppercase">
-                Surface Damage
+                {language === 'hi' ? 'सतह क्षति' : 'Surface Damage'}
               </p>
 
               <p className="text-3xl font-bold text-slate-400 mt-2">
@@ -432,7 +444,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
               </p>
 
               <p className="text-[10px] text-slate-400 mt-1">
-                Run damage scan
+                {language === 'hi' ? 'क्षति स्कैन चलाएं' : 'Run damage scan'}
               </p>
 
             </div>
@@ -440,7 +452,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
             <div className="p-4 rounded-2xl bg-[#F8F6F0] border border-slate-200">
 
               <p className="text-[10px] text-slate-500 font-bold uppercase">
-                Crack Velocity
+                {language === 'hi' ? 'दरार गति' : 'Crack Velocity'}
               </p>
 
               <p className="text-2xl font-bold text-slate-400 mt-3">
@@ -448,7 +460,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
               </p>
 
               <p className="text-[10px] text-slate-400 mt-1">
-                Run damage scan
+                {language === 'hi' ? 'क्षति स्कैन चलाएं' : 'Run damage scan'}
               </p>
 
             </div>
@@ -458,7 +470,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
           <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 p-4">
 
             <h4 className="text-xs font-bold text-slate-800 mb-2">
-              Detected Anomalies
+              {language === 'hi' ? 'पहचाने गए असामान्यताएं' : 'Detected Anomalies'}
             </h4>
 
             <div className="flex flex-col items-center justify-center min-h-[190px] text-center">
@@ -466,12 +478,13 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
               <CheckCircle2 className="w-9 h-9 text-emerald-500 mb-2" />
 
               <p className="text-sm font-semibold text-slate-700">
-                No AI scan result loaded
+                {language === 'hi' ? 'कोई एआई स्कैन परिणाम लोड नहीं' : 'No AI scan result loaded'}
               </p>
 
               <p className="text-[11px] text-slate-500 mt-1 max-w-xs">
-                Select a site and run its damage scan to populate AI
-                detections and conservation recommendations.
+                {language === 'hi'
+                  ? 'एआई डिटेक्शन और संरक्षण सिफारिशों को लोड करने के लिए एक साइट चुनें और क्षति स्कैन चलाएं।'
+                  : 'Select a site and run its damage scan to populate AI detections and conservation recommendations.'}
               </p>
 
             </div>
@@ -485,10 +498,10 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                 'Field Conservation Inspection'
               )
             }
-            className="mt-4 w-full py-3 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+            className="mt-4 w-full py-3 rounded-xl bg-[#0F3D3E] hover:bg-[#0A2627] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
           >
             <Send className="w-4 h-4 text-[#D4AF37]" />
-            Dispatch ASI Conservation Team
+            {language === 'hi' ? 'एएसआई संरक्षण टीम प्रेषित करें' : 'Dispatch ASI Conservation Team'}
           </button>
 
         </div>
@@ -503,16 +516,16 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
 
           <div>
             <h3 className="text-xs font-bold text-[#0F3D3E]">
-              Configured Heritage Sites
+              {language === 'hi' ? 'कॉन्फ़िगर किए गए धरोहर स्थल' : 'Configured Heritage Sites'}
             </h3>
 
             <p className="text-[10px] text-slate-500">
-              Each site uses its own local image asset.
+              {language === 'hi' ? 'प्रत्येक स्थल अपनी स्थानीय छवि का उपयोग करता है।' : 'Each site uses its own local image asset.'}
             </p>
           </div>
 
           <span className="text-[10px] font-mono text-slate-400">
-            20 sites
+            {language === 'hi' ? '20 स्थल' : '20 sites'}
           </span>
 
         </div>
@@ -544,7 +557,7 @@ export const AiDamageInspector: React.FC<AiDamageInspectorProps> = ({
                   }`}
                 />
 
-                {site.name}
+                {getSiteDisplayName(site.site_id, site.name)}
 
               </button>
             );

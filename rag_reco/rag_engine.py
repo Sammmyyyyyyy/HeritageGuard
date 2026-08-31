@@ -1,6 +1,7 @@
 # rag_engine.py
 import os
 from typing import List
+from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -8,7 +9,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 
-load_dotenv()
+# Explicitly load .env from rag_reco directory
+_env_path = Path(__file__).resolve().parent / ".env"
+if _env_path.exists():
+    load_dotenv(dotenv_path=_env_path, override=True)
+else:
+    load_dotenv()
 
 # --- Pydantic Schemas for Structured Output ---
 class SourceCitation(BaseModel):

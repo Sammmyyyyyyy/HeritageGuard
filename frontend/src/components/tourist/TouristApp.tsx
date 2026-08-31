@@ -32,7 +32,13 @@ import { ItineraryPlanner } from './ItineraryPlanner';
 import { SavedMonumentsPage } from './SavedMonumentsPage';
 
 import { useSavedMonuments } from '../../hooks/useSavedMonuments';
-import { t } from '../../utils/translations';
+import {
+  t,
+  getCategoryLabel,
+  getStyleLabel,
+  getStateLabel,
+  getCityLabel
+} from '../../utils/translations';
 
 // =====================================================
 // TOURIST APP PROPS
@@ -175,7 +181,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
         const matchesSearch =
           !q ||
           m.name.toLowerCase().includes(q) ||
-          m.hindiName.toLowerCase().includes(q) ||
+          (m.hindiName ? m.hindiName.toLowerCase().includes(q) : false) ||
           m.city.toLowerCase().includes(q) ||
           m.state.toLowerCase().includes(q) ||
           m.architecturalStyle.toLowerCase().includes(q) ||
@@ -293,7 +299,11 @@ export const TouristApp: React.FC<TouristAppProps> = ({
             <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-[#0D3B2E]/10">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#1A2621] font-serif-heritage leading-tight">
-                  Discover <span className="text-[#0E382B]">Heritage</span> Monuments
+                  {language === 'hi' ? (
+                    <>धरोहर <span className="text-[#0E382B]">स्मारक</span> खोजें</>
+                  ) : (
+                    <>Discover <span className="text-[#0E382B]">Heritage</span> Monuments</>
+                  )}
                 </h1>
                 <p className="text-xs sm:text-sm text-[#1A2621]/70 mt-1 font-medium">
                   {language === 'hi'
@@ -309,14 +319,14 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white border border-[#0D3B2E]/15 text-[#0D3B2E] text-xs font-bold shadow-2xs hover:bg-[#0D3B2E] hover:text-white transition-all cursor-pointer"
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>Plan Route</span>
+                  <span>{language === 'hi' ? 'मार्ग योजना' : 'Plan Route'}</span>
                 </button>
                 <button
                   onClick={() => handleNavigateTab('scan')}
                   className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#0D3B2E] text-[#D4AF37] border border-[#D4AF37]/30 text-xs font-bold shadow-2xs hover:bg-[#08281E] transition-all cursor-pointer"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Scan Monument</span>
+                  <span>{language === 'hi' ? 'स्मारक स्कैन करें' : 'Scan Monument'}</span>
                 </button>
               </div>
             </div>
@@ -344,14 +354,14 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     onClick={() => setSearchQuery('')}
                     className="px-3 py-1.5 text-xs text-gray-500 hover:text-[#0E382B] font-semibold cursor-pointer"
                   >
-                    Clear
+                    {language === 'hi' ? 'हटाएं' : 'Clear'}
                   </button>
                 )}
                 <button
                   onClick={() => {}}
                   className="px-6 py-2.5 bg-[#0E382B] hover:bg-[#08281E] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
                 >
-                  Search
+                  {language === 'hi' ? 'खोजें' : 'Search'}
                 </button>
               </div>
             </div>
@@ -366,7 +376,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 >
                   {availableStates.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {getStateLabel(s, language)}
                     </option>
                   ))}
                 </select>
@@ -378,14 +388,14 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   onChange={(e) => setSelectedCategory(e.target.value as any)}
                   className="w-full bg-white border border-[#0D3B2E]/15 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1A2621] shadow-2xs outline-none cursor-pointer"
                 >
-                  <option value="All">All Categories</option>
-                  <option value="Temples">Temples</option>
-                  <option value="Tombs & Mausoleums">Tombs & Mausoleums</option>
-                  <option value="Forts & Palaces">Forts & Palaces</option>
-                  <option value="Caves & Rock Cut">Caves & Rock Cut</option>
-                  <option value="Museums">Museums</option>
-                  <option value="UNESCO Sites">UNESCO Sites</option>
-                  <option value="Other Heritage">Other Heritage</option>
+                  <option value="All">{language === 'hi' ? 'सभी श्रेणियां' : 'All Categories'}</option>
+                  <option value="Temples">{language === 'hi' ? 'मंदिर' : 'Temples'}</option>
+                  <option value="Tombs & Mausoleums">{language === 'hi' ? 'मकबरे और समाधि' : 'Tombs & Mausoleums'}</option>
+                  <option value="Forts & Palaces">{language === 'hi' ? 'किले और महल' : 'Forts & Palaces'}</option>
+                  <option value="Caves & Rock Cut">{language === 'hi' ? 'गुफाएं और शैलकृत' : 'Caves & Rock Cut'}</option>
+                  <option value="Museums">{language === 'hi' ? 'संग्रहालय' : 'Museums'}</option>
+                  <option value="UNESCO Sites">{language === 'hi' ? 'यूनेस्को स्थल' : 'UNESCO Sites'}</option>
+                  <option value="Other Heritage">{language === 'hi' ? 'अन्य धरोहर' : 'Other Heritage'}</option>
                 </select>
               </div>
 
@@ -397,7 +407,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 >
                   {availableTimePeriods.map((p) => (
                     <option key={p} value={p}>
-                      {p}
+                      {p === 'All Time Periods' ? (language === 'hi' ? 'सभी कालखंड' : p) : p}
                     </option>
                   ))}
                 </select>
@@ -411,7 +421,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 >
                   {availableStyles.map((st) => (
                     <option key={st} value={st}>
-                      {st}
+                      {getStyleLabel(st, language)}
                     </option>
                   ))}
                 </select>
@@ -423,10 +433,10 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full bg-white border border-[#0D3B2E]/15 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1A2621] shadow-2xs outline-none cursor-pointer"
                 >
-                  <option value="Popular">Sort By: Popular</option>
-                  <option value="Rating">Highest Rated</option>
-                  <option value="LowPressure">Least Pressure</option>
-                  <option value="HighPressure">Most Vulnerable</option>
+                  <option value="Popular">{language === 'hi' ? 'क्रमबद्ध करें: लोकप्रिय' : 'Sort By: Popular'}</option>
+                  <option value="Rating">{language === 'hi' ? 'उच्चतम रेटिंग' : 'Highest Rated'}</option>
+                  <option value="LowPressure">{language === 'hi' ? 'न्यूनतम दबाव' : 'Least Pressure'}</option>
+                  <option value="HighPressure">{language === 'hi' ? 'सर्वाधिक संवेदनशील' : 'Most Vulnerable'}</option>
                 </select>
               </div>
 
@@ -442,7 +452,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   className="w-full bg-[#F8F6F0] hover:bg-white border border-[#0D3B2E]/15 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#0E382B] flex items-center justify-center space-x-1 transition-all cursor-pointer"
                 >
                   <Filter className="w-3.5 h-3.5" />
-                  <span>Reset Filters</span>
+                  <span>{language === 'hi' ? 'फ़िल्टर रीसेट करें' : 'Reset Filters'}</span>
                 </button>
               </div>
             </div>
@@ -460,7 +470,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   }`}
                 >
                   <span>{cat.icon}</span>
-                  <span>{cat.label}</span>
+                  <span>{getCategoryLabel(cat.id, language)}</span>
                 </button>
               ))}
             </div>
@@ -470,10 +480,10 @@ export const TouristApp: React.FC<TouristAppProps> = ({
               <div className="flex items-center justify-between">
                 <h3 className="text-lg sm:text-xl font-bold text-[#0E382B] font-serif-heritage flex items-center space-x-2">
                   <span>🌾</span>
-                  <span>Heritage Monuments</span>
+                  <span>{language === 'hi' ? 'धरोहर स्मारक' : 'Heritage Monuments'}</span>
                   {!sitesLoading && (
                     <span className="text-xs font-mono font-normal text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">
-                      {filteredMonuments.length} sites
+                      {filteredMonuments.length} {language === 'hi' ? 'स्थल' : 'sites'}
                     </span>
                   )}
                 </h3>
@@ -487,7 +497,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   }}
                   className="text-xs font-semibold text-[#0E382B] hover:underline flex items-center space-x-1 cursor-pointer"
                 >
-                  <span>View All Monuments</span>
+                  <span>{language === 'hi' ? 'सभी स्मारक देखें' : 'View All Monuments'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -519,7 +529,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 <div className="p-8 rounded-3xl bg-amber-50 border border-amber-200 text-center space-y-4 max-w-xl mx-auto my-8">
                   <AlertCircle className="w-10 h-10 text-amber-600 mx-auto" />
                   <h4 className="text-base font-bold text-amber-900">
-                    Unable to Load Heritage Sites
+                    {language === 'hi' ? 'स्मारक लोड करने में असमर्थ' : 'Unable to Load Heritage Sites'}
                   </h4>
                   <p className="text-xs text-amber-800 leading-relaxed">
                     {sitesError}
@@ -529,7 +539,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#0E382B] hover:bg-[#08281E] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Retry Loading Sites</span>
+                    <span>{language === 'hi' ? 'पुनः प्रयास करें' : 'Retry Loading Sites'}</span>
                   </button>
                 </div>
               )}
@@ -539,10 +549,12 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 <div className="p-12 rounded-3xl bg-white border border-[#0D3B2E]/10 text-center space-y-4 max-w-lg mx-auto my-8">
                   <div className="text-4xl">🔍</div>
                   <h4 className="text-base font-bold text-[#0D3B2E]">
-                    No Heritage Sites Found
+                    {language === 'hi' ? 'कोई स्मारक नहीं मिला' : 'No Heritage Sites Found'}
                   </h4>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    No monuments matched your current search and filter criteria. Try adjusting your query or resetting filters.
+                    {language === 'hi'
+                      ? 'आपकी खोज और फ़िल्टर के अनुसार कोई स्मारक नहीं मिला। कृपया फ़िल्टर बदलें।'
+                      : 'No monuments matched your current search and filter criteria. Try adjusting your query or resetting filters.'}
                   </p>
                   <button
                     onClick={() => {
@@ -555,7 +567,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#0E382B] text-white text-xs font-bold shadow transition-all cursor-pointer"
                   >
                     <Filter className="w-3.5 h-3.5" />
-                    <span>Reset All Filters</span>
+                    <span>{language === 'hi' ? 'सभी फ़िल्टर रीसेट करें' : 'Reset All Filters'}</span>
                   </button>
                 </div>
               )}
@@ -569,6 +581,12 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     const imageSrc = isFailed
                       ? resolveImageUrl('', monument.id)
                       : resolveImageUrl(monument.imageUrl, monument.id);
+                    const monumentDisplayName = (language === 'hi' && monument.hindiName)
+                      ? monument.hindiName
+                      : monument.name;
+                    const localizedCity = getCityLabel(monument.city, language);
+                    const localizedState = getStateLabel(monument.state, language);
+                    const localizedStyle = getStyleLabel(monument.architecturalStyle, language);
 
                     return (
                       <div
@@ -580,7 +598,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                         <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-900">
                           <img
                             src={imageSrc}
-                            alt={monument.name}
+                            alt={monumentDisplayName}
                             onError={() => handleImageError(monument.id)}
                             className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                           />
@@ -594,7 +612,9 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                                   : 'bg-black/65 text-white border border-white/20'
                               }`}
                             >
-                              {monument.isUnesco ? 'UNESCO SITE' : 'HERITAGE SITE'}
+                              {monument.isUnesco
+                                ? (language === 'hi' ? 'यूनेस्को स्थल' : 'UNESCO SITE')
+                                : (language === 'hi' ? 'धरोहर स्थल' : 'HERITAGE SITE')}
                             </span>
                           </div>
 
@@ -620,12 +640,12 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                         <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
                           <div className="space-y-1.5">
                             <h4 className="text-base sm:text-lg font-bold text-[#0D3B2E] font-serif-heritage group-hover:text-[#C85A32] transition-colors leading-snug tracking-tight">
-                              {monument.name}
+                              {monumentDisplayName}
                             </h4>
                             <p className="text-xs text-gray-500 font-medium truncate flex items-center space-x-1">
                               <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
                               <span>
-                                {monument.city}, {monument.state}
+                                {localizedCity}, {localizedState}
                               </span>
                             </p>
 
@@ -637,7 +657,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                                 </span>
                               </div>
                               <span className="text-gray-400 font-normal text-[11px]">
-                                ({monument.reviewsCount})
+                                ({monument.reviewsCount} {language === 'hi' ? 'समीक्षाएं' : ''})
                               </span>
                             </div>
                           </div>
@@ -646,7 +666,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                           <div className="space-y-3 pt-3 border-t border-gray-100 mt-auto">
                             <div className="text-xs text-gray-600 flex items-center justify-between font-medium">
                               <span className="truncate max-w-[150px]">
-                                {monument.architecturalStyle}
+                                {localizedStyle}
                               </span>
                               <span className="text-[10px] font-mono-stat text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
                                 HPS: {monument.heritagePressureScore}
@@ -659,7 +679,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                                 e.stopPropagation();
                                 onSelectMonument(monument);
                               }}
-                              aria-label={`View details for ${monument.name}`}
+                              aria-label={`View details for ${monumentDisplayName}`}
                               className="w-full py-2.5 px-3 rounded-xl bg-[#0D3B2E]/6 hover:bg-[#0D3B2E] text-[#0D3B2E] hover:text-white border border-[#0D3B2E]/15 hover:border-[#0D3B2E] text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all duration-200 cursor-pointer shadow-2xs group/btn active:scale-98"
                             >
                               <span>
@@ -688,7 +708,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     {!sitesLoading ? backendMonuments.length : '20'}
                   </p>
                   <p className="text-[10px] text-gray-500 font-semibold">
-                    Live Monitored Sites
+                    {language === 'hi' ? 'लाइव मॉनिटर किए गए स्थल' : 'Live Monitored Sites'}
                   </p>
                 </div>
 
@@ -702,7 +722,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                       : '7'}
                   </p>
                   <p className="text-[10px] text-gray-500 font-semibold">
-                    UNESCO World Heritage
+                    {language === 'hi' ? 'यूनेस्को विश्व धरोहर' : 'UNESCO World Heritage'}
                   </p>
                 </div>
 
@@ -714,7 +734,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     4
                   </p>
                   <p className="text-[10px] text-gray-500 font-semibold">
-                    Key Tourist Hubs
+                    {language === 'hi' ? 'प्रमुख पर्यटन केंद्र' : 'Key Tourist Hubs'}
                   </p>
                 </div>
 
@@ -726,7 +746,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                     500K+
                   </p>
                   <p className="text-[10px] text-gray-500 font-semibold">
-                    Daily Visitors
+                    {language === 'hi' ? 'दैनिक पर्यटक' : 'Daily Visitors'}
                   </p>
                 </div>
               </div>
@@ -736,13 +756,17 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                 <div className="space-y-2">
                   <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/10 text-[#D4AF37] text-xs font-bold">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>AI Heritage Companion</span>
+                    <span>{language === 'hi' ? 'एआई धरोहर साथी' : 'AI Heritage Companion'}</span>
                   </div>
                   <h4 className="text-lg font-bold font-serif-heritage text-white">
-                    Need instant historical stories or crowd forecasts?
+                    {language === 'hi'
+                      ? 'ऐतिहासिक गाथाएं या भीड़ पूर्वानुमान जानना चाहते हैं?'
+                      : 'Need instant historical stories or crowd forecasts?'}
                   </h4>
                   <p className="text-xs text-white/80 leading-relaxed">
-                    Ask Dharohar AI for custom routes, epigraph translations, and eco-friendly visit windows.
+                    {language === 'hi'
+                      ? 'कस्टम यात्रा मार्गों, अभिलेख अनुवाद और पर्यावरण-अनुकूल समय के लिए धरोहर एआई से पूछें।'
+                      : 'Ask Dharohar AI for custom routes, epigraph translations, and eco-friendly visit windows.'}
                   </p>
                 </div>
 
@@ -750,7 +774,7 @@ export const TouristApp: React.FC<TouristAppProps> = ({
                   onClick={() => handleNavigateTab('ai-assistant')}
                   className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c59b27] text-[#08281E] text-xs font-bold flex items-center justify-between transition-all cursor-pointer shadow-md active:scale-95"
                 >
-                  <span>Chat with Dharohar AI</span>
+                  <span>{language === 'hi' ? 'धरोहर एआई से बातचीत करें' : 'Chat with Dharohar AI'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

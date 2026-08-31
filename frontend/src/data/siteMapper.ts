@@ -1,4 +1,5 @@
 import { BackendSite } from '../api/sites';
+import { API_BASE_URL } from '../api/config';
 import { Monument, MonumentCategory, CrowdLevel, DeteriorationStatus } from '../types/heritage';
 import { MONUMENT_FALLBACKS } from '../assets/monumentImages';
 
@@ -50,9 +51,7 @@ export const resolveImageUrl = (
     if (clean.startsWith('/images/')) {
       return clean;
     }
-    const apiBase =
-      import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    return `${apiBase.replace(/\/+$/, '')}/${clean.replace(/^\/+/, '')}`;
+    return `${API_BASE_URL.replace(/\/+$/, '')}/${clean.replace(/^\/+/, '')}`;
   }
 
   if (siteId && SITE_IMAGE_PATHS[siteId]) {
@@ -102,7 +101,7 @@ interface SiteCuratedData {
   acousticFeatures?: string;
 }
 
-const KNOWN_SITE_METADATA: Record<string, SiteCuratedData> = {
+export const SITE_METADATA: Record<string, SiteCuratedData> = {
   DEL001: {
     hindiName: 'लाल किला',
     tagline: 'Historic Mughal fortress of red sandstone, symbol of Indian independence',
@@ -790,7 +789,7 @@ const KNOWN_SITE_METADATA: Record<string, SiteCuratedData> = {
 export const convertBackendSiteToMonument = (
   site: BackendSite
 ): Monument => {
-  const meta = KNOWN_SITE_METADATA[site.site_id];
+  const meta = SITE_METADATA[site.site_id];
 
   const id = site.site_id;
   const name = site.name;

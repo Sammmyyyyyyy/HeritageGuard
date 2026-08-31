@@ -29,32 +29,48 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
             <div className="flex items-center space-x-3 bg-white/5 p-4 rounded-xl border border-white/5">
               <Building2 className="w-6 h-6 text-[#D4AF37] shrink-0" />
               <div className="text-left">
-                <p className="text-xs font-bold leading-tight">Ministry of Tourism</p>
-                <p className="text-[10px] text-white/60">Government of India</p>
+                <p className="text-xs font-bold leading-tight">
+                  {language === 'hi' ? 'पर्यटन मंत्रालय' : 'Ministry of Tourism'}
+                </p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? 'भारत सरकार' : 'Government of India'}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 bg-white/5 p-4 rounded-xl border border-white/5">
               <ShieldCheck className="w-6 h-6 text-[#D4AF37] shrink-0" />
               <div className="text-left">
-                <p className="text-xs font-bold leading-tight">Archaeological Survey</p>
-                <p className="text-[10px] text-white/60">of India (ASI)</p>
+                <p className="text-xs font-bold leading-tight">
+                  {language === 'hi' ? 'भारतीय पुरातत्व सर्वेक्षण' : 'Archaeological Survey'}
+                </p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? 'एएसआई (ASI)' : 'of India (ASI)'}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 bg-white/5 p-4 rounded-xl border border-white/5">
               <HeartHandshake className="w-6 h-6 text-[#D4AF37] shrink-0" />
               <div className="text-left">
-                <p className="text-xs font-bold leading-tight">INTACH National Trust</p>
-                <p className="text-[10px] text-white/60">Art & Cultural Heritage</p>
+                <p className="text-xs font-bold leading-tight">
+                  {language === 'hi' ? 'इंटेक (INTACH)' : 'INTACH National Trust'}
+                </p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? 'कला एवं सांस्कृतिक धरोहर' : 'Art & Cultural Heritage'}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 bg-white/5 p-4 rounded-xl border border-white/5">
               <Globe2 className="w-6 h-6 text-[#D4AF37] shrink-0" />
               <div className="text-left">
-                <p className="text-xs font-bold leading-tight">UNESCO Heritage</p>
-                <p className="text-[10px] text-white/60">World Heritage Centre</p>
+                <p className="text-xs font-bold leading-tight">
+                  {language === 'hi' ? 'यूनेस्को धरोहर' : 'UNESCO Heritage'}
+                </p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? 'विश्व धरोहर केंद्र' : 'World Heritage Centre'}
+                </p>
               </div>
             </div>
           </div>
@@ -70,17 +86,21 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
               </div>
               <div>
                 <span className="font-regal text-xl font-bold tracking-tight text-white">
-                  Dhorohar<span className="text-[#D4AF37]">Dhirsti</span>
+                  Dharohar<span className="text-[#D4AF37]">Dhristi</span>
                 </span>
-                <p className="text-[10px] text-white/60">DhoroharDhirsti AI Platform</p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? 'धरोहर दृष्टि एआई मंच' : 'DharoharDhristi AI Platform'}
+                </p>
               </div>
             </div>
             <p className="text-xs text-white/70 leading-relaxed mb-4">
-              Pioneering artificial intelligence for monument longevity, sustainable crowd balancing, and immersive cultural storytelling across India.
+              {language === 'hi'
+                ? 'भारत भर के स्मारकों की दीर्घायु, सतत भीड़ संतुलन और समृद्ध सांस्कृतिक पर्यटन के लिए कृत्रिम बुद्धिमत्ता का उपयोग।'
+                : 'Pioneering artificial intelligence for monument longevity, sustainable crowd balancing, and immersive cultural storytelling across India.'}
             </p>
             <div className="flex items-center space-x-2 text-xs text-[#D4AF37]">
               <Sparkles className="w-4 h-4" />
-              <span>ASI Innovation Partner</span>
+              <span>{language === 'hi' ? 'एएसआई नवाचार सहयोगी' : 'ASI Innovation Partner'}</span>
             </div>
           </div>
 
@@ -90,23 +110,23 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
             </h4>
             <ul className="space-y-2 text-xs text-white/75">
               <li>
-                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer">
-                  Smart AI Itinerary Generator
+                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'स्मार्ट एआई यात्रा योजना जनरेटर' : 'Smart AI Itinerary Generator'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer">
-                  Live Heritage Pressure Heatmap
+                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'लाइव धरोहर दबाव हीटमैप' : 'Live Heritage Pressure Heatmap'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer">
-                  Citizen Damage Reporter & Scanner
+                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'नागरिक क्षति रिपोर्टर और स्कैनर' : 'Citizen Damage Reporter & Scanner'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer">
-                  Historical RAG Q&A Assistant
+                <button onClick={() => handleNav('tourist')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'ऐतिहासिक आरएजी प्रश्नोत्तर सहायक' : 'Historical RAG Q&A Assistant'}
                 </button>
               </li>
             </ul>
@@ -118,23 +138,23 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
             </h4>
             <ul className="space-y-2 text-xs text-white/75">
               <li>
-                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer">
-                  Computer Vision Crack & Spalling AI
+                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'कंप्यूटर विज़न दरार और क्षरण पहचान' : 'Computer Vision Crack & Spalling AI'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer">
-                  Heritage Pressure Matrix (HPS)
+                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'धरोहर दबाव मैट्रिक्स (HPS)' : 'Heritage Pressure Matrix (HPS)'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer">
-                  Live Footfall Throttling & Gating
+                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'लाइव फुटफॉल थ्रॉटलिंग व गेटिंग' : 'Live Footfall Throttling & Gating'}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer">
-                  ASI Emergency Dispatch Workflow
+                <button onClick={() => handleNav('authority')} className="hover:text-white transition-colors cursor-pointer text-left">
+                  {language === 'hi' ? 'एएसआई आपातकालीन टीम प्रेषण' : 'ASI Emergency Dispatch Workflow'}
                 </button>
               </li>
             </ul>
@@ -145,13 +165,17 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
               {language === 'hi' ? 'हेल्पलाइन व संपर्क' : 'Conservation Support'}
             </h4>
             <p className="text-xs text-white/70 mb-3">
-              Report urgent structural vandalism, illegal digging, or hazardous cracks.
+              {language === 'hi'
+                ? 'तत्काल संरचनात्मक क्षति, अवैध खनन या खतरनाक दरारों की रिपोर्ट करें।'
+                : 'Report urgent structural vandalism, illegal digging, or hazardous cracks.'}
             </p>
             <div className="flex items-center space-x-2 text-xs bg-white/10 p-2.5 rounded-lg border border-white/10">
               <PhoneCall className="w-4 h-4 text-emerald-400" />
               <div>
                 <p className="font-bold text-white">1800-11-1363</p>
-                <p className="text-[10px] text-white/60">24x7 Heritage Emergency Toll-Free</p>
+                <p className="text-[10px] text-white/60">
+                  {language === 'hi' ? '24x7 राष्ट्रीय धरोहर आपातकालीन टोल-फ्री' : '24x7 Heritage Emergency Toll-Free'}
+                </p>
               </div>
             </div>
           </div>
@@ -159,9 +183,11 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
         </div>
 
         <div className="pt-8 border-t border-white/10 text-center text-xs text-white/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 DhoroharDhirsti. All rights reserved.</p>
+          <p>{language === 'hi' ? '© 2026 धरोहर दृष्टि। सर्वाधिकार सुरक्षित।' : '© 2026 DharoharDhristi. All rights reserved.'}</p>
           <p className="text-[11px]">
-            Designed for India's Cultural Legacy • Developed for High Conservation Impact
+            {language === 'hi'
+              ? "भारत की सांस्कृतिक विरासत के संरक्षण हेतु समर्पित"
+              : "Designed for India's Cultural Legacy • Developed for High Conservation Impact"}
           </p>
         </div>
 

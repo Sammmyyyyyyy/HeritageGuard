@@ -36,7 +36,8 @@ export interface HourlyFootfall {
 export interface Monument {
   id: string;
   name: string;
-  hindiName: string;
+  hindiName?: string;
+  city_hi?: string;
   tagline: string;
   city: string;
   state: string;

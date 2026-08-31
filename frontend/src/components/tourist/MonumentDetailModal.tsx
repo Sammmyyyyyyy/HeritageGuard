@@ -27,6 +27,7 @@ import { Monument } from '../../types/heritage';
 import { getCrowd, CrowdPredictionResponse, HourlyPrediction } from '../../api/crowd';
 import { getPressure, PressureResponse } from '../../api/pressure';
 import { getTodayDateString, formatTime12, formatTimeRange } from '../../data/crowdForecastData';
+import { getConditionLabel, getHighlightLabel } from '../../utils/translations';
 
 interface MonumentDetailModalProps {
   monument: Monument | null;
@@ -292,18 +293,24 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-[#1A2621]/60 font-semibold uppercase">Rating & Footfall</p>
+                    <p className="text-xs text-[#1A2621]/60 font-semibold uppercase">
+                      {language === 'hi' ? 'रेटिंग एवं आगंतुक' : 'Rating & Footfall'}
+                    </p>
                     <div className="flex items-center space-x-1.5 mt-0.5">
                       <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                       <span className="text-lg font-bold text-[#0D3B2E]">{monument.rating}</span>
-                      <span className="text-xs text-gray-500">({monument.reviewsCount})</span>
+                      <span className="text-xs text-gray-500">
+                        ({monument.reviewsCount} {language === 'hi' ? 'समीक्षाएं' : ''})
+                      </span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <p className="text-xs text-[#1A2621]/60 font-semibold uppercase">Condition Status</p>
+                    <p className="text-xs text-[#1A2621]/60 font-semibold uppercase">
+                      {language === 'hi' ? 'संरचनात्मक स्थिति' : 'Condition Status'}
+                    </p>
                     <span className="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                      {monument.deteriorationStatus}
+                      {getConditionLabel(monument.deteriorationStatus, language)}
                     </span>
                   </div>
                 </div>
@@ -313,7 +320,9 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                   <div className="flex items-center justify-between text-xs font-semibold mb-1">
                     <span className="text-[#0D3B2E] flex items-center space-x-1">
                       <ShieldAlert className="w-3.5 h-3.5 text-[#C85A32]" />
-                      <span>Heritage Pressure Score (HPS)</span>
+                      <span>
+                        {language === 'hi' ? 'धरोहर दबाव स्कोर (HPS)' : 'Heritage Pressure Score (HPS)'}
+                      </span>
                     </span>
                     {isLoadingTelemetry ? (
                       <span className="inline-block w-12 h-4 bg-gray-200 animate-pulse rounded" />
@@ -339,14 +348,18 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                     )}
                   </div>
                   <p className="text-[10px] text-[#1A2621]/60 mt-1 leading-tight">
-                    Live structural pressure assessment from backend AI (calibrated on footfall load, weathering, and material wear).
+                    {language === 'hi'
+                      ? 'बैकएंड एआई द्वारा लाइव संरचनात्मक दबाव मूल्यांकन (आगंतुक भार, मौसम और सामग्री घिसाव पर आधारित)।'
+                      : 'Live structural pressure assessment from backend AI (calibrated on footfall load, weathering, and material wear).'}
                   </p>
                 </div>
 
                 {/* Timings & Entry Ticket Fee (Live Backend Source) */}
                 <div className="pt-3 border-t border-[#0D3B2E]/10 grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-semibold">Opening Hours</span>
+                    <span className="text-gray-500 block text-[10px] uppercase font-semibold">
+                      {language === 'hi' ? 'खुलने का समय' : 'Opening Hours'}
+                    </span>
                     {isLoadingTelemetry ? (
                       <span className="inline-block w-24 h-4 bg-gray-200 animate-pulse rounded mt-0.5" />
                     ) : (
@@ -354,8 +367,12 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                     )}
                   </div>
                   <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-semibold">Entry Ticket</span>
-                    <span className="font-bold text-[#0D3B2E]">₹{monument.entryFee.indian} (Indian) / ₹{monument.entryFee.foreigner}</span>
+                    <span className="text-gray-500 block text-[10px] uppercase font-semibold">
+                      {language === 'hi' ? 'प्रवेश टिकट' : 'Entry Ticket'}
+                    </span>
+                    <span className="font-bold text-[#0D3B2E]">
+                      ₹{monument.entryFee.indian} ({language === 'hi' ? 'भारतीय' : 'Indian'}) / ₹{monument.entryFee.foreigner}
+                    </span>
                   </div>
                 </div>
 
@@ -365,7 +382,9 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
               <div className="bg-gradient-to-br from-[#0D3B2E] to-[#165342] text-white p-4 rounded-2xl shadow-md border border-[#D4AF37]/30">
                 <div className="flex items-center space-x-2 text-[#D4AF37] text-xs font-bold uppercase tracking-wider mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>AI Recommended Visiting Window</span>
+                  <span>
+                    {language === 'hi' ? 'एआई अनुशंसित भ्रमण समय' : 'AI Recommended Visiting Window'}
+                  </span>
                 </div>
                 {isLoadingTelemetry ? (
                   <div className="h-7 w-40 bg-white/20 animate-pulse rounded my-1" />
@@ -575,13 +594,13 @@ export const MonumentDetailModal: React.FC<MonumentDetailModalProps> = ({
                 {monument.architectureHighlights.map((hl, index) => (
                   <li key={index} className="flex items-start space-x-2">
                     <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>{hl}</span>
+                    <span>{getHighlightLabel(hl, language)}</span>
                   </li>
                 ))}
                 {monument.acousticFeatures && (
                   <li className="flex items-start space-x-2 text-[#0D3B2E] font-semibold bg-[#0D3B2E]/5 p-2 rounded-lg mt-2">
                     <Volume2 className="w-4 h-4 text-[#C85A32] shrink-0 mt-0.5" />
-                    <span>{monument.acousticFeatures}</span>
+                    <span>{getHighlightLabel(monument.acousticFeatures, language)}</span>
                   </li>
                 )}
               </ul>

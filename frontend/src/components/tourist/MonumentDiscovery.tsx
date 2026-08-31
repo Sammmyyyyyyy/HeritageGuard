@@ -18,6 +18,12 @@ import {
 } from 'lucide-react';
 import { MONUMENTS_DATA } from '../../data/monumentsData';
 import { Monument, MonumentCategory, CrowdLevel } from '../../types/heritage';
+import {
+  getCityLabel,
+  getStateLabel,
+  getStyleLabel,
+  getCategoryLabel
+} from '../../utils/translations';
 
 interface MonumentDiscoveryProps {
   language: 'en' | 'hi';
@@ -72,7 +78,7 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
       // Search query
       const matchesSearch = 
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.hindiName.includes(searchQuery) ||
+        (item.hindiName && item.hindiName.includes(searchQuery)) ||
         item.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.architecturalStyle.toLowerCase().includes(searchQuery.toLowerCase());
@@ -286,11 +292,11 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
                 <div className="absolute top-3 left-3">
                   {monument.isUnesco ? (
                     <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider uppercase bg-[#0D3B2E]/90 backdrop-blur-md text-[#D4AF37] border border-[#D4AF37]/40 shadow-sm flex items-center space-x-1">
-                      <span>UNESCO SITE</span>
+                      <span>{language === 'hi' ? 'यूनेस्को स्थल' : 'UNESCO SITE'}</span>
                     </span>
                   ) : (
                     <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider uppercase bg-black/60 backdrop-blur-md text-white/90 border border-white/20 shadow-sm">
-                      HERITAGE SITE
+                      {language === 'hi' ? 'धरोहर स्थल' : 'HERITAGE SITE'}
                     </span>
                   )}
                 </div>
@@ -342,12 +348,14 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
                   {/* Title & Hindi Name */}
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="text-lg font-bold text-[#0D3B2E] font-serif-heritage leading-snug group-hover:text-[#C85A32] transition-colors">
-                      {monument.name}
+                      {language === 'hi' && monument.hindiName ? monument.hindiName : monument.name}
                     </h3>
                   </div>
                   <p className="text-xs text-[#1A2621]/60 font-medium mb-3 flex items-center space-x-1">
                     <MapPin className="w-3.5 h-3.5 text-[#C85A32]" />
-                    <span>{monument.city}, {monument.state}</span>
+                    <span>
+                      {getCityLabel(monument.city, language)}, {getStateLabel(monument.state, language)}
+                    </span>
                   </p>
 
                   {/* Rating & Architecture Tag */}
@@ -355,11 +363,13 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
                     <div className="flex items-center space-x-1 text-amber-600 font-bold">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       <span>{monument.rating}</span>
-                      <span className="text-gray-400 font-normal">({monument.reviewsCount})</span>
+                      <span className="text-gray-400 font-normal">
+                        ({monument.reviewsCount} {language === 'hi' ? 'समीक्षाएं' : ''})
+                      </span>
                     </div>
 
                     <span className="text-[11px] text-[#0D3B2E]/80 bg-[#0D3B2E]/5 px-2 py-0.5 rounded font-medium truncate max-w-[150px]">
-                      {monument.architecturalStyle}
+                      {getStyleLabel(monument.architecturalStyle, language)}
                     </span>
                   </div>
 
@@ -367,7 +377,7 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
                   <div className="bg-[#F8F6F0] p-2.5 rounded-xl text-xs text-[#1A2621]/80 mb-3">
                     <div className="flex items-center space-x-1.5 font-semibold text-[#0D3B2E] mb-0.5">
                       <Clock className="w-3.5 h-3.5 text-[#C85A32]" />
-                      <span>Best Visiting Window:</span>
+                      <span>{language === 'hi' ? 'सर्वोत्तम भ्रमण समय:' : 'Best Visiting Window:'}</span>
                     </div>
                     <p className="text-[11px] text-[#1A2621]/70 font-mono">
                       {monument.bestVisitingWindow.start} – {monument.bestVisitingWindow.end}
