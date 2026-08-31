@@ -24,6 +24,12 @@ from app.routers import (
     rag,
 )
 
+from app.exceptions.base import AppException
+from app.exceptions.handlers import (
+    app_exception_handler,
+    unexpected_exception_handler,
+)
+
 # =========================================================
 # APPLICATION INSTANCE (Only 1 instance)
 # =========================================================
@@ -33,18 +39,31 @@ app = FastAPI(
 )
 
 # =========================================================
+# EXCEPTION HANDLERS
+# =========================================================
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(Exception, unexpected_exception_handler)
+
+# =========================================================
 # CORS MIDDLEWARE
 # =========================================================
-# Note: allow_credentials=True requires exact origin matching, OR allow_origin_regex
+raw_origins = getattr(settings, "CORS_ORIGINS", "")
+cors_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins:
+    cors_origins.append(settings.FRONTEND_URL)
+
+for default_origin in [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]:
+    if default_origin not in cors_origins:
+        cors_origins.append(default_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://heritage-guard-helper-smoky.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

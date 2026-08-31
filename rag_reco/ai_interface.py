@@ -1,7 +1,6 @@
 import json
 from itineary_engine import generate_itinerary, load_sites, get_live_weather
 from rag_engine import ask_heritage_question
-from ingest import ingest_documents
 
 # Define operational boundaries and link them to their JSON files
 SUPPORTED_CITIES = {
@@ -63,4 +62,5 @@ def answer_tourist_query(site_id: str, question: str, language: str = "English")
 
 def run_pdf_ingestion():
     """Triggers the document vectorization pipeline."""
+    from ingest import ingest_documents
     ingest_documents()

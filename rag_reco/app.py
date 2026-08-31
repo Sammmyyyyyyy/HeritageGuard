@@ -22,12 +22,20 @@ app.add_middleware(
 # 2. Self-healing check on startup
 @app.on_event("startup")
 def startup_event():
-    """Auto-ingests documents if vector database is not present."""
+    """Verifies that pre-built vector database is present."""
     db_dir = "./chroma_db"
     if not os.path.exists(db_dir) or not os.listdir(db_dir):
         raise RuntimeError(
             "ChromaDB not found. Please deploy the pre-built chroma_db directory."
         )
+
+@app.get("/")
+def root():
+    return {"message": "HeritageGuard RAG Service is running", "status": "healthy"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "HeritageGuard RAG Engine"}
 
 # 3. Payload schemas (Structured for clean Swagger UI documentation)
 class Coordinates(BaseModel):

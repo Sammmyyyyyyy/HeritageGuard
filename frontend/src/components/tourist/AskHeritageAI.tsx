@@ -8,7 +8,6 @@ import {
   BookOpen, 
   RotateCcw
 } from 'lucide-react';
-import { HISTORICAL_KNOWLEDGE_BASE } from '../../data/historicalQnAData';
 import { getSites, queryHeritageRAG, BackendSite } from '../../api/sites';
 import { ChatMessage } from '../../types/heritage';
 
@@ -114,15 +113,45 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
     let targetSiteId = selectedSiteId;
     const qLower = query.toLowerCase();
 
-    for (const site of backendSites) {
-      const nameParts = site.name.toLowerCase().replace(/[()]/g, ' ').split(' ');
-      const hasMatch = nameParts.some(
-        (part) => part.length > 3 && qLower.includes(part)
-      ) || qLower.includes(site.site_id.toLowerCase());
+    const SITE_KEYWORD_MAP: { [siteId: string]: string[] } = {
+      'BOM001': ['gateway of india', 'gateway', 'गेटवे', 'apollo bunder'],
+      'BOM002': ['elephanta', 'elephanta caves', 'gharapuri', 'एलिफेंटा'],
+      'BOM003': ['csmt', 'cst', 'chhatrapati shivaji', 'victoria terminus', 'सीएसएमटी'],
+      'BOM004': ['haji ali', 'हाजी अली'],
+      'BOM005': ['siddhivinayak', 'सिद्धिविनायक'],
+      'JAI001': ['amer fort', 'amber fort', 'amer', 'amber', 'आमेर'],
+      'JAI002': ['hawa mahal', 'हवा महल'],
+      'JAI003': ['city palace', 'सिटी पैलेस'],
+      'JAI004': ['jantar mantar', 'जंतर मंतर'],
+      'JAI005': ['albert hall', 'अल्बर्ट हॉल'],
+      'DEL001': ['red fort', 'lal qila', 'lal kila', 'लाल किला'],
+      'DEL002': ['qutub', 'qutab', 'qutub minar', 'कुतुब'],
+      'DEL003': ['india gate', 'इंडिया गेट'],
+      'DEL004': ['humayun', 'humayun’s tomb', 'humayuns tomb', 'हुमायूँ'],
+      'DEL005': ['lotus temple', 'लोटस टेम्पल', 'bahai temple'],
+      'PRA001': ['triveni', 'sangam', 'triveni sangam', 'त्रिवेणी संगम'],
+      'PRA002': ['allahabad fort', 'इलाहाबाद का किला', 'prayagraj fort'],
+      'PRA003': ['khusro bagh', 'खुसरो बाग'],
+      'PRA004': ['anand bhavan', 'आनंद भवन', 'anand bhawan'],
+      'PRA005': ['azad park', 'chandrashekhar azad', 'alfred park', 'कंपनी बाग']
+    };
 
-      if (hasMatch) {
-        targetSiteId = site.site_id;
-        break;
+    if (selectedSiteId === 'all') {
+      for (const [siteId, keywords] of Object.entries(SITE_KEYWORD_MAP)) {
+        if (keywords.some((kw) => qLower.includes(kw))) {
+          targetSiteId = siteId;
+          break;
+        }
+      }
+
+      if (targetSiteId === 'all') {
+        for (const site of backendSites) {
+          const cleanName = site.name.toLowerCase().replace(/[()]/g, '').trim();
+          if (cleanName && qLower.includes(cleanName)) {
+            targetSiteId = site.site_id;
+            break;
+          }
+        }
       }
     }
 
@@ -176,45 +205,21 @@ export const AskHeritageAI: React.FC<AskHeritageAIProps> = ({ language }) => {
 
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error: any) {
-      console.error('RAG - BACKEND QUERY FAILED, USING FALLBACK:', error);
+      console.error('RAG - BACKEND QUERY FAILED:', error);
 
       setRagError(
-        error?.message || 'Unable to connect to the Heritage AI backend.'
+        error?.message || 'Unable to connect to the Heritage AI service.'
       );
 
-      // Local knowledge-base fallback logic
-      const matched = HISTORICAL_KNOWLEDGE_BASE.find((item) =>
-        item.keywords.some((kw) => qLower.includes(kw.toLowerCase()))
-      );
+      const unavailableMessage: ChatMessage = {
+        id: 'ai-' + Date.now(),
+        sender: 'ai',
+        text: '⚠️ Heritage AI is currently unavailable.\nThe RAG service is not connected.',
+        hindiText: '⚠️ Heritage AI is currently unavailable.\nThe RAG service is not connected.',
+        timestamp: 'Just now'
+      };
 
-      // Find matched site metadata from default list
-      const matchedSite = backendSites.find((s) =>
-        s.site_id.toLowerCase() === siteIdToUse.toLowerCase() ||
-        qLower.includes(s.name.toLowerCase().split(' ')[0])
-      );
-
-      const fallbackResponse: ChatMessage = matched
-        ? {
-            id: 'ai-' + Date.now(),
-            sender: 'ai',
-            text: matched.answerEn,
-            hindiText: matched.answerHi,
-            timestamp: 'Just now',
-            sources: matched.sources
-          }
-        : {
-            id: 'ai-' + Date.now(),
-            sender: 'ai',
-            text: matchedSite
-              ? `${matchedSite.name} in ${matchedSite.city}, ${matchedSite.state} is a prominent heritage site. Grounded in ASI dossiers, it represents important cultural and architectural history.`
-              : `Regarding "${query}": India's 20 major heritage monuments feature architectural synthesis and rich historical significance documented in ASI dossiers.`,
-            hindiText: matchedSite
-              ? `${matchedSite.name} (${matchedSite.city}, ${matchedSite.state}) भारतीय पुरातत्व सर्वेक्षण रिकॉर्ड में शामिल एक प्रमुख ऐतिहासिक धरोहर है।`
-              : `"${query}" के संबंध में: भारत के 20 प्रमुख ऐतिहासिक स्मारक अद्भुत स्थापत्य और सांस्कृतिक धरोहर का प्रतिनिधित्व करते हैं।`,
-            timestamp: 'Just now'
-          };
-
-      setMessages((prev) => [...prev, fallbackResponse]);
+      setMessages((prev) => [...prev, unavailableMessage]);
     } finally {
       setIsTyping(false);
     }

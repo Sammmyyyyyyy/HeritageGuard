@@ -19,24 +19,64 @@ class RAGResponse(BaseModel):
     answer: str = Field(description="The factual answer to the question in the requested language")
     sources: List[SourceCitation] = Field(description="List of sources used")
 
-# --- Database & LLM Initialization ---
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-vector_db = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+# --- Lazy Singletons for Memory & Startup Optimization ---
+_embeddings = None
+_vector_db = None
+_llm = None
+_structured_llm = None
 
-llm = ChatOpenAI(
-    model=os.getenv("OPENAI_MODEL", "gemini-3.6-flash"), 
-    temperature=0, 
-    max_tokens=1000,
-    base_url=os.getenv("OPENAI_API_BASE"),
-    api_key=os.getenv("OPENAI_API_KEY")
-)
-structured_llm = llm.with_structured_output(RAGResponse)
+
+def get_embeddings():
+    global _embeddings
+    if _embeddings is None:
+        _embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={"device": "cpu"}
+        )
+    return _embeddings
+
+
+def get_vector_db():
+    global _vector_db
+    if _vector_db is None:
+        db_dir = "./chroma_db"
+        if not os.path.exists(db_dir) or not os.listdir(db_dir):
+            raise RuntimeError("ChromaDB not found. Please deploy the pre-built chroma_db directory.")
+        _vector_db = Chroma(
+            persist_directory=db_dir,
+            embedding_function=get_embeddings()
+        )
+    return _vector_db
+
+
+def get_llm_and_structured():
+    global _llm, _structured_llm
+    if _llm is None:
+        api_key = (
+            os.getenv("GEMINI_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
+        )
+        base_url = os.getenv("OPENAI_API_BASE")
+        model_name = os.getenv("OPENAI_MODEL", "gemini-3.6-flash")
+
+        _llm = ChatOpenAI(
+            model=model_name,
+            temperature=0,
+            max_tokens=1000,
+            base_url=base_url if base_url else None,
+            api_key=api_key
+        )
+        _structured_llm = _llm.with_structured_output(RAGResponse)
+    return _llm, _structured_llm
+
 
 # --- Prompts ---
 SYSTEM_PROMPT = """You are the HeritageGuard AI, an expert multilingual heritage guide. 
-You answer historical questions based ONLY on the provided context documents.
-If the context does not contain the answer, you must reply: "The historical records do not contain this information." translated into the requested language.
-Do NOT invent facts. You must write your final answer in the requested language: {language}."""
+Answer historical questions factually and comprehensively based on the provided context documents.
+Note that Indian monuments frequently have alternate transliterations and names (e.g., Amer Fort / Amber Fort, Red Fort / Lal Qila, Qutub / Qutab Minar, Gateway of India / Apollo Bunder, Prayagraj / Allahabad).
+If the provided context contains relevant historical records about the monument or place, answer the question accurately in {language}.
+Only if the context genuinely contains no relevant historical facts to answer the question, reply: "The historical records do not contain this information." in {language}."""
 
 HUMAN_PROMPT = """
 Context Documents:
@@ -50,47 +90,62 @@ prompt_template = ChatPromptTemplate.from_messages([
     ("human", HUMAN_PROMPT)
 ])
 
+
 def ask_heritage_question(site_id: str, question: str, language: str = "English"):
     """
     Handles multilingual queries across heritage sites with fallback vector search and resilient LLM invocation.
     """
     try:
+        llm, structured_llm = get_llm_and_structured()
+        vector_db = get_vector_db()
+
         # 1. Zero-Cost Multilingual Search Strategy
         search_query = question
-        if language.lower() != "english":
+        if language and language.lower() != "english":
             try:
                 translation_prompt = f"Translate the following tourist question into simple English. Return ONLY the translated text: {question}"
                 translated_res = llm.invoke(translation_prompt)
                 if hasattr(translated_res, 'content') and translated_res.content:
                     search_query = translated_res.content.strip()
             except Exception as te:
-                print("⚠️ Translation skipped:", te)
+                print("Translation skipped:", te)
 
-        # 2. Vector search with Metadata Filter (ONLY retrieve requested site_id if available)
+        # Normalize site_id to match upper-case metadata stored during ingestion
+        clean_site_id = site_id.strip().upper() if site_id else ""
+
+        # 2. Vector search strategy:
+        # Retrieve both site-filtered candidates (if site_id specified) AND semantic unfiltered candidates
         docs = []
-        if site_id and str(site_id).lower() not in ["all", "default_site", "none"]:
+        seen_contents = set()
+
+        if clean_site_id and clean_site_id not in ["ALL", "DEFAULT_SITE", "NONE"]:
             try:
-                docs = vector_db.similarity_search(
+                filtered_docs = vector_db.similarity_search(
                     query=search_query,
-                    k=4,
-                    filter={"site_id": site_id}
+                    k=3,
+                    filter={"site_id": clean_site_id}
                 )
+                for d in filtered_docs:
+                    if d.page_content not in seen_contents:
+                        seen_contents.add(d.page_content)
+                        docs.append(d)
             except Exception as fe:
-                print(f"⚠️ Filtered vector search for site {site_id} failed: {fe}")
+                print(f"Filtered vector search for site {clean_site_id} failed: {fe}")
 
-        # Fallback to unfiltered vector search if no site-filtered docs were found
-        if not docs:
-            try:
-                docs = vector_db.similarity_search(
-                    query=search_query,
-                    k=6
-                )
-            except Exception as ufe:
-                print(f"⚠️ Unfiltered vector search failed: {ufe}")
+        # Always complement with top global semantic matches for the question
+        try:
+            semantic_docs = vector_db.similarity_search(
+                query=search_query,
+                k=4
+            )
+            for d in semantic_docs:
+                if d.page_content not in seen_contents:
+                    seen_contents.add(d.page_content)
+                    docs.append(d)
+        except Exception as se:
+            print(f"Semantic vector search failed: {se}")
 
-        print("🔎 SITE ID FILTER:", site_id)
-        print("🔎 SEARCH QUERY:", search_query)
-        print("📚 DOCS FOUND:", len(docs))
+        print(f"[RAG Engine] Site Filter: {clean_site_id} | Query: {search_query} | Docs retrieved: {len(docs)}")
 
         # 3. Format context
         formatted_context = ""
@@ -118,7 +173,7 @@ def ask_heritage_question(site_id: str, question: str, language: str = "English"
                 "sources": [source.model_dump() if hasattr(source, "model_dump") else source.dict() for source in result.sources]
             }
         except Exception as llm_err:
-            print("⚠️ Structured LLM failed, using direct prompt completion:", llm_err)
+            print("Structured LLM failed, using direct prompt completion:", llm_err)
             
             direct_prompt = f"""You are HeritageGuard AI, an expert heritage guide.
 Context:

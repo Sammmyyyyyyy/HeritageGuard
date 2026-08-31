@@ -54,10 +54,11 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 10485760
 
     # =========================================================
-    # FRONTEND
+    # FRONTEND & CORS
     # =========================================================
 
     FRONTEND_URL: str = "https://heritage-guard-helper-smoky.vercel.app"
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,https://heritage-guard-helper-smoky.vercel.app"
 
     # =========================================================
     # ENV FILE

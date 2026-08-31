@@ -88,12 +88,19 @@ def get_or_train_ml_model():
     joblib.dump(model, MODEL_PATH)
     return model
 
-ML_MODEL = get_or_train_ml_model()
+_ml_model = None
+
+def get_ml_model():
+    global _ml_model
+    if _ml_model is None:
+        _ml_model = get_or_train_ml_model()
+    return _ml_model
 
 def predict_crowd(arrival_time_str: str, base_pop: float, weather: dict) -> float:
     hour = int(arrival_time_str.split(":")[0])
     df = pd.DataFrame([{"hour": hour, "is_weekend": weather.get("is_weekend", 0), "is_holiday": 0, "temp_c": weather.get("temperature_c", 30), "rain_prob": weather.get("rain_prob", 0), "base_pop": base_pop}])
-    return round(float(np.clip(ML_MODEL.predict(df)[0], 0.05, 1.0)), 2)
+    model = get_ml_model()
+    return round(float(np.clip(model.predict(df)[0], 0.05, 1.0)), 2)
 
 # ==========================================
 # 4. CORE OPTIMIZER ENGINE

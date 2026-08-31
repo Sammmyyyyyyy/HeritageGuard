@@ -19,10 +19,11 @@ class RAGAIClient:
         language: str = "English",
     ) -> Dict[str, Any]:
 
-        url = (
-            f"{settings.RAG_AI_URL}"
-            f"{settings.RAG_AI_ENDPOINT}"
-        )
+        base_url = settings.RAG_AI_URL.rstrip("/")
+        endpoint = settings.RAG_AI_ENDPOINT
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
+        url = f"{base_url}{endpoint}"
 
         payload = {
             "site_id": site_id,
@@ -44,7 +45,7 @@ class RAGAIClient:
                 result = response.json()
 
         except httpx.TimeoutException as exc:
-            raise AIServiceTimeout() from exc
+            raise AIServiceTimeout("RAG AI request timed out") from exc
 
         except httpx.HTTPError as exc:
             raise AIServiceUnavailable(
