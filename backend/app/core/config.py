@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # DAMAGE AI
     # =========================================================
 
-    DAMAGE_AI_URL: str = "http://127.0.0.1:8002"
+    DAMAGE_AI_URL: str = "https://heritageguard-2.onrender.com"
     DAMAGE_AI_ENDPOINT: str = "/analyze"
 
     # =========================================================
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # =========================================================
 
     CROWD_AI_URL: str = "http://127.0.0.1:8003"
-    PRESSURE_AI_URL:str = "http://127.0.0.1:8003"
+    PRESSURE_AI_URL: str = "http://127.0.0.1:8003"
 
     # =========================================================
     # AI SETTINGS
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # FRONTEND
     # =========================================================
 
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "https://heritage-guard-helper-smoky.vercel.app"
 
     # =========================================================
     # ENV FILE
@@ -68,7 +68,6 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
-
 
 
 settings = Settings()
