@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # DAMAGE AI
     # =========================================================
 
-    DAMAGE_AI_URL: str = "https://heritageguard-2.onrender.com"
+    DAMAGE_AI_URL: str = "http://127.0.0.1:8002"
     DAMAGE_AI_ENDPOINT: str = "/analyze"
 
     # =========================================================
