@@ -19,17 +19,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Self-healing check and warm-up on startup
+# 2. Self-healing check on startup
 @app.on_event("startup")
 def startup_event():
-    """Verifies that pre-built vector database is present and pre-warms models for instant response."""
-    try:
-        from rag_engine import get_embeddings, get_vector_db, get_llm
-        get_vector_db()
-        get_llm()
-        print("[Heritage RAG Engine] Models & Vector DB pre-warmed for ultra-low latency.")
-    except Exception as exc:
-        print(f"[Heritage RAG Engine] Startup initialization warning: {exc}")
+    """Verifies that pre-built vector database is present."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate_dirs = [
+        os.path.join(base_dir, "chroma_db"),
+        "./chroma_db",
+        "../chroma_db"
+    ]
+    found = any(os.path.exists(d) and len(os.listdir(d)) > 0 for d in candidate_dirs)
+    if not found:
+        print("[Warning] ChromaDB directory not found yet.")
 
 @app.get("/")
 def root():
