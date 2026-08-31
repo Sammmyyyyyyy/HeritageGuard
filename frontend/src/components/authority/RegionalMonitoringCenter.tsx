@@ -17,9 +17,11 @@ import {
   calculateConditionStatus,
   calculateCrowdLevel,
   getCurrentHourPredictedVisitors,
+  isMonumentCurrentlyClosed,
   resolveImageUrl
 } from '../../api/authority';
 import { MONUMENT_FALLBACKS } from '../../assets/monumentImages';
+import { SITE_METADATA } from '../../data/siteMapper';
 
 interface RegionalMonitoringCenterProps {
   sites: BackendSite[];
@@ -75,7 +77,7 @@ export const RegionalMonitoringCenter: React.FC<RegionalMonitoringCenterProps> =
       }
       const c = crowdMap[s.site_id];
       if (c) {
-        totalVisitors += getCurrentHourPredictedVisitors(c);
+        totalVisitors += getCurrentHourPredictedVisitors(c, SITE_METADATA[s.site_id]?.openingHours);
       }
     });
 
@@ -258,8 +260,10 @@ export const RegionalMonitoringCenter: React.FC<RegionalMonitoringCenterProps> =
                     const isSelected = selectedSite?.site_id === site.site_id;
                     const pressure = pressureMap[site.site_id] || null;
                     const crowd = crowdMap[site.site_id] || null;
+                    const openingHours = SITE_METADATA[site.site_id]?.openingHours || '';
+                    const isClosed = isMonumentCurrentlyClosed(crowd, openingHours);
                     const condition = calculateConditionStatus(pressure);
-                    const liveVisitors = getCurrentHourPredictedVisitors(crowd);
+                    const liveVisitors = getCurrentHourPredictedVisitors(crowd, openingHours);
                     const imgUrl = resolveImageUrl(site.image_url, site.site_id);
 
                     return (
@@ -299,9 +303,15 @@ export const RegionalMonitoringCenter: React.FC<RegionalMonitoringCenterProps> =
                             <p className={`text-xs font-bold ${isSelected ? 'text-amber-300' : 'text-slate-900'}`}>
                               {pressure ? `${pressure.pressure_score.toFixed(1)}/100` : 'N/A'}
                             </p>
-                            <p className={`text-[9px] ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
-                              {liveVisitors.toLocaleString()} visitors
-                            </p>
+                            {isClosed ? (
+                              <p className={`text-[9px] font-bold ${isSelected ? 'text-amber-300' : 'text-amber-600'}`}>
+                                0 (currently closed)
+                              </p>
+                            ) : (
+                              <p className={`text-[9px] ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                                {liveVisitors.toLocaleString()} visitors
+                              </p>
+                            )}
                           </div>
 
                           <span

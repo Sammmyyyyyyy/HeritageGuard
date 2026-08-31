@@ -158,10 +158,97 @@ export async function fetchLiveAuthorityMetrics(): Promise<LiveAuthorityMetrics>
   };
 }
 
+export function isMonumentCurrentlyClosed(
+  crowd: CrowdPredictionResponse | null | undefined,
+  openingHoursStr?: string
+): boolean {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sun, 1 = Mon, ... 5 = Fri, 6 = Sat
+  const rawHours = (crowd?.operating_hours || openingHoursStr || '').trim();
+  const lower = rawHours.toLowerCase();
+
+  // Weekly Closed Day Check
+  if (lower.includes('closed on monday') && day === 1) return true;
+  if (lower.includes('closed on friday') && day === 5) return true;
+  if (lower.includes('closed on sunday') && day === 0) return true;
+  if (lower.includes('closed on wednesday') && day === 3) return true;
+
+  // Open 24 Hours
+  if (lower.includes('24 hours') || lower.includes('open 24')) return false;
+
+  const currentHourNum = now.getHours();
+  const currentHourFormatted = `${String(currentHourNum).padStart(2, '0')}:00`;
+
+  let openH = 9;
+  let openM = 0;
+  let closeH = 17;
+  let closeM = 0;
+  let foundHours = false;
+
+  if (crowd?.operating_hours) {
+    const parts = crowd.operating_hours.split('-');
+    if (parts.length === 2) {
+      const [oh, om] = parts[0].split(':').map((n) => parseInt(n, 10));
+      const [ch, cm] = parts[1].split(':').map((n) => parseInt(n, 10));
+      if (!isNaN(oh) && !isNaN(ch)) {
+        openH = oh;
+        openM = om || 0;
+        closeH = ch;
+        closeM = cm || 0;
+        foundHours = true;
+      }
+    }
+  }
+
+  if (!foundHours && openingHoursStr) {
+    const m = openingHoursStr.match(/(\d{1,2}):?(\d{2})?\s*(AM|PM)\s*-\s*(\d{1,2}):?(\d{2})?\s*(AM|PM)/i);
+    if (m) {
+      let h1 = parseInt(m[1], 10);
+      const min1 = m[2] ? parseInt(m[2], 10) : 0;
+      const ampm1 = m[3].toUpperCase();
+      if (ampm1 === 'PM' && h1 !== 12) h1 += 12;
+      if (ampm1 === 'AM' && h1 === 12) h1 = 0;
+
+      let h2 = parseInt(m[4], 10);
+      const min2 = m[5] ? parseInt(m[5], 10) : 0;
+      const ampm2 = m[6].toUpperCase();
+      if (ampm2 === 'PM' && h2 !== 12) h2 += 12;
+      if (ampm2 === 'AM' && h2 === 12) h2 = 0;
+
+      openH = h1;
+      openM = min1;
+      closeH = h2;
+      closeM = min2;
+      foundHours = true;
+    }
+  }
+
+  if (foundHours) {
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const openMins = openH * 60 + openM;
+    const closeMins = closeH * 60 + closeM;
+    if (currentMins < openMins || currentMins >= closeMins) {
+      return true;
+    }
+  } else if (crowd?.predictions && crowd.predictions.length > 0) {
+    const match = crowd.predictions.some(
+      (p) => p.time === currentHourFormatted || p.time.startsWith(String(currentHourNum).padStart(2, '0'))
+    );
+    if (!match) return true;
+  }
+
+  return false;
+}
+
 export function getCurrentHourPredictedVisitors(
-  crowd: CrowdPredictionResponse | null
+  crowd: CrowdPredictionResponse | null,
+  openingHoursStr?: string
 ): number {
   if (!crowd || !crowd.predictions || crowd.predictions.length === 0) {
+    return 0;
+  }
+
+  if (isMonumentCurrentlyClosed(crowd, openingHoursStr)) {
     return 0;
   }
 
@@ -176,8 +263,7 @@ export function getCurrentHourPredictedVisitors(
     return found.expected_visitors;
   }
 
-  const midIndex = Math.floor(crowd.predictions.length / 2);
-  return crowd.predictions[midIndex]?.expected_visitors || 0;
+  return 0;
 }
 
 export function calculateConditionStatus(

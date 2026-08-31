@@ -14,7 +14,8 @@ import { BackendSite, PressureResponse } from '../../api/sites';
 import { CrowdPredictionResponse } from '../../api/crowd';
 import {
   calculateConditionStatus,
-  getCurrentHourPredictedVisitors
+  getCurrentHourPredictedVisitors,
+  isMonumentCurrentlyClosed
 } from '../../api/authority';
 import { SITE_METADATA } from '../../data/siteMapper';
 
@@ -417,8 +418,10 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
               const isSelected = selectedSite?.site_id === site.site_id;
               const pressure = pressureMap[site.site_id] || null;
               const crowd = crowdMap[site.site_id] || null;
+              const openingHours = SITE_METADATA[site.site_id]?.openingHours || '';
+              const isClosed = isMonumentCurrentlyClosed(crowd, openingHours);
               const condition = calculateConditionStatus(pressure);
-              const liveVisitors = getCurrentHourPredictedVisitors(crowd);
+              const liveVisitors = getCurrentHourPredictedVisitors(crowd, openingHours);
               const displayName = getSiteDisplayName(site.site_id, site.name);
 
               // Secondary Risk Indicator Dot
@@ -466,7 +469,7 @@ export const IndiaGisMap: React.FC<IndiaGisMapProps> = ({
                       <p className="text-slate-300 font-mono text-[10px]">
                         {language === 'hi' ? 'लाइव पर्यटक:' : 'Live Visitors:'}{' '}
                         <span className="font-bold text-amber-400">
-                          {liveVisitors.toLocaleString()}
+                          {isClosed ? '0 (currently closed)' : liveVisitors.toLocaleString()}
                         </span>
                       </p>
                       <p className="text-slate-400 text-[10px]">

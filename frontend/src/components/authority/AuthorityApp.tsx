@@ -21,8 +21,8 @@ import {
 import {
   resolveImageUrl,
   calculateConditionStatus,
-  calculateCrowdLevel,
-  getCurrentHourPredictedVisitors
+  getCurrentHourPredictedVisitors,
+  isMonumentCurrentlyClosed
 } from '../../api/authority';
 
 import { CrowdPredictionResponse } from '../../api/crowd';
@@ -127,7 +127,9 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
 
   const selectedPressure = selectedSite ? pressureMap[selectedSite.site_id] || null : null;
   const selectedCrowd = selectedSite ? crowdMap[selectedSite.site_id] || null : null;
-  const selectedLiveVisitors = getCurrentHourPredictedVisitors(selectedCrowd);
+  const selectedOpeningHours = selectedSite ? SITE_METADATA[selectedSite.site_id]?.openingHours || '' : '';
+  const selectedIsClosed = selectedSite ? isMonumentCurrentlyClosed(selectedCrowd, selectedOpeningHours) : false;
+  const selectedLiveVisitors = getCurrentHourPredictedVisitors(selectedCrowd, selectedOpeningHours);
 
   // Group sites by city for GIS site list
   const sitesByCity = useMemo(() => {
@@ -735,7 +737,15 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
                       <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
                         <span className="text-slate-600 font-medium">{language === 'hi' ? 'वर्तमान घंटे का पूर्वानुमान' : 'Current Hour Prediction'}</span>
                         <span className="font-bold font-mono text-slate-900">
-                          {loading ? '...' : `${selectedLiveVisitors.toLocaleString()} ${language === 'hi' ? 'पर्यटक' : 'visitors'}`}
+                          {loading ? (
+                            '...'
+                          ) : selectedIsClosed ? (
+                            <span className="text-amber-700 font-semibold text-xs">
+                              0 ({language === 'hi' ? 'वर्तमान में बंद' : 'currently closed'})
+                            </span>
+                          ) : (
+                            `${selectedLiveVisitors.toLocaleString()} ${language === 'hi' ? 'पर्यटक' : 'visitors'}`
+                          )}
                         </span>
                       </div>
 

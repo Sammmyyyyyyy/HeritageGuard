@@ -21,6 +21,7 @@ import {
   calculateConditionStatus,
   calculateCrowdLevel,
   getCurrentHourPredictedVisitors,
+  isMonumentCurrentlyClosed,
   fetchAllSitesTelemetry
 } from '../../api/authority';
 
@@ -46,6 +47,7 @@ interface SiteTelemetryRow {
   condition: 'CRITICAL' | 'SEVERE' | 'MODERATE' | 'STABLE';
   crowdLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'PEAK';
   liveVisitors: number;
+  isClosed: boolean;
 }
 
 export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
@@ -87,7 +89,6 @@ export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
     try {
       setLoading(true);
       setError(null);
-
       const res = await fetchAllSitesTelemetry(undefined, forceRefresh);
       setSites(res.sites);
       setPressureMap(res.pressureMap);
@@ -111,9 +112,11 @@ export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
     return sites.map((site) => {
       const pressure = pressureMap[site.site_id] || null;
       const crowd = crowdMap[site.site_id] || null;
+      const openingHours = SITE_METADATA[site.site_id]?.openingHours || '';
+      const isClosed = isMonumentCurrentlyClosed(crowd, openingHours);
       const condition = calculateConditionStatus(pressure);
       const crowdLevel = calculateCrowdLevel(crowd);
-      const liveVisitors = getCurrentHourPredictedVisitors(crowd);
+      const liveVisitors = getCurrentHourPredictedVisitors(crowd, openingHours);
 
       return {
         site,
@@ -121,7 +124,8 @@ export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
         crowd,
         condition,
         crowdLevel,
-        liveVisitors
+        liveVisitors,
+        isClosed
       };
     });
   }, [sites, pressureMap, crowdMap]);
@@ -509,23 +513,42 @@ export const ConditionMatrix: React.FC<ConditionMatrixProps> = ({
 
                       {/* Crowd Density */}
                       <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border ${getCrowdBadgeStyle(
-                            row.crowdLevel
-                          )}`}
-                        >
-                          {getCrowdLabel(row.crowdLevel)}
-                        </span>
+                        {row.isClosed ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border bg-slate-100 text-slate-600 border-slate-300">
+                            {language === 'hi' ? 'बंद है' : 'CLOSED'}
+                          </span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border ${getCrowdBadgeStyle(
+                              row.crowdLevel
+                            )}`}
+                          >
+                            {getCrowdLabel(row.crowdLevel)}
+                          </span>
+                        )}
                       </td>
 
                       {/* Current Footfall */}
                       <td className="py-3.5 px-4 font-mono">
-                        <p className="font-bold text-slate-900">
-                          {row.liveVisitors.toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{language === 'hi' ? 'पर्यटक' : 'visitors'}</span>
-                        </p>
-                        <p className="text-[10px] text-slate-400">
-                          {language === 'hi' ? 'क्षमता:' : 'Cap:'} {row.crowd?.safe_capacity ? row.crowd.safe_capacity.toLocaleString() : 'N/A'}
-                        </p>
+                        {row.isClosed ? (
+                          <>
+                            <p className="font-bold text-amber-700 text-xs">
+                              0 <span className="text-[10px] font-semibold text-amber-600">({language === 'hi' ? 'वर्तमान में बंद' : 'currently closed'})</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {language === 'hi' ? 'क्षमता:' : 'Cap:'} {row.crowd?.safe_capacity ? row.crowd.safe_capacity.toLocaleString() : 'N/A'}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-bold text-slate-900">
+                              {row.liveVisitors.toLocaleString()} <span className="text-[10px] font-normal text-slate-400">{language === 'hi' ? 'पर्यटक' : 'visitors'}</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {language === 'hi' ? 'क्षमता:' : 'Cap:'} {row.crowd?.safe_capacity ? row.crowd.safe_capacity.toLocaleString() : 'N/A'}
+                            </p>
+                          </>
+                        )}
                       </td>
 
                       {/* Actions (Responsive wrap, Dispatch never hidden) */}
