@@ -71,7 +71,7 @@ export const AuthorityApp: React.FC<AuthorityAppProps> = ({
       const fetchedSites = await getSites();
       setSites(fetchedSites);
 
-      if (fetchedSites.length > 0 && !selectedSiteId) {
+      if (Array.isArray(fetchedSites) && fetchedSites.length > 0 && !selectedSiteId && fetchedSites[0]?.site_id) {
         setSelectedSiteId(fetchedSites[0].site_id);
       }
 

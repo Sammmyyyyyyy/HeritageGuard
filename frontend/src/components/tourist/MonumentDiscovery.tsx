@@ -385,7 +385,7 @@ export const MonumentDiscovery: React.FC<MonumentDiscoveryProps> = ({
                   </div>
 
                   {/* Alternative Site Badge if Overcrowded */}
-                  {monument.heritagePressureScore > 75 && monument.alternativeSites.length > 0 && (
+                  {monument.heritagePressureScore > 75 && monument.alternativeSites && monument.alternativeSites.length > 0 && monument.alternativeSites[0]?.name && (
                     <div className="flex items-center space-x-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200/80">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                       <span className="truncate">

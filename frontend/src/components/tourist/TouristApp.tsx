@@ -180,12 +180,12 @@ export const TouristApp: React.FC<TouristAppProps> = ({
         const q = searchQuery.toLowerCase().trim();
         const matchesSearch =
           !q ||
-          m.name.toLowerCase().includes(q) ||
+          (m.name && m.name.toLowerCase().includes(q)) ||
           (m.hindiName ? m.hindiName.toLowerCase().includes(q) : false) ||
-          m.city.toLowerCase().includes(q) ||
-          m.state.toLowerCase().includes(q) ||
-          m.architecturalStyle.toLowerCase().includes(q) ||
-          m.id.toLowerCase().includes(q);
+          (m.city && m.city.toLowerCase().includes(q)) ||
+          (m.state && m.state.toLowerCase().includes(q)) ||
+          (m.architecturalStyle && m.architecturalStyle.toLowerCase().includes(q)) ||
+          (m.id && m.id.toLowerCase().includes(q));
 
         const matchesState =
           selectedState === 'All States' || m.state === selectedState;
@@ -257,10 +257,13 @@ export const TouristApp: React.FC<TouristAppProps> = ({
           <ItineraryPlanner
             language={language}
             onSelectMonumentName={(name) => {
+              if (!name) return;
+              const targetName = String(name).toLowerCase();
               const match = backendMonuments.find(
                 (m) =>
-                  m.name.toLowerCase() === name.toLowerCase() ||
-                  m.id.toLowerCase() === name.toLowerCase()
+                  m &&
+                  ((m.name && m.name.toLowerCase() === targetName) ||
+                   (m.id && m.id.toLowerCase() === targetName))
               );
               if (match) {
                 onSelectMonument(match);

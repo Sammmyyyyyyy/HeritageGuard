@@ -61,22 +61,26 @@ export const CrowdForecastPage: React.FC<CrowdForecastPageProps> = ({
       setForecastBundle(bundle);
 
       const dayMap: Record<string, DailyCrowdForecast> = {};
-      bundle.days.forEach((d) => {
-        dayMap[d.date] = d;
-      });
+      if (Array.isArray(bundle?.days)) {
+        bundle.days.forEach((d) => {
+          if (d?.date) dayMap[d.date] = d;
+        });
+      }
 
       // If an initial custom date was requested and isn't in the initial 7 days, fetch it
-      const targetDate = initialDate && initialDate.trim().length > 0 ? initialDate : bundle.days[0].date;
+      const fallbackToday = new Date().toISOString().split('T')[0];
+      const defaultDate = bundle?.days?.[0]?.date || fallbackToday;
+      const targetDate = initialDate && initialDate.trim().length > 0 ? initialDate : defaultDate;
       setSelectedDate(targetDate);
 
       if (!dayMap[targetDate]) {
         try {
-          const baselineTotal = bundle.days[0]?.expectedVisitors || bundle.currentLiveFootfall;
+          const baselineTotal = bundle?.days?.[0]?.expectedVisitors || bundle?.currentLiveFootfall || 5000;
           const customDay = await fetchSingleDateCrowdForecast(monument, targetDate, baselineTotal);
           dayMap[targetDate] = customDay;
         } catch {
           // If custom date fails, fallback to today
-          setSelectedDate(bundle.days[0].date);
+          setSelectedDate(defaultDate);
         }
       }
 
