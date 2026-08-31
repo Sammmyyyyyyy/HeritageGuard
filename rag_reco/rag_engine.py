@@ -45,9 +45,21 @@ def get_embeddings():
 def get_vector_db():
     global _vector_db
     if _vector_db is None:
-        db_dir = "./chroma_db"
-        if not os.path.exists(db_dir) or not os.listdir(db_dir):
-            raise RuntimeError("ChromaDB not found. Please deploy the pre-built chroma_db directory.")
+        base_dir = Path(__file__).resolve().parent
+        candidate_dirs = [
+            base_dir / "chroma_db",
+            Path.cwd() / "chroma_db",
+            Path.cwd() / "rag_reco" / "chroma_db",
+        ]
+        db_dir = None
+        for d in candidate_dirs:
+            if d.exists() and d.is_dir() and any(d.iterdir()):
+                db_dir = str(d)
+                break
+                
+        if not db_dir:
+            raise RuntimeError("ChromaDB not found. Please ensure the pre-built chroma_db directory is deployed.")
+            
         _vector_db = Chroma(
             persist_directory=db_dir,
             embedding_function=get_embeddings()
@@ -55,8 +67,8 @@ def get_vector_db():
     return _vector_db
 
 
-def get_llm_and_structured():
-    global _llm, _structured_llm
+def get_llm():
+    global _llm
     if _llm is None:
         api_key = (
             os.getenv("GEMINI_API_KEY")
@@ -64,84 +76,39 @@ def get_llm_and_structured():
             or os.getenv("GOOGLE_API_KEY")
         )
         base_url = os.getenv("OPENAI_API_BASE")
-        model_name = os.getenv("OPENAI_MODEL", "gemini-3.6-flash")
+        model_name = os.getenv("OPENAI_MODEL", "google/gemini-2.5-flash")
 
         _llm = ChatOpenAI(
             model=model_name,
-            temperature=0,
-            max_tokens=1000,
+            temperature=0.1,
+            max_tokens=450,
             base_url=base_url if base_url else None,
             api_key=api_key
         )
-        _structured_llm = _llm.with_structured_output(RAGResponse)
-    return _llm, _structured_llm
-
-
-# --- Prompts ---
-SYSTEM_PROMPT = """You are the HeritageGuard AI, an expert multilingual heritage guide. 
-Answer historical questions factually and comprehensively based on the provided context documents.
-Note that Indian monuments frequently have alternate transliterations and names (e.g., Amer Fort / Amber Fort, Red Fort / Lal Qila, Qutub / Qutab Minar, Gateway of India / Apollo Bunder, Prayagraj / Allahabad).
-If the provided context contains relevant historical records about the monument or place, answer the question accurately in {language}.
-Only if the context genuinely contains no relevant historical facts to answer the question, reply: "The historical records do not contain this information." in {language}."""
-
-HUMAN_PROMPT = """
-Context Documents:
-{context}
-
-Question: {question}
-"""
-
-prompt_template = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_PROMPT),
-    ("human", HUMAN_PROMPT)
-])
+    return _llm
 
 
 def ask_heritage_question(site_id: str, question: str, language: str = "English"):
     """
-    Handles multilingual queries across heritage sites with fallback vector search and resilient LLM invocation.
+    Ultra-fast, accurate RAG execution across heritage sites using direct vector retrieval and single-hop LLM answering.
     """
     try:
-        llm, structured_llm = get_llm_and_structured()
+        llm = get_llm()
         vector_db = get_vector_db()
 
-        # 1. Zero-Cost Multilingual Search Strategy
-        search_query = question
-        if language and language.lower() != "english":
-            try:
-                translation_prompt = f"Translate the following tourist question into simple English. Return ONLY the translated text: {question}"
-                translated_res = llm.invoke(translation_prompt)
-                if hasattr(translated_res, 'content') and translated_res.content:
-                    search_query = translated_res.content.strip()
-            except Exception as te:
-                print("Translation skipped:", te)
-
-        # Normalize site_id to match upper-case metadata stored during ingestion
+        # Normalize site_id
         clean_site_id = site_id.strip().upper() if site_id else ""
+        is_hindi = bool(language and language.lower().startswith("hi"))
+        no_info_message = "ऐतिहासिक अभिलेखों में यह जानकारी उपलब्ध नहीं है।" if is_hindi else "The historical records do not contain this information."
 
-        # 2. Vector search strategy:
-        # Retrieve both site-filtered candidates (if site_id specified) AND semantic unfiltered candidates
+        # Vector similarity search (Hybrid semantic + site-filtered retrieval)
         docs = []
         seen_contents = set()
 
-        if clean_site_id and clean_site_id not in ["ALL", "DEFAULT_SITE", "NONE"]:
-            try:
-                filtered_docs = vector_db.similarity_search(
-                    query=search_query,
-                    k=3,
-                    filter={"site_id": clean_site_id}
-                )
-                for d in filtered_docs:
-                    if d.page_content not in seen_contents:
-                        seen_contents.add(d.page_content)
-                        docs.append(d)
-            except Exception as fe:
-                print(f"Filtered vector search for site {clean_site_id} failed: {fe}")
-
-        # Always complement with top global semantic matches for the question
+        # 1. Semantic search across database
         try:
             semantic_docs = vector_db.similarity_search(
-                query=search_query,
+                query=question,
                 k=4
             )
             for d in semantic_docs:
@@ -149,62 +116,68 @@ def ask_heritage_question(site_id: str, question: str, language: str = "English"
                     seen_contents.add(d.page_content)
                     docs.append(d)
         except Exception as se:
-            print(f"Semantic vector search failed: {se}")
+            print(f"Semantic search failed: {se}")
 
-        print(f"[RAG Engine] Site Filter: {clean_site_id} | Query: {search_query} | Docs retrieved: {len(docs)}")
+        # 2. Site-filtered search if site_id provided
+        if clean_site_id and clean_site_id not in ["ALL", "DEFAULT_SITE", "NONE"]:
+            try:
+                filtered_docs = vector_db.similarity_search(
+                    query=question,
+                    k=3,
+                    filter={"site_id": clean_site_id}
+                )
+                for d in filtered_docs:
+                    if d.page_content not in seen_contents:
+                        seen_contents.add(d.page_content)
+                        docs.append(d)
+            except Exception:
+                pass
 
-        # 3. Format context
-        formatted_context = ""
-        if docs:
-            for d in docs:
-                filename = d.metadata.get('file_name', 'heritage_guide.pdf')
-                page = d.metadata.get('page', 1) 
-                formatted_context += f"---\nSource: {filename} (Page {page})\nText: {d.page_content}\n"
-        else:
-            formatted_context = f"Monument Context for {site_id}: India's rich architectural and historical monument heritage."
-
-        # 4. Invoke LLM Chain with structured output, falling back to direct completion
-        try:
-            chain = prompt_template | structured_llm
-            result = chain.invoke({
-                "context": formatted_context,
-                "question": question,
-                "language": language
-            })
-            
+        if not docs:
             return {
                 "site_id": site_id,
-                "answer": result.answer,
+                "answer": no_info_message,
                 "language": language,
-                "sources": [source.model_dump() if hasattr(source, "model_dump") else source.dict() for source in result.sources]
+                "sources": []
             }
-        except Exception as llm_err:
-            print("Structured LLM failed, using direct prompt completion:", llm_err)
-            
-            direct_prompt = f"""You are HeritageGuard AI, an expert heritage guide.
-Context:
+
+        # Format retrieved context
+        formatted_context = ""
+        sources = []
+        for d in docs:
+            filename = d.metadata.get('file_name', 'heritage_guide.pdf')
+            page = d.metadata.get('page', 1)
+            sources.append({"file_name": filename, "page": page})
+            formatted_context += f"- Source: {filename} (Page {page}): {d.page_content}\n"
+
+        # Direct, fast single-hop prompt
+        prompt = f"""You are HeritageGuard AI, an authoritative multilingual heritage guide.
+Context Records:
 {formatted_context}
 
 Question: {question}
 
-Write a detailed, informative, and engaging answer about this monument in {language}.
-If the context has specific facts, use them. Otherwise, answer using accurate historical knowledge of Indian monuments."""
+Instructions:
+1. Answer the question factually, clearly, and concisely in {language} based on the Context Records above.
+2. If the Context Records do NOT contain the answer, reply EXACTLY with: "{no_info_message}"."""
 
-            res = llm.invoke(direct_prompt)
-            answer_text = res.content if hasattr(res, 'content') else str(res)
-            
-            return {
-                "site_id": site_id,
-                "answer": answer_text,
-                "language": language,
-                "sources": [{"file_name": "heritage_guide.pdf", "page": 1}]
-            }
-        
-    except Exception as e:
-        print(f"Error during RAG: {e}")
+        res = llm.invoke(prompt)
+        answer_text = res.content if hasattr(res, 'content') else str(res)
+        answer_text = answer_text.strip()
+
         return {
             "site_id": site_id,
-            "answer": f"Heritage AI Guide response for '{question}': This historic site represents a landmark of architectural excellence and cultural heritage in India.",
+            "answer": answer_text,
             "language": language,
-            "sources": [{"file_name": "heritage_guide.pdf", "page": 1}]
+            "sources": sources[:2]
+        }
+
+    except Exception as e:
+        print(f"Error during RAG: {e}")
+        is_hindi = bool(language and language.lower().startswith("hi"))
+        return {
+            "site_id": site_id,
+            "answer": "ऐतिहासिक अभिलेखों में यह जानकारी उपलब्ध नहीं है।" if is_hindi else "The historical records do not contain this information.",
+            "language": language,
+            "sources": []
         }
