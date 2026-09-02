@@ -1,21 +1,31 @@
+import sys
+
+def log(msg: str):
+    print(msg, flush=True)
+
+log("[Damage AI] Importing dependencies...")
 import io
 import os
-import sys
 import asyncio
 from pathlib import Path
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 os.environ["YOLO_VERBOSE"] = "False"
 os.environ["ULTRALYTICS_AUTOINSTALL"] = "0"
+os.environ["PYTHONUNBUFFERED"] = "1"
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
+log("[Damage AI] Dependencies loaded")
+
 # ============================================================
 # CONFIG & ROBUST ENV LOADING
 # ============================================================
 
+log("[Damage AI] Resolving configuration and model paths...")
 BASE_DIR = Path(__file__).resolve().parent
 
 # Check potential .env locations safely
@@ -38,76 +48,136 @@ AI_DAMAGE_BUCKET = os.getenv("AI_DAMAGE_BUCKET", "ai-damage")
 AI_DAMAGE_MODEL_PATH = os.getenv("AI_DAMAGE_MODEL_PATH", "best.pt")
 CONFIDENCE_THRESHOLD = 0.15
 
-# Resolve model path safely across different Render root directories
-candidate_model_paths = [
-    BASE_DIR / AI_DAMAGE_MODEL_PATH,
-    BASE_DIR / "best.pt",
-    Path.cwd() / "ai" / "damage" / "best.pt",
-    Path.cwd() / "best.pt",
-]
-
-MODEL_PATH = None
-for p in candidate_model_paths:
-    if p.exists() and p.is_file():
-        MODEL_PATH = p
-        break
-
-if not MODEL_PATH:
-    MODEL_PATH = BASE_DIR / "best.pt"
-
-# ============================================================
-# LOAD MODEL (Crash-proof initialization)
-# ============================================================
-
+# Global model state
 model = None
+model_loading = False
+model_error = None
 
-# 1. Try loading from existing file
-if MODEL_PATH.exists() and MODEL_PATH.is_file():
+
+def resolve_model_path() -> Path:
+    """Find local model weights file across Render, root, and subfolder locations."""
+    candidate_paths = [
+        Path("/opt/render/project/src/ai/damage/best.pt"),
+        Path("/opt/render/project/src/best.pt"),
+        BASE_DIR / AI_DAMAGE_MODEL_PATH,
+        BASE_DIR / "best.pt",
+        Path.cwd() / "ai" / "damage" / "best.pt",
+        Path.cwd() / "best.pt",
+    ]
+    for p in candidate_paths:
+        try:
+            if p.exists() and p.is_file() and p.stat().st_size > 1000:
+                return p
+        except Exception:
+            pass
+    return BASE_DIR / "best.pt"
+
+
+def load_yolo_weights(path: Path):
+    """Load YOLO weights synchronously on CPU inside a worker thread."""
+    log(f"[Damage AI] Loading YOLO model from: {path}")
+    from ultralytics import YOLO
+    loaded = YOLO(str(path))
+    return loaded
+
+
+def download_from_supabase_sync(target_path: Path) -> bool:
+    """Download model weights from Supabase storage into local target_path."""
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        log("[Damage AI] Supabase credentials not provided. Skipping download.")
+        return False
+
+    log("[Damage AI] Downloading model weights from Supabase...")
+    from supabase import create_client
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    model_bytes = supabase.storage.from_(AI_DAMAGE_BUCKET).download(AI_DAMAGE_MODEL_PATH)
+    if not model_bytes or len(model_bytes) < 1000:
+        raise ValueError(f"Downloaded model is too small ({len(model_bytes) if model_bytes else 0} bytes)")
+    target_path.write_bytes(model_bytes)
+    log(f"[Damage AI] Model downloaded and saved to: {target_path} ({len(model_bytes)/(1024*1024):.2f} MB)")
+    return True
+
+
+async def initialize_model():
+    """
+    Asynchronously initializes the YOLO model without stalling FastAPI startup.
+    Allows Uvicorn to bind immediately to $PORT and pass Render deployment checks.
+    """
+    global model, model_loading, model_error
+    if model is not None:
+        return
+
+    model_loading = True
+    model_error = None
+    log("[Damage AI] Starting model initialization...")
+
     try:
-        from ultralytics import YOLO
-        model = YOLO(str(MODEL_PATH))
-        print(f"[Damage AI] Model loaded successfully from: {MODEL_PATH}")
-    except Exception as exc:
-        print(f"[Damage AI] Warning: Failed to load local model {MODEL_PATH}: {exc}")
+        target_path = resolve_model_path()
+        log(f"[Damage AI] Target model path resolved: {target_path}")
 
-# 2. If not found or failed, try downloading from Supabase if credentials are provided
-if model is None and SUPABASE_URL and SUPABASE_KEY:
-    try:
-        from supabase import create_client
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("[Damage AI] Downloading model weights from Supabase...")
-        model_bytes = supabase.storage.from_(AI_DAMAGE_BUCKET).download(AI_DAMAGE_MODEL_PATH)
-        MODEL_PATH.write_bytes(model_bytes)
-        from ultralytics import YOLO
-        model = YOLO(str(MODEL_PATH))
-        print(f"[Damage AI] Model downloaded and loaded from Supabase: {MODEL_PATH}")
-    except Exception as exc:
-        print(f"[Damage AI] Warning: Supabase model download failed: {exc}")
+        # 1. Prefer local file if already available (avoids re-downloading)
+        if target_path.exists() and target_path.is_file() and target_path.stat().st_size > 1000:
+            log(f"[Damage AI] Local model weights found ({target_path.stat().st_size / (1024*1024):.2f} MB)")
+        else:
+            # 2. If not found locally, try downloading with strict timeout
+            if SUPABASE_URL and SUPABASE_KEY:
+                try:
+                    log("[Damage AI] Downloading model...")
+                    await asyncio.wait_for(
+                        asyncio.to_thread(download_from_supabase_sync, target_path),
+                        timeout=25.0
+                    )
+                except asyncio.TimeoutError:
+                    log("[Damage AI] ERROR: Supabase model download timed out after 25s.")
+                    model_error = "Supabase model download timed out"
+                except Exception as dl_err:
+                    log(f"[Damage AI] ERROR: Supabase download failed: {dl_err}")
+                    model_error = str(dl_err)
+            else:
+                log("[Damage AI] Model file not found locally and no Supabase credentials configured.")
+                model_error = "Model file not found locally"
 
-# 3. Fallback to standard pretrained YOLO if custom weights could not be loaded
-if model is None:
-    try:
-        from ultralytics import YOLO
-        print("[Damage AI] Loading fallback lightweight YOLO model...")
-        model = YOLO("yolov8n.pt")
+        # 3. Load YOLO weights from resolved target_path
+        if target_path.exists() and target_path.is_file() and target_path.stat().st_size > 1000:
+            log("[Damage AI] Loading YOLO model...")
+            model = await asyncio.to_thread(load_yolo_weights, target_path)
+            class_names = list(model.names.values()) if hasattr(model, "names") else []
+            log(f"[Damage AI] Model loaded successfully. Detected classes: {class_names}")
+            log("[Damage AI] Application ready")
+            model_error = None
+        else:
+            if not model_error:
+                model_error = f"Model file {target_path} not found or corrupted"
+            log(f"[Damage AI] Warning: Model unavailable: {model_error}")
+            log("[Damage AI] Application ready (model unavailable, will return HTTP 503 from /analyze)")
     except Exception as exc:
-        print(f"[Damage AI] Critical: Could not load fallback YOLO: {exc}")
+        log(f"[Damage AI] Critical error during model initialization: {exc}")
+        model = None
+        model_error = str(exc)
+        log("[Damage AI] Application ready (model unavailable, will return HTTP 503 from /analyze)")
+    finally:
+        model_loading = False
 
-print("============================================")
-print("HeritageGuard Damage AI Microservice")
-print("============================================")
-print(f"Model: {MODEL_PATH}")
-print(f"Model Available: {model is not None}")
-print("============================================")
 
 # ============================================================
-# FASTAPI
+# FASTAPI LIFESPAN & APP
 # ============================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log("[Damage AI] Starting application...")
+    # Launch background task to load model so Uvicorn binds to $PORT immediately
+    asyncio.create_task(initialize_model())
+    yield
+    log("[Damage AI] Application shutting down...")
+
 
 app = FastAPI(
     title="HeritageGuard Damage AI",
     description="Crack detection and visual damage assessment",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 
@@ -142,11 +212,15 @@ app.add_middleware(
 # ============================================================
 
 @app.get("/")
+@app.get("/health")
 async def root():
     return {
         "status": "running",
         "service": "HeritageGuard Damage AI",
-        "model": "YOLO11",
+        "model": "best.pt",
+        "model_available": model is not None,
+        "model_loading": model_loading,
+        "model_error": model_error,
         "classes": model.names if model is not None else {}
     }
 
@@ -218,14 +292,14 @@ def analyze_image(
     site_id: str
 ):
     if model is None:
-        print("[Damage AI] ERROR: Inference requested but model is not loaded.")
+        log("[Damage AI] ERROR: Inference requested but model is not loaded.")
         raise HTTPException(
             status_code=503,
             detail="Damage AI model is currently unavailable."
         )
 
-    print(f"[Damage AI] Image received: {image.width}x{image.height} for site: {site_id}")
-    print("[Damage AI] Running inference...")
+    log(f"[Damage AI] Image received: {image.width}x{image.height} for site: {site_id}")
+    log("[Damage AI] Running inference...")
 
     # Preprocessing: constrain dimensions to avoid memory/CPU spikes on constrained servers
     inference_image = image
@@ -302,15 +376,15 @@ def analyze_image(
             priority = "LOW"
             damage_status = "low"
 
-        print(f"[Damage AI] Detections: {len(detections)}")
-        print(f"[Damage AI] Classes: {list({d['type'] for d in detections})}")
-        print(f"[Damage AI] Max confidence: {model_confidence}")
-        print(f"[Damage AI] Damage score: {damage_score} ({damage_status})")
+        log(f"[Damage AI] Detections: {len(detections)}")
+        log(f"[Damage AI] Classes: {list({d['type'] for d in detections})}")
+        log(f"[Damage AI] Max confidence: {model_confidence}")
+        log(f"[Damage AI] Damage score: {damage_score} ({damage_status})")
     else:
         model_confidence = None
         priority = "LOW"
         damage_status = "no_damage"
-        print("[Damage AI] No damage detected")
+        log("[Damage AI] No damage detected")
 
     return {
         "success": True,
@@ -333,6 +407,19 @@ async def analyze_image_api(
     site_id: str = Form(...),
     file: UploadFile = File(...)
 ):
+    # Model readiness check
+    if model is None:
+        detail_msg = (
+            "Damage AI model is currently initializing. Please try again in a moment."
+            if model_loading
+            else f"Damage AI model is currently unavailable ({model_error or 'Weights not loaded'})."
+        )
+        log(f"[Damage AI] Rejecting /analyze: {detail_msg}")
+        raise HTTPException(
+            status_code=503,
+            detail=detail_msg
+        )
+
     # Check file type
     if not file.content_type:
         raise HTTPException(
@@ -352,7 +439,7 @@ async def analyze_image_api(
     try:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception as exc:
-        print(f"[Damage AI] ERROR: Invalid image: {exc}")
+        log(f"[Damage AI] ERROR: Invalid image: {exc}")
         raise HTTPException(
             status_code=400,
             detail="Invalid image format."
@@ -368,7 +455,7 @@ async def analyze_image_api(
     except HTTPException:
         raise
     except Exception as exc:
-        print(f"[Damage AI] ERROR: {exc}")
+        log(f"[Damage AI] ERROR: {exc}")
         raise HTTPException(
             status_code=500,
             detail=f"Damage analysis execution failed: {str(exc)}"
