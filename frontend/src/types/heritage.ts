@@ -117,6 +117,8 @@ export interface DamageScanResult {
   reportId?: string;
   reportType?: string;
   summary?: string;
+  modelConfidence?: number | null;
+  damageStatus?: string;
 }
 
 export interface AuthorityKPIs {

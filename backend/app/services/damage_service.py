@@ -1,6 +1,9 @@
+import logging
 from typing import Any, Dict
 
 from app.db.storage import upload_image
+from app.exceptions.base import AppException
+from app.exceptions.ai import AIServiceUnavailable, AIServiceTimeout
 from app.integrations.damage.client import (
     DamageAIClient,
 )
@@ -11,6 +14,8 @@ from app.repositories.alert_repository import (
     AlertRepository,
 )
 from app.utils.files import validate_image
+
+logger = logging.getLogger("heritageguard.damage_service")
 
 
 class DamageService:
@@ -38,7 +43,7 @@ class DamageService:
         image_bytes = await validate_image(file)
 
         # -----------------------------------------
-        # 2. Send image to Damage AI
+        # 2. Send image to Damage AI (No fake fallbacks)
         # -----------------------------------------
 
         try:
@@ -48,24 +53,14 @@ class DamageService:
                 site_id=site_id,
                 content_type=file.content_type or "image/jpeg",
             )
+        except AppException:
+            # Propagate AIServiceUnavailable, AIServiceTimeout, etc. directly
+            raise
         except Exception as exc:
-            import random
-            print(f"Damage AI microservice request failed ({exc}), engaging fallback CV analysis.")
-            result = {
-                "site_id": site_id,
-                "damage_score": round(random.uniform(0.18, 0.42), 2),
-                "priority": "MEDIUM",
-                "detections": [
-                    {
-                        "id": f"det-{site_id}-1",
-                        "type": "crack",
-                        "confidence": 0.89,
-                        "bbox": {"x": 34.0, "y": 38.0, "width": 32.0, "height": 24.0},
-                        "severity": "MODERATE",
-                        "description": "Surface hairline fissure and joint weathering detected on stone masonry."
-                    }
-                ]
-            }
+            logger.error(f"[DamageService] Damage AI call failed: {exc}", exc_info=True)
+            raise AIServiceUnavailable(
+                f"Damage AI service is currently unavailable. Please try again in a moment. ({exc})"
+            ) from exc
 
         # -----------------------------------------
         # 3. Upload image to Supabase Storage
@@ -95,12 +90,18 @@ class DamageService:
         # 4. Prepare database record
         # -----------------------------------------
 
+        damage_score = float(result.get("damage_score", 0.0))
+        priority = str(result.get("priority", "LOW"))
+        confidence = result.get("confidence")
+        damage_status = result.get("damage_status") or ("no_damage" if not result.get("detections") else "low")
+        detections = result.get("detections", [])
+
         report_data = {
             "site_id": site_id,
-            "damage_score": result["damage_score"],
-            "priority": result["priority"],
+            "damage_score": damage_score,
+            "priority": priority,
             "image_url": image_url,
-            "detections": result["detections"],
+            "detections": detections,
         }
 
         # -----------------------------------------
@@ -111,14 +112,14 @@ class DamageService:
         try:
             report = self.damage_repository.create(report_data)
         except Exception as exc:
-            print(f"Notice: Failed to persist damage report to database ({exc}), generating in-memory record.")
+            logger.warning(f"Notice: Failed to persist damage report to database ({exc}), generating in-memory record.")
             report = {
                 "id": f"REP-{unique_id}",
                 "site_id": site_id,
-                "damage_score": result.get("damage_score", 0.0),
-                "priority": result.get("priority", "MEDIUM"),
+                "damage_score": damage_score,
+                "priority": priority,
                 "image_url": image_url,
-                "detections": result.get("detections", []),
+                "detections": detections,
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             }
 
@@ -126,30 +127,34 @@ class DamageService:
         # 6. Create alert for serious damage (Safe persistence)
         # -----------------------------------------
 
-        if result.get("priority") in {"HIGH", "CRITICAL"}:
+        if priority in {"HIGH", "CRITICAL"} and damage_score >= 40.0:
             try:
                 self.alert_repository.create(
                     {
                         "site_id": site_id,
                         "alert_type": "DAMAGE",
-                        "severity": result["priority"],
+                        "severity": priority,
                         "title": "Heritage Damage Detected",
                         "message": (
-                            f"AI detected "
-                            f"{result['priority'].lower()} "
-                            f"damage risk at site {site_id}"
+                            f"AI detected {priority.lower()} damage risk (Score: {damage_score}) at site {site_id}"
                         ),
                     }
                 )
             except Exception as exc:
-                print(f"Notice: Failed to log damage alert ({exc})")
+                logger.warning(f"Notice: Failed to log damage alert ({exc})")
 
         # -----------------------------------------
         # 7. Return response
         # -----------------------------------------
 
         return {
-            **result,
+            "success": True,
+            "site_id": site_id,
+            "damage_score": damage_score,
+            "confidence": confidence,
+            "priority": priority,
+            "damage_status": damage_status,
+            "detections": detections,
             "image_url": image_url,
             "report": report,
         }

@@ -49,11 +49,16 @@ export async function getSite(siteId: string): Promise<BackendSite> {
 // ======================================================
 
 export interface DamageAnalysisResponse {
+  success?: boolean;
   site_id: string;
   damage_score: number;
+  confidence?: number | null;
   priority: string;
+  damage_status?: string;
+  detections_count?: number;
   detections: Array<Record<string, any>>;
   image_url?: string | null;
+  report?: Record<string, any> | null;
 }
 
 export async function analyzeDamage(
@@ -76,8 +81,23 @@ export async function analyzeDamage(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Damage analysis failed: ${response.status} ${errorText}`);
+    let errorMessage = `Damage analysis failed (${response.status})`;
+    try {
+      const errJson = await response.json();
+      if (errJson?.error?.message) {
+        errorMessage = errJson.error.message;
+      } else if (errJson?.detail) {
+        errorMessage = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+      } else if (errJson?.message) {
+        errorMessage = errJson.message;
+      }
+    } catch {
+      try {
+        const errorText = await response.text();
+        if (errorText) errorMessage = errorText;
+      } catch {}
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();

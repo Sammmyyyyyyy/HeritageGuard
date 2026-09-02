@@ -347,8 +347,6 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
     result: any
   ): DamageScanResult => {
     /*
-     * DO NOT FALL BACK TO backendSites[0].
-     *
      * The selected site is the source of truth.
      */
     const siteId =
@@ -373,16 +371,16 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         0
     );
 
-    if (rawScore <= 0) {
-      if (detections.length > 0) {
-        const avgConf = detections.reduce((acc: number, d: DamageDetection) => acc + (d.confidence || 0.5), 0) / detections.length;
-        rawScore = Math.round(avgConf * 70 + Math.min(detections.length * 8, 28));
-      } else {
-        rawScore = 24;
-      }
+    // If no detections exist, the surface is undamaged (0 / 100)
+    if (detections.length === 0) {
+      rawScore = 0;
+    } else if (rawScore <= 0) {
+      // Detections exist but score was 0: calculate from actual detections
+      const avgConf = detections.reduce((acc: number, d: DamageDetection) => acc + (d.confidence || 0.5), 0) / detections.length;
+      rawScore = Math.round(avgConf * 60 + Math.min(detections.length * 8, 30));
     }
 
-    const priorityRaw = String(result?.priority ?? result?.report?.severity ?? 'medium').toLowerCase();
+    const priorityRaw = String(result?.priority ?? result?.report?.severity ?? (detections.length === 0 ? 'low' : 'medium')).toLowerCase();
     const priorityMap: Record<string, 'Low' | 'Medium' | 'High' | 'Critical'> = {
       low: 'Low',
       medium: 'Medium',
@@ -390,51 +388,49 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
       critical: 'Critical'
     };
 
-    const severityRaw = String(result?.report?.severity ?? result?.severity ?? 'medium').toLowerCase();
+    const severityRaw = String(result?.report?.severity ?? result?.severity ?? (detections.length === 0 ? 'low' : 'medium')).toLowerCase();
+
+    // Determine model confidence: real YOLO confidence or null if undamaged
+    const modelConfidence =
+      result?.confidence !== undefined && result?.confidence !== null
+        ? Number(result.confidence)
+        : detections.length > 0
+        ? Math.max(...detections.map((d: DamageDetection) => d.confidence))
+        : null;
+
+    const damageStatus =
+      result?.damage_status ||
+      (detections.length === 0
+        ? 'no_damage'
+        : rawScore >= 70
+        ? 'severe'
+        : rawScore >= 40
+        ? 'moderate'
+        : 'low');
 
     return {
       id: `backend-scan-${Date.now()}`,
-
       monumentId: siteId,
-
-      monumentName:
-        getSiteName(siteId),
-
-      scannedAt:
-        result?.report?.created_at || new Date().toISOString(),
-
-      imageUrl:
-        result?.image_url ||
-        customImage ||
-        '',
-
-      overallDamageScore: Math.max(
-        15,
-        Math.min(100, Math.round(rawScore))
-      ),
-
+      monumentName: getSiteName(siteId),
+      scannedAt: result?.report?.created_at || new Date().toISOString(),
+      imageUrl: result?.image_url || customImage || '',
+      overallDamageScore: Math.max(0, Math.min(100, Math.round(rawScore))),
       detections,
-
-      priority: priorityMap[priorityRaw] || 'Medium',
-
-      severity: priorityMap[severityRaw] || 'Medium',
-
+      priority: detections.length === 0 ? 'Low' : (priorityMap[priorityRaw] || 'Medium'),
+      severity: detections.length === 0 ? 'Low' : (priorityMap[severityRaw] || 'Medium'),
+      modelConfidence,
+      damageStatus,
       reportId: result?.report?.id || `REP-${Date.now().toString().slice(-6)}`,
-
       reportType: result?.report?.report_type
         ? String(result.report.report_type).replace(/_/g, ' ').toUpperCase()
         : 'AI STRUCTURAL AUDIT',
-
-      summary: result?.report?.summary || 'AI detected structural anomaly on monument surface.',
-
-      source:
-        'Citizen Camera Scan',
-
-      status:
-        'Pending Review',
-
-      submittedBy:
-        'Citizen Heritage Contributor'
+      summary:
+        detections.length === 0
+          ? 'Surface integrity verified. No visible cracks or structural defects detected by AI.'
+          : (result?.report?.summary || `AI detected ${detections.length} anomaly region(s) on monument surface.`),
+      source: 'Citizen Camera Scan',
+      status: 'Pending Review',
+      submittedBy: 'Citizen Heritage Contributor'
     };
   };
 
@@ -444,31 +440,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
 
   const activeScan: DamageScanResult =
     backendScan ||
-    (customImage
-      ? {
-          ...PRESET_DAMAGE_SCANS[0],
-
-          id: 'custom-scan',
-
-          /*
-           * NEVER use backendSites[0] here.
-           */
-          monumentId:
-            selectedSiteId ||
-            'unknown-site',
-
-          monumentName:
-            selectedSiteId
-              ? getSiteName(
-                  selectedSiteId
-                )
-              : 'Select a monument',
-
-          imageUrl: customImage
-        }
-      : PRESET_DAMAGE_SCANS[
-          selectedScanIndex
-        ]);
+    PRESET_DAMAGE_SCANS[selectedScanIndex];
 
   /* =========================================================
      SITE SELECTION
@@ -540,6 +512,13 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
+
+    // Reset previous scan results and errors immediately before starting a new scan
+    setAnalysisError(null);
+    setBackendScan(null);
+    setHasScanned(false);
+    setSelectedDetection(null);
+    setIsSubmitted(false);
 
     /*
      * Uploaded image OR Live Camera Capture => REAL backend AI analysis.
@@ -963,6 +942,33 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
         </div>
 
       </div>
+
+      {/* Damage AI Service Error Alert */}
+      {analysisError && (
+        <div className="w-full max-w-3xl mx-auto mb-6 p-4 rounded-2xl bg-red-50 border-2 border-red-300 text-red-900 shadow-md flex items-start space-x-3 animate-fadeIn">
+          <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 text-xs">
+            <h4 className="font-bold text-red-800 text-sm mb-1">
+              {language === 'hi' ? 'क्षति विश्लेषण त्रुटि' : 'Damage AI Service Unavailable'}
+            </h4>
+            <p className="font-medium text-red-700 leading-relaxed">
+              {analysisError}
+            </p>
+            <p className="mt-1.5 text-[11px] text-red-600/80">
+              {language === 'hi'
+                ? 'एआई सेवा से वास्तविक प्रतिक्रिया प्राप्त नहीं हुई। कोई नकली या अनुमानित परिणाम नहीं दिखाए गए हैं।'
+                : 'Damage AI service did not complete analysis. No mock or default damage values are displayed.'}
+            </p>
+          </div>
+          <button
+            onClick={() => setAnalysisError(null)}
+            className="text-red-400 hover:text-red-700 p-1 text-xs font-bold cursor-pointer"
+            title="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* =====================================================
           MAIN GRID
@@ -1392,19 +1398,33 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                   <span className="text-[#0D3B2E] font-bold">
                     {language === 'hi' ? 'सतह क्षति सूचकांक' : 'Surface Damage Index'}
                   </span>
-                  <span className="font-mono font-bold text-red-600 text-sm">
+                  <span className={`font-mono font-bold text-sm ${
+                    activeScan.overallDamageScore === 0
+                      ? 'text-emerald-700'
+                      : activeScan.overallDamageScore >= 70
+                      ? 'text-red-600'
+                      : activeScan.overallDamageScore >= 40
+                      ? 'text-amber-600'
+                      : 'text-emerald-600'
+                  }`}>
                     {activeScan.overallDamageScore} / 100
                   </span>
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-gray-200 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-red-600 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.max(5, activeScan.overallDamageScore)}%` }}
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      activeScan.overallDamageScore === 0
+                        ? 'bg-emerald-500'
+                        : activeScan.overallDamageScore >= 70
+                        ? 'bg-red-600'
+                        : 'bg-gradient-to-r from-amber-500 to-red-600'
+                    }`}
+                    style={{ width: `${activeScan.overallDamageScore === 0 ? 0 : Math.max(5, activeScan.overallDamageScore)}%` }}
                   />
                 </div>
               </div>
 
-              {/* Priority & Severity Badges */}
+              {/* Priority, Severity & Model Confidence Badges */}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-[#F8F6F0] p-2.5 rounded-xl border border-[#0D3B2E]/10">
                   <span className="text-[10px] text-gray-500 uppercase font-semibold block">
@@ -1417,7 +1437,7 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                       ? 'text-amber-700'
                       : 'text-emerald-700'
                   }`}>
-                    {activeScan.priority || 'MEDIUM'}
+                    {activeScan.priority || 'LOW'}
                   </span>
                 </div>
                 <div className="bg-[#F8F6F0] p-2.5 rounded-xl border border-[#0D3B2E]/10">
@@ -1431,7 +1451,19 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                       ? 'text-amber-700'
                       : 'text-emerald-700'
                   }`}>
-                    {activeScan.severity || 'MEDIUM'}
+                    {activeScan.severity || 'LOW'}
+                  </span>
+                </div>
+
+                {/* Overall Model Confidence Metric */}
+                <div className="bg-[#F8F6F0] p-2.5 rounded-xl border border-[#0D3B2E]/10 col-span-2 flex items-center justify-between">
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold block">
+                    {language === 'hi' ? 'एआई मॉडल विश्वसनीयता' : 'AI Model Confidence'}
+                  </span>
+                  <span className="font-mono font-bold text-xs text-[#0D3B2E] bg-white px-2 py-0.5 rounded border border-gray-200">
+                    {activeScan.modelConfidence !== null && activeScan.modelConfidence !== undefined
+                      ? `${Math.round(activeScan.modelConfidence * 100)}%`
+                      : (language === 'hi' ? 'कोई क्षति नहीं मिली' : 'No damage detected')}
                   </span>
                 </div>
               </div>
@@ -1506,13 +1538,18 @@ export const ScanMonument: React.FC<ScanMonumentProps> = ({
                         })}
                       </div>
                     ) : (
-                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>
-                          {language === 'hi'
-                            ? 'निरीक्षित सतह पर कोई संरचनात्मक क्षति नहीं पाई गई।'
-                            : 'No structural damage detected on inspected masonry surface.'}
-                        </span>
+                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-start space-x-2.5">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-emerald-900">
+                            {language === 'hi' ? 'कोई क्षति नहीं पाई गई' : 'No Damage Detected'}
+                          </p>
+                          <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
+                            {language === 'hi'
+                              ? 'वाईओएलओ मॉडल को इस सतह पर दरार या संरचनात्मक दोष का कोई साक्ष्य नहीं मिला।'
+                              : 'The AI model evaluated the monument image and found no detectable structural cracks or surface deterioration.'}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

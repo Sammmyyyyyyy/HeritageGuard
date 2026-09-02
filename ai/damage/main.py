@@ -1,8 +1,12 @@
 import io
 import os
 import sys
+import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
+
+os.environ["YOLO_VERBOSE"] = "False"
+os.environ["ULTRALYTICS_AUTOINSTALL"] = "0"
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -151,162 +155,173 @@ async def root():
 # MAIN AI FUNCTION
 # ============================================================
 
+# ============================================================
+# MAIN AI FUNCTION & SCORE CALCULATION
+# ============================================================
+
+def calculate_damage_score(
+    detections: list,
+    image_width: int,
+    image_height: int
+) -> float:
+    """
+    Calculate a genuine, deterministic damage score (0-100) from YOLO detections.
+    Considers:
+    - Number of detected damage regions
+    - Bounding box area relative to image area
+    - Model confidence of detections
+    - Class severity weight
+    """
+    if not detections:
+        return 0.0
+
+    # 1. Class severity weighting
+    class_weights = {
+        "crack": 1.0,
+        "fracture": 1.2,
+        "deterioration": 1.1,
+        "erosion": 0.9,
+        "spalling": 1.2,
+        "vegetation": 0.8,
+        "stain": 0.6,
+        "discoloration": 0.5,
+    }
+
+    # 2. Confidences
+    confidences = [d["confidence"] for d in detections]
+    max_conf = max(confidences)
+    avg_conf = sum(confidences) / len(confidences)
+
+    # 3. Damaged area coverage relative to image area
+    total_area_ratio = min(1.0, sum(d.get("area_ratio", 0.0) for d in detections))
+
+    # 4. Count factor (saturating up to 5 detections)
+    count = len(detections)
+    count_factor = min(1.0, count / 5.0)
+
+    # 5. Composite score:
+    # - Confidence component (up to 35 pts)
+    # - Area coverage component (up to 40 pts: 15% surface damage gives full 40 pts)
+    # - Count / spread component (up to 25 pts)
+    conf_component = (0.6 * max_conf + 0.4 * avg_conf) * 35.0
+    area_component = min(1.0, total_area_ratio / 0.15) * 40.0
+    count_component = count_factor * 25.0
+
+    severity_weight = max(class_weights.get(d.get("type", "").lower(), 1.0) for d in detections)
+    raw_score = (conf_component + area_component + count_component) * severity_weight
+
+    return max(1.0, min(100.0, round(raw_score, 1)))
+
+
 def analyze_image(
     image: Image.Image,
     site_id: str
 ):
     if model is None:
-        return {
-            "site_id": site_id,
-            "damage_score": 15.0,
-            "priority": "LOW",
-            "detections": []
-        }
+        print("[Damage AI] ERROR: Inference requested but model is not loaded.")
+        raise HTTPException(
+            status_code=503,
+            detail="Damage AI model is currently unavailable."
+        )
 
-    # Run YOLO
+    print(f"[Damage AI] Image received: {image.width}x{image.height} for site: {site_id}")
+    print("[Damage AI] Running inference...")
+
+    # Preprocessing: constrain dimensions to avoid memory/CPU spikes on constrained servers
+    inference_image = image
+    if max(image.width, image.height) > 1024:
+        inference_image = image.copy()
+        inference_image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+
+    img_w, img_h = inference_image.width, inference_image.height
+    img_area = float(img_w * img_h)
+
+    # Run YOLO inference
     results = model.predict(
-        source=image,
+        source=inference_image,
         conf=CONFIDENCE_THRESHOLD,
-        verbose=False
+        imgsz=640,
+        verbose=False,
+        device="cpu"
     )
 
     result = results[0]
-
     detections = []
 
     # Extract detections
     for box in result.boxes:
-
         class_id = int(box.cls[0])
-
         class_name = result.names[class_id]
+        confidence = float(box.conf[0])
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
 
-        confidence = float(
-            box.conf[0]
-        )
+        box_w = max(0.0, x2 - x1)
+        box_h = max(0.0, y2 - y1)
+        area_ratio = (box_w * box_h) / max(1.0, img_area)
 
-        x1, y1, x2, y2 = (
-            box.xyxy[0].tolist()
-        )
+        # Map severity based on class & confidence
+        if confidence >= 0.70:
+            det_severity = "HIGH"
+        elif confidence >= 0.40:
+            det_severity = "MEDIUM"
+        else:
+            det_severity = "LOW"
 
         detections.append({
-
+            "id": f"det-{len(detections) + 1}",
             "type": class_name,
-
-            "confidence": round(
-                confidence,
-                2
-            ),
-
+            "confidence": round(confidence, 2),
+            "severity": det_severity,
+            "area_ratio": round(area_ratio, 4),
+            "description": f"Detected {class_name} on monument surface.",
             "bbox": {
-
-                "x1": round(
-                    x1,
-                    2
-                ),
-
-                "y1": round(
-                    y1,
-                    2
-                ),
-
-                "x2": round(
-                    x2,
-                    2
-                ),
-
-                "y2": round(
-                    y2,
-                    2
-                )
+                "x1": round(x1, 2),
+                "y1": round(y1, 2),
+                "x2": round(x2, 2),
+                "y2": round(y2, 2),
+                "x": round(x1, 2),
+                "y": round(y1, 2),
+                "width": round(box_w, 2),
+                "height": round(box_h, 2),
             }
         })
 
+    # Calculate image-dependent score
+    damage_score = calculate_damage_score(detections, img_w, img_h)
 
-    # Calculate score
+    # Model confidence & damage status
+    if detections:
+        model_confidence = round(max(d["confidence"] for d in detections), 2)
+        if damage_score >= 70:
+            priority = "HIGH"
+            damage_status = "severe"
+        elif damage_score >= 40:
+            priority = "MEDIUM"
+            damage_status = "moderate"
+        else:
+            priority = "LOW"
+            damage_status = "low"
 
-    damage_score = calculate_damage_score(
-        detections
-    )
-
-
-    # Priority
-
-    if damage_score >= 70:
-
-        priority = "HIGH"
-
-    elif damage_score >= 40:
-
-        priority = "MEDIUM"
-
+        print(f"[Damage AI] Detections: {len(detections)}")
+        print(f"[Damage AI] Classes: {list({d['type'] for d in detections})}")
+        print(f"[Damage AI] Max confidence: {model_confidence}")
+        print(f"[Damage AI] Damage score: {damage_score} ({damage_status})")
     else:
-
+        model_confidence = None
         priority = "LOW"
-
+        damage_status = "no_damage"
+        print("[Damage AI] No damage detected")
 
     return {
-
+        "success": True,
         "site_id": site_id,
-
         "damage_score": damage_score,
-
+        "confidence": model_confidence,
         "priority": priority,
-
-        "detections": detections
-
+        "damage_status": damage_status,
+        "detections_count": len(detections),
+        "detections": detections,
     }
-
-
-# ============================================================
-# CRACK DAMAGE SCORE
-# ============================================================
-
-def calculate_damage_score(
-    detections
-):
-    if not detections:
-        return 24.0
-
-    crack_detections = [
-        d
-        for d in detections
-        if d.get("type") in {"crack", "fracture", "deterioration"}
-    ]
-
-    if not crack_detections:
-        crack_detections = detections
-
-    highest_confidence = max(
-        d["confidence"]
-        for d in crack_detections
-    )
-
-    crack_count = len(
-        crack_detections
-    )
-
-    confidence_component = (
-        highest_confidence * 65.0
-    )
-
-    count_component = min(
-        crack_count * 10.0,
-        35.0
-    )
-
-    score = (
-        confidence_component
-        + count_component
-    )
-
-    return max(
-        20.0,
-        min(
-            round(score, 1),
-            98.0
-        )
-    )
 
 
 # ============================================================
@@ -315,72 +330,46 @@ def calculate_damage_score(
 
 @app.post("/analyze")
 async def analyze_image_api(
-
     site_id: str = Form(...),
-
     file: UploadFile = File(...)
-
 ):
-
     # Check file type
-
     if not file.content_type:
-
         raise HTTPException(
-
             status_code=400,
-
             detail="Could not determine file type."
-
         )
 
-
-    if not file.content_type.startswith(
-        "image/"
-    ):
-
+    if not file.content_type.startswith("image/"):
         raise HTTPException(
-
             status_code=400,
-
             detail="Only image files are allowed."
-
         )
-
 
     # Read uploaded image
-
     image_bytes = await file.read()
 
-
     try:
-
-        image = Image.open(
-
-            io.BytesIO(
-                image_bytes
-            )
-
-        ).convert("RGB")
-
-
-    except Exception:
-
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as exc:
+        print(f"[Damage AI] ERROR: Invalid image: {exc}")
         raise HTTPException(
-
             status_code=400,
-
-            detail="Invalid image."
-
+            detail="Invalid image format."
         )
 
-
-    # Run AI
-
-    return analyze_image(
-
-        image=image,
-
-        site_id=site_id
-
-    )
+    # Run AI off the event loop thread to keep FastAPI responsive
+    try:
+        return await asyncio.to_thread(
+            analyze_image,
+            image=image,
+            site_id=site_id
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"[Damage AI] ERROR: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Damage analysis execution failed: {str(exc)}"
+        )
