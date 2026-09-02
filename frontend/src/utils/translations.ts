@@ -1,11 +1,11 @@
-// Centralized Translations for DharoharDhirsti / HeritageGuard
+// Centralized Translations for DharoharDrishti / HeritageGuard
 
 export type Language = 'en' | 'hi';
 
 export const translations = {
   en: {
     // Brand & General
-    brandName: 'DHAROHARDHRISTI',
+    brandName: 'DHAROHARDRISHTI',
     brandTagline: 'HERITAGEGUARD AI',
     discover: 'Discover',
     planJourney: 'Plan Journey',
@@ -231,7 +231,7 @@ export const translations = {
   },
   hi: {
     // Brand & General
-    brandName: 'DHAROHARDHRISTI',
+    brandName: 'DHAROHARDRISHTI',
     brandTagline: 'HERITAGEGUARD AI',
     discover: 'खोजें',
     planJourney: 'यात्रा योजना',

@@ -86,10 +86,10 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
               </div>
               <div>
                 <span className="font-regal text-xl font-bold tracking-tight text-white">
-                  Dharohar<span className="text-[#D4AF37]">Dhristi</span>
+                  Dharohar<span className="text-[#D4AF37]">Drishti</span>
                 </span>
                 <p className="text-[10px] text-white/60">
-                  {language === 'hi' ? 'धरोहर दृष्टि एआई मंच' : 'DharoharDhristi AI Platform'}
+                  {language === 'hi' ? 'धरोहर दृष्टि एआई मंच' : 'DharoharDrishti AI Platform'}
                 </p>
               </div>
             </div>
@@ -183,7 +183,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onViewChan
         </div>
 
         <div className="pt-8 border-t border-white/10 text-center text-xs text-white/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>{language === 'hi' ? '© 2026 धरोहर दृष्टि। सर्वाधिकार सुरक्षित।' : '© 2026 DharoharDhristi. All rights reserved.'}</p>
+          <p>{language === 'hi' ? '© 2026 धरोहर दृष्टि। सर्वाधिकार सुरक्षित।' : '© 2026 DharoharDrishti. All rights reserved.'}</p>
           <p className="text-[11px]">
             {language === 'hi'
               ? "भारत की सांस्कृतिक विरासत के संरक्षण हेतु समर्पित"

@@ -149,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className={`font-serif-heritage text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-none ${
                 activeView === 'authority' ? 'text-[#0F2B48]' : 'text-[#0D3B2E]'
               }`}>
-                DHAROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DHRISTI</span>
+                DHAROHAR<span className={activeView === 'authority' ? 'text-[#2B6CB0]' : 'text-[#C85A32]'}>DRISHTI</span>
               </span>
               <span className="text-[8px] sm:text-[9.5px] tracking-[0.22em] uppercase font-bold text-[#6B7280] mt-0.5 sm:mt-1">
                 HERITAGEGUARD AI
